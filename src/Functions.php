@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Hyperf\Utils\ApplicationContext;
+use Hyperf\Context\ApplicationContext;
 use Hyperf\Contract\ConfigInterface;
 
 if (!function_exists('cfg')) {
