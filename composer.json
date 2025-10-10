@@ -9,7 +9,7 @@
     "description": "adc帮助类",
     "autoload": {
         "psr-4": {
-            "TgkwAdc\\Helper\\": "src/"
+            "TgkwAdc\\": "src/"
         },
         "files": [
             "src/Functions.php"
