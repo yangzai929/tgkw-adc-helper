@@ -154,7 +154,7 @@ trait EnumCodeGet
             return EnumStore::get($enumClassName);
         }
 
-        $isAdc = str_contains($enumClassName, 'App\\Constants\\Code');
+        $isAdc = str_contains($enumClassName, 'TgkwAdc\\Constants\\Code');
         $microName = env('MICRO_NAME', env('APP_NAME'));
         $enumCases = $enum->getCases();
         $classObj = self::getEnumClassAttitude();

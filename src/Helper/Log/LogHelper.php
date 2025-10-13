@@ -6,263 +6,162 @@ namespace TgkwAdc\Helper\Log;
 
 use Hyperf\Context\ApplicationContext;
 use Hyperf\Logger\LoggerFactory;
-use Monolog\Handler\StreamHandler;
+use Monolog\Handler\RotatingFileHandler;
+use Monolog\Handler\BufferHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 
 class LogHelper
 {
     /**
-     * 动态日志记录器缓存
+     * 缓存 Logger 实例
      */
     private static array $dynamicLoggers = [];
 
     /**
-     * 获取日志记录器
-     *
-     * @param string $name 日志通道名称
-     * @param string $group 日志组名称，默认为 'default'
-     * @return LoggerInterface
+     * 从配置中获取日志级别
+     */
+    private static function getConfigLevel(string $group): string|int
+    {
+        $configLevel = config("logger.{$group}.handler.constructor.level") ?? 'info';
+
+        // 如果是 Monolog 3.x 的 Level 对象
+        if ($configLevel instanceof \Monolog\Level) {
+            return strtolower($configLevel->name); // 返回 'info'、'debug' 等
+        }
+
+        // 如果是 Monolog 2.x 的整数常量
+        if (is_int($configLevel)) {
+            return strtolower(\Monolog\Logger::getLevelName($configLevel));
+        }
+
+        // 如果本来就是字符串
+        if (is_string($configLevel)) {
+            return strtolower($configLevel);
+        }
+
+        return $configLevel;
+    }
+    
+    /**
+     * 获取容器中的 Logger
      */
     public static function get(string $name = 'app', string $group = 'default'): LoggerInterface
     {
         return ApplicationContext::getContainer()
             ->get(LoggerFactory::class)
             ->get($name, $group);
+
     }
 
     /**
-     * 获取动态日志记录器（支持自定义文件名）
-     *
-     * @param string $name 日志通道名称
-     * @param string $filename 自定义日志文件名（不包含路径和扩展名）
-     * @param string $level 日志级别
-     * @return LoggerInterface
+     * 获取动态日志记录器
      */
-    public static function getDynamic(string $name, string $filename, string $level = 'info'): LoggerInterface
-    {
-        $cacheKey = "{$name}_{$filename}_{$level}";
-        
+    public static function getDynamic(
+        string $name,
+        string $filename,
+        string $level = 'info',
+        int $maxFiles = 30,
+        bool $async = false
+    ): LoggerInterface {
+        $cacheKey = "{$name}_{$filename}_{$level}_{$maxFiles}_{$async}";
+
         if (isset(self::$dynamicLoggers[$cacheKey])) {
             return self::$dynamicLoggers[$cacheKey];
         }
 
+        // 日志目录（可配置）
+        $logDir = env('LOG_PATH', BASE_PATH . '/runtime/logs');
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0777, true);
+        }
+
+        $logPath = "{$logDir}/{$filename}.log";
+
         $logger = new Logger($name);
-        $logPath = BASE_PATH . "/runtime/logs/{$filename}.log";
-        
-        $handler = new StreamHandler($logPath, Logger::toMonologLevel($level));
+        $handler = new RotatingFileHandler($logPath, $maxFiles, Logger::toMonologLevel($level));
+
+        // 异步缓冲写入
+        if ($async) {
+            $handler = new BufferHandler($handler, 50, Logger::toMonologLevel($level), true, true);
+        }
+
         $logger->pushHandler($handler);
-        
+
         self::$dynamicLoggers[$cacheKey] = $logger;
-        
+
         return $logger;
     }
 
     /**
-     * 记录调试级别日志
-     *
-     * @param string $message 日志消息
-     * @param array $context 上下文信息
-     * @param string $name 日志通道名称
-     * @param string $group 日志组名称
-     * @param string|null $filename 自定义日志文件名（不包含路径和扩展名）
+     * 通用日志方法
      */
-    public static function debug(string $message, array $context = [], string $name = 'app', string $group = 'default', ?string $filename = null): void
-    {
+    private static function log(
+        string $method,
+        string $message,
+        array $context = [],
+        string $name = 'log',
+        string $group = 'single',
+        ?string $filename = null,
+        bool $async = false
+    ): void {
+        $level = self::getConfigLevel($group);
+
         if ($filename) {
-            self::getDynamic($name, $filename, 'debug')->debug($message, $context);
+            self::getDynamic($name, $filename, $level, 30, $async)->{$method}($message, $context);
         } else {
-            self::get($name, $group)->debug($message, $context);
+            self::get($name, $group)->{$method}($message, $context);
         }
     }
 
+    // 以下是不同级别的快捷方法
+    public static function info(...$args): void { self::log('info', ...$args); }
+    public static function notice(...$args): void { self::log('notice', ...$args); }
+    public static function warning(...$args): void { self::log('warning', ...$args); }
+    public static function error(...$args): void { self::log('error', ...$args); }
+    public static function critical(...$args): void { self::log('critical', ...$args); }
+    public static function alert(...$args): void { self::log('alert', ...$args); }
+    public static function emergency(...$args): void { self::log('emergency', ...$args); }
+
+    //调试日志
+    public static function debug(
+        string $message,
+        array $context = [],
+        string $name = 'app_log',
+        string $group = 'debug', // 默认走 debug 组
+        ?string $filename = null,
+        bool $async = false
+    ): void {
+        self::log('debug', $message, $context, $name, $group, $filename, $async);
+    }
     /**
-     * 记录信息级别日志
-     *
-     * @param string $message 日志消息
-     * @param array $context 上下文信息
-     * @param string $name 日志通道名称
-     * @param string $group 日志组名称
-     * @param string|null $filename 自定义日志文件名（不包含路径和扩展名）
+     * 业务日志
      */
-    public static function info(string $message, array $context = [], string $name = 'app', string $group = 'default', ?string $filename = null): void
+    public static function business(string $message, array $context = [], string $name = 'business_log', ?string $filename = null, bool $async = false): void
     {
-        if ($filename) {
-            self::getDynamic($name, $filename, 'info')->info($message, $context);
-        } else {
-            self::get($name, $group)->info($message, $context);
-        }
+        self::log('info', $message, $context, $name, 'business', $filename, $async);
     }
 
     /**
-     * 记录通知级别日志
-     *
-     * @param string $message 日志消息
-     * @param array $context 上下文信息
-     * @param string $name 日志通道名称
-     * @param string $group 日志组名称
-     * @param string|null $filename 自定义日志文件名（不包含路径和扩展名）
+     * 访问日志
      */
-    public static function notice(string $message, array $context = [], string $name = 'app', string $group = 'default', ?string $filename = null): void
+    public static function access(string $message, array $context = [], string $name = 'access_log', ?string $filename = null, bool $async = false): void
     {
-        if ($filename) {
-            self::getDynamic($name, $filename, 'notice')->notice($message, $context);
-        } else {
-            self::get($name, $group)->notice($message, $context);
-        }
+        self::log('info', $message, $context, $name, 'access', $filename, $async);
     }
 
     /**
-     * 记录警告级别日志
-     *
-     * @param string $message 日志消息
-     * @param array $context 上下文信息
-     * @param string $name 日志通道名称
-     * @param string $group 日志组名称
-     * @param string|null $filename 自定义日志文件名（不包含路径和扩展名）
+     * 系统日志
      */
-    public static function warning(string $message, array $context = [], string $name = 'app', string $group = 'default', ?string $filename = null): void
+    public static function system(string $message, array $context = [], string $name = 'system_log', ?string $filename = null, bool $async = false): void
     {
-        if ($filename) {
-            self::getDynamic($name, $filename, 'warning')->warning($message, $context);
-        } else {
-            self::get($name, $group)->warning($message, $context);
-        }
+        self::log('warning', $message, $context, $name, 'system', $filename, $async);
     }
 
     /**
-     * 记录错误级别日志
-     *
-     * @param string $message 日志消息
-     * @param array $context 上下文信息
-     * @param string $name 日志通道名称
-     * @param string $group 日志组名称
-     * @param string|null $filename 自定义日志文件名（不包含路径和扩展名）
+     * 异常日志
      */
-    public static function error(string $message, array $context = [], string $name = 'app', string $group = 'default', ?string $filename = null): void
-    {
-        if ($filename) {
-            self::getDynamic($name, $filename, 'error')->error($message, $context);
-        } else {
-            self::get($name, $group)->error($message, $context);
-        }
-    }
-
-    /**
-     * 记录严重错误级别日志
-     *
-     * @param string $message 日志消息
-     * @param array $context 上下文信息
-     * @param string $name 日志通道名称
-     * @param string $group 日志组名称
-     * @param string|null $filename 自定义日志文件名（不包含路径和扩展名）
-     */
-    public static function critical(string $message, array $context = [], string $name = 'app', string $group = 'default', ?string $filename = null): void
-    {
-        if ($filename) {
-            self::getDynamic($name, $filename, 'critical')->critical($message, $context);
-        } else {
-            self::get($name, $group)->critical($message, $context);
-        }
-    }
-
-    /**
-     * 记录警报级别日志
-     *
-     * @param string $message 日志消息
-     * @param array $context 上下文信息
-     * @param string $name 日志通道名称
-     * @param string $group 日志组名称
-     * @param string|null $filename 自定义日志文件名（不包含路径和扩展名）
-     */
-    public static function alert(string $message, array $context = [], string $name = 'app', string $group = 'default', ?string $filename = null): void
-    {
-        if ($filename) {
-            self::getDynamic($name, $filename, 'alert')->alert($message, $context);
-        } else {
-            self::get($name, $group)->alert($message, $context);
-        }
-    }
-
-    /**
-     * 记录紧急级别日志
-     *
-     * @param string $message 日志消息
-     * @param array $context 上下文信息
-     * @param string $name 日志通道名称
-     * @param string $group 日志组名称
-     * @param string|null $filename 自定义日志文件名（不包含路径和扩展名）
-     */
-    public static function emergency(string $message, array $context = [], string $name = 'app', string $group = 'default', ?string $filename = null): void
-    {
-        if ($filename) {
-            self::getDynamic($name, $filename, 'emergency')->emergency($message, $context);
-        } else {
-            self::get($name, $group)->emergency($message, $context);
-        }
-    }
-
-    /**
-     * 记录业务日志
-     *
-     * @param string $message 日志消息
-     * @param array $context 上下文信息
-     * @param string $name 日志通道名称
-     * @param string|null $filename 自定义日志文件名（不包含路径和扩展名）
-     */
-    public static function business(string $message, array $context = [], string $name = 'business', ?string $filename = null): void
-    {
-        if ($filename) {
-            self::getDynamic($name, $filename, 'info')->info($message, $context);
-        } else {
-            self::get($name)->info($message, $context);
-        }
-    }
-
-    /**
-     * 记录访问日志
-     *
-     * @param string $message 日志消息
-     * @param array $context 上下文信息
-     * @param string $name 日志通道名称
-     * @param string|null $filename 自定义日志文件名（不包含路径和扩展名）
-     */
-    public static function access(string $message, array $context = [], string $name = 'access', ?string $filename = null): void
-    {
-        if ($filename) {
-            self::getDynamic($name, $filename, 'info')->info($message, $context);
-        } else {
-            self::get($name)->info($message, $context);
-        }
-    }
-
-    /**
-     * 记录系统日志
-     *
-     * @param string $message 日志消息
-     * @param array $context 上下文信息
-     * @param string $name 日志通道名称
-     * @param string|null $filename 自定义日志文件名（不包含路径和扩展名）
-     */
-    public static function system(string $message, array $context = [], string $name = 'system', ?string $filename = null): void
-    {
-        if ($filename) {
-            self::getDynamic($name, $filename, 'info')->info($message, $context);
-        } else {
-            self::get($name)->info($message, $context);
-        }
-    }
-
-    /**
-     * 记录异常日志
-     *
-     * @param \Throwable $exception 异常对象
-     * @param string $message 额外消息
-     * @param array $context 上下文信息
-     * @param string $name 日志通道名称
-     * @param string|null $filename 自定义日志文件名（不包含路径和扩展名）
-     */
-    public static function exception(\Throwable $exception, string $message = '', array $context = [], string $name = 'exception', ?string $filename = null): void
+    public static function exception(\Throwable $exception, string $message = '', array $context = [], string $name = 'exception', ?string $filename = null, bool $async = false): void
     {
         $logMessage = $message ?: $exception->getMessage();
         $context['exception'] = [
@@ -272,11 +171,7 @@ class LogHelper
             'line' => $exception->getLine(),
             'trace' => $exception->getTraceAsString(),
         ];
-        
-        if ($filename) {
-            self::getDynamic($name, $filename, 'error')->error($logMessage, $context);
-        } else {
-            self::get($name)->error($logMessage, $context);
-        }
+
+        self::log('error', $logMessage, $context, $name, 'exception', $filename, $async);
     }
 }

@@ -27,18 +27,6 @@ use Hyperf\Di\Annotation\AbstractAnnotation;
 class EnumI18n extends AbstractAnnotation
 {
     /**
-     * 支持的语言代码
-     */
-    public const SUPPORTED_LANGUAGES = [
-        'zh_CN', 'zh_HK', 'zh_TW', 'en', 'ja', 'ko', 'fr', 'de', 'es', 'it', 'pt', 'ru',
-    ];
-
-    /**
-     * 默认语言
-     */
-    public const DEFAULT_LANGUAGE = 'zh_CN';
-
-    /**
      * 中文内容
      */
     public string $txt = '';
