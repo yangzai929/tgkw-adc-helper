@@ -5,6 +5,7 @@ namespace TgkwAdc\Helper;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use TgkwAdc\Helper\Log\LogHelper;
 
 class NacosHelper
 {
@@ -42,7 +43,7 @@ class NacosHelper
                 'form_params' => [
                     'dataId'      => $dataId,
                     'group'       => $this->group,
-                    'namespaceId' => $this->namespaceId,
+                    'tenant'      => $this->namespaceId,
                     'type'        => $type,
                     'content'     => $content,
                     'username'    => $this->username,
@@ -50,6 +51,7 @@ class NacosHelper
                 ]
             ]);
 
+            LogHelper::info('写入配置到 Nacos', [$this->group,$this->namespaceId]);
             return $response->getStatusCode() === 200;
         } catch (GuzzleException $e) {
             return false;
@@ -67,7 +69,7 @@ class NacosHelper
                 'query' => [
                     'dataId'      => $dataId,
                     'group'       => $this->group,
-                    'namespaceId' => $this->namespaceId,
+                    'tenant'      => $this->namespaceId,
                     'username'    => $this->username,
                     'password'    => $this->password,
                 ]

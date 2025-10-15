@@ -9,7 +9,9 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
-namespace TgkwAdc\Helper;
+namespace TgkwAdc;
+
+use TgkwAdc\Listener\MainWorkerStartListener;
 
 class ConfigProvider
 {
@@ -19,6 +21,9 @@ class ConfigProvider
             'dependencies' => [
             ],
             'commands' => [
+            ],
+            'listeners' => [
+                MainWorkerStartListener::class,
             ],
             'annotations' => [
                 'scan' => [

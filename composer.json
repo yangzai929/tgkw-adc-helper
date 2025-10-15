@@ -85,7 +85,7 @@
     },
     "extra": {
         "hyperf": {
-            "config": "TgkwAdc\\Helper\\ConfigProvider"
+            "config": "TgkwAdc\\ConfigProvider"
         }
     }
 }
