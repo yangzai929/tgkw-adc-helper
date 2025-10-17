@@ -19,10 +19,19 @@ $appName = env('APP_NAME', 'hyperf');
 return [
     // 默认日志配置
     'default' => [
-        'handlers' => ['single', 'daily'],
-        'processors' => [
-            [
-                'class' => AppendRequestIdProcessor::class,
+        'handler' => [
+            'class' => Monolog\Handler\StreamHandler::class,
+            'constructor' => [
+                'stream' => BASE_PATH . '/runtime/logs/hyperf.log',
+                'level' => Level::Debug,
+            ],
+        ],
+        'formatter' => [
+            'class' => Monolog\Formatter\LineFormatter::class,
+            'constructor' => [
+                'format' => null,
+                'dateFormat' => 'Y-m-d H:i:s',
+                'allowInlineLineBreaks' => true,
             ],
         ],
     ],
