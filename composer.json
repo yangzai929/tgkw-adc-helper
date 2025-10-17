@@ -55,11 +55,12 @@
         "hyperf/service-governance": "*",
         "hyperf/service-governance-nacos": "*",
         "hyperf/snowflake": "^3.1",
+        "hyperf/translation": "^3.1",
         "hyperf/validation": "^3.1",
         "hyperf/xxl-job-incubator": "^0.7.0",
         "league/flysystem-aws-s3-v3": "3.0",
-        "overtrue/flysystem-cos": "5.0",
         "mpdf/mpdf": "^8.2",
+        "overtrue/flysystem-cos": "5.0",
         "overtrue/flysystem-qiniu": "3.0"
     },
     "require-dev": {
