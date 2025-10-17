@@ -29,7 +29,7 @@ class LogHelper
     /**
      * 获取容器中的 Logger.
      */
-    public static function get(string $name = 'app', string $group = 'default'): LoggerInterface
+    public static function get(string $name = 'app', string $group = 'single'): LoggerInterface
     {
         return ApplicationContext::getContainer()
             ->get(LoggerFactory::class)
