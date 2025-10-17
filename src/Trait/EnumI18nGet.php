@@ -1,16 +1,21 @@
 <?php
 
 declare(strict_types=1);
-
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
 
 namespace TgkwAdc\Trait;
 
+use ReflectionEnum;
+use ReflectionEnumUnitCase;
 use TgkwAdc\Annotation\EnumI18n;
 use TgkwAdc\Annotation\EnumI18nGroup;
 use TgkwAdc\Helper\EnumStore;
 use TgkwAdc\Helper\Intl\I18nHelper;
-use ReflectionEnum;
-use ReflectionEnumUnitCase;
 
 trait EnumI18nGet
 {
@@ -63,7 +68,7 @@ trait EnumI18nGet
     /**
      * 获取当前枚举项的 i18n 文本。
      */
-    public function getI18nTxt(?string $key = null): string|array|null
+    public function getI18nTxt(?string $key = null): array|string|null
     {
         if ($key !== null) {
             return self::getEnums()[$this->name]['i18nTxt'][$key] ?? null;
@@ -75,9 +80,9 @@ trait EnumI18nGet
     /**
      * 生成可返回的 i18n 数据或当前语言文本。
      *
-     * @param  array  $i18nParams  占位符参数，形如 ['name' => 'Tom']
-     * @param  bool  $returnNowLang  为 true 时仅返回当前语言文本
-     * @param  string  $language  指定语言，留空则取当前语言
+     * @param array $i18nParams 占位符参数，形如 ['name' => 'Tom']
+     * @param bool $returnNowLang 为 true 时仅返回当前语言文本
+     * @param string $language 指定语言，留空则取当前语言
      */
     public function genI18nTxt(array $i18nParams = [], bool $returnNowLang = false, string $language = ''): array|string
     {
@@ -112,7 +117,8 @@ trait EnumI18nGet
     /**
      * 获取当前枚举类的定义集合。
      * - 当 $onlyCode 为 true：仅从代码注解构建数组，不写入缓存
-     * - 默认：构建后写入内存缓存，后续复用
+     * - 默认：构建后写入内存缓存，后续复用.
+     * @param mixed $onlyCode
      */
     public static function getEnums($onlyCode = false): array
     {
@@ -145,7 +151,7 @@ trait EnumI18nGet
                     'groupCode' => $groupCode,
                 ],
             ];
-            $caseArr['i18nKey'] = 'i18n.'.$appName.'.'.$groupCode.'.'.$caseValue;
+            $caseArr['i18nKey'] = 'i18n.' . $appName . '.' . $groupCode . '.' . $caseValue;
 
             $caseAll[$case->name] = $caseArr;
         }

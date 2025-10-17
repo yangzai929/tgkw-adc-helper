@@ -1,13 +1,19 @@
 <?php
 
 declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
 
 namespace TgkwAdc\Helper;
 
-use TgkwAdc\Constants\LocaleConstants;
+use Hyperf\Context\ApplicationContext;
 use Hyperf\Context\Context;
 use Hyperf\Contract\TranslatorInterface;
-use Hyperf\Context\ApplicationContext;
+use TgkwAdc\Constants\LocaleConstants;
 
 class LocaleHelper
 {
@@ -33,7 +39,7 @@ class LocaleHelper
     }
 
     /**
-     * 翻译文本
+     * 翻译文本.
      */
     public static function trans(string $key, array $replace = [], ?string $locale = null): string
     {
@@ -54,7 +60,7 @@ class LocaleHelper
     }
 
     /**
-     * 检查是否为中文
+     * 检查是否为中文.
      */
     public static function isChinese(): bool
     {
@@ -63,7 +69,7 @@ class LocaleHelper
     }
 
     /**
-     * 检查是否为英文
+     * 检查是否为英文.
      */
     public static function isEnglish(): bool
     {
@@ -71,7 +77,7 @@ class LocaleHelper
     }
 
     /**
-     * 获取支持的语言列表
+     * 获取支持的语言列表.
      */
     public static function getSupportedLocales(): array
     {
@@ -79,7 +85,7 @@ class LocaleHelper
     }
 
     /**
-     * 获取语言显示名称
+     * 获取语言显示名称.
      */
     public static function getLocaleName(?string $locale = null): string
     {

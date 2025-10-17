@@ -1,15 +1,21 @@
 <?php
 
 declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
 
 namespace TgkwAdc\Trait;
 
+use ReflectionEnum;
+use ReflectionEnumUnitCase;
 use TgkwAdc\Annotation\EnumCode;
 use TgkwAdc\Annotation\EnumCodePrefix;
 use TgkwAdc\Helper\EnumStore;
 use TgkwAdc\Helper\Intl\I18nHelper;
-use ReflectionEnum;
-use ReflectionEnumUnitCase;
 
 trait EnumCodeGet
 {
@@ -20,7 +26,7 @@ trait EnumCodeGet
         if ($pos === 0) {
             $getKey = substr($name, 3);
             if ($getKey) {
-                $getKey = strtolower(substr($getKey, 0, 1)).substr($getKey, 1);
+                $getKey = strtolower(substr($getKey, 0, 1)) . substr($getKey, 1);
                 if (isset($ext[$getKey])) {
                     return $ext[$getKey];
                 }
@@ -31,20 +37,6 @@ trait EnumCodeGet
         }
 
         return null;
-    }
-
-    protected function getExt(): array
-    {
-        $enumArr = self::getEnums()[$this->name] ?? [];
-
-        return [
-            'name' => $enumArr['name'] ?? $this->name,
-            'value' => $enumArr['value'] ?? $this->value,
-            'msg' => $enumArr['msg'] ?? null,
-            'code' => $enumArr['code'] ?? null,
-            'i18nMsg' => $enumArr['i18nMsg'] ?? null,
-            'prefixCode' => $enumArr['pre']['prefixCode'] ?? null,
-        ];
     }
 
     /**
@@ -95,7 +87,7 @@ trait EnumCodeGet
     /**
      * 获取i18n的内容.
      */
-    public function getI18nMsg(?string $key = null): string|array|null
+    public function getI18nMsg(?string $key = null): array|string|null
     {
         if ($key !== null) {
             return self::getEnums()[$this->name]['i18nMsg'][$key] ?? null;
@@ -107,7 +99,7 @@ trait EnumCodeGet
     /**
      * 获取i18n的组装内容，用于返回.
      *
-     * @param  array  $i18nParam  i18n参数
+     * @param array $i18nParam i18n参数
      */
     public function genI18nMsg(array $i18nParam = [], bool $returnNowLang = false, string $language = ''): array|string
     {
@@ -154,7 +146,7 @@ trait EnumCodeGet
             return EnumStore::get($enumClassName);
         }
 
-        $isAdc = str_contains($enumClassName, 'TgkwAdc\\Constants\\Code');
+        $isAdc = str_contains($enumClassName, 'TgkwAdc\Constants\Code');
         $microName = env('MICRO_NAME', env('APP_NAME'));
         $enumCases = $enum->getCases();
         $classObj = self::getEnumClassAttitude();
@@ -167,7 +159,7 @@ trait EnumCodeGet
             $obj = $case->getEnumCase();
 
             $caseValue = $case->value;
-            $code = (int) ($prefixCode.str_pad((string) $caseValue, 2, '0', STR_PAD_LEFT));
+            $code = (int) ($prefixCode . str_pad((string) $caseValue, 2, '0', STR_PAD_LEFT));
             $caseArr = [
                 'name' => $case->name,
                 'value' => $caseValue,
@@ -178,7 +170,7 @@ trait EnumCodeGet
                     'prefixCode' => $prefixCode,
                 ],
             ];
-            $caseArr['i18nKey'] = 'code.'.($isAdc ? 'common' : $microName).'.'.$code;
+            $caseArr['i18nKey'] = 'code.' . ($isAdc ? 'common' : $microName) . '.' . $code;
 
             $caseAll[$case->name] = $caseArr;
         }
@@ -186,6 +178,20 @@ trait EnumCodeGet
         EnumStore::setAll($enumClassName, $caseAll);
 
         return EnumStore::get($enumClassName);
+    }
+
+    protected function getExt(): array
+    {
+        $enumArr = self::getEnums()[$this->name] ?? [];
+
+        return [
+            'name' => $enumArr['name'] ?? $this->name,
+            'value' => $enumArr['value'] ?? $this->value,
+            'msg' => $enumArr['msg'] ?? null,
+            'code' => $enumArr['code'] ?? null,
+            'i18nMsg' => $enumArr['i18nMsg'] ?? null,
+            'prefixCode' => $enumArr['pre']['prefixCode'] ?? null,
+        ];
     }
 
     protected static function getEnumClassAttitude(): ?EnumCodePrefix

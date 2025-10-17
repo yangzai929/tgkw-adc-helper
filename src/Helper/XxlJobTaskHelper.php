@@ -1,15 +1,23 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
+
 namespace TgkwAdc\Helper;
 
 use Hyperf\Di\Annotation\AnnotationCollector;
+use TgkwAdc\Annotation\XxlJobTask as VendorXxlJobTask;
 use TgkwAdc\Helper\Log\LogHelper;
 
+use function class_exists;
 
-use TgkwAdc\Annotation\XxlJobTask as VendorXxlJobTask;
-
-class XxlJobTaskHelper {
-
+class XxlJobTaskHelper
+{
     /**
      * 构建并（可选）注册基于注解的 xxl-job 任务。
      */
@@ -18,7 +26,7 @@ class XxlJobTaskHelper {
         $jobs = [];
 
         // 收集来自注解来源的任务定义（方法级注解）
-        $methodsVendor = \class_exists(VendorXxlJobTask::class) ? AnnotationCollector::getMethodsByAnnotation(VendorXxlJobTask::class) : [];
+        $methodsVendor = class_exists(VendorXxlJobTask::class) ? AnnotationCollector::getMethodsByAnnotation(VendorXxlJobTask::class) : [];
 
         foreach ($methodsVendor as $method) {
             $annotation = $method['annotation'];

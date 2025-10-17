@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
+
 namespace TgkwAdc\Helper;
 
 use Hyperf\Context\ApplicationContext;
@@ -8,7 +16,7 @@ use Psr\Http\Message\ResponseInterface as Psr7ResponseInterface;
 
 class ApiResponseHelper
 {
-    public static function success($data = null, $message = 'success', $code = 0,$httpStatusCode = 200): Psr7ResponseInterface
+    public static function success($data = null, $message = 'success', $code = 0, $httpStatusCode = 200): Psr7ResponseInterface
     {
         $response = ApplicationContext::getContainer()->get(ResponseInterface::class);
 
@@ -20,7 +28,7 @@ class ApiResponseHelper
         ])->withStatus($httpStatusCode);
     }
 
-    public static function error($message = 'error',$error=null, $data = null, $code = 400,$httpStatusCode = 200): Psr7ResponseInterface
+    public static function error($message = 'error', $error = null, $data = null, $code = 400, $httpStatusCode = 200): Psr7ResponseInterface
     {
         $response = ApplicationContext::getContainer()->get(ResponseInterface::class);
 

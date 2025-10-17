@@ -1,13 +1,19 @@
 <?php
 
 declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
 
 namespace TgkwAdc\Constants;
 
 class LocaleConstants
 {
     /**
-     * 支持的语言列表
+     * 支持的语言列表.
      */
     public const SUPPORTED_LOCALES = [
         'zh_CN' => 'zh_CN',
@@ -25,7 +31,7 @@ class LocaleConstants
     ];
 
     /**
-     * 语言显示名称
+     * 语言显示名称.
      */
     public const LOCALE_NAMES = [
         'zh_CN' => '简体中文',
@@ -48,12 +54,12 @@ class LocaleConstants
     public const DEFAULT_LOCALE = 'zh_CN';
 
     /**
-     * 中文语言列表
+     * 中文语言列表.
      */
     public const CHINESE_LOCALES = ['zh_CN', 'zh_HK', 'zh_TW'];
 
     /**
-     * 获取支持的语言代码列表
+     * 获取支持的语言代码列表.
      */
     public static function getSupportedLocaleCodes(): array
     {
@@ -61,7 +67,7 @@ class LocaleConstants
     }
 
     /**
-     * 获取语言显示名称列表
+     * 获取语言显示名称列表.
      */
     public static function getLocaleNames(): array
     {
@@ -77,7 +83,7 @@ class LocaleConstants
     }
 
     /**
-     * 获取语言显示名称
+     * 获取语言显示名称.
      */
     public static function getLocaleName(string $locale): string
     {
@@ -85,7 +91,7 @@ class LocaleConstants
     }
 
     /**
-     * 检查是否为中文
+     * 检查是否为中文.
      */
     public static function isChinese(string $locale): bool
     {

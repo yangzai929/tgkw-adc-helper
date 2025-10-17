@@ -1,7 +1,16 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
+
 namespace TgkwAdc\Listener;
 
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Hyperf\Amqp\Annotation\Consumer;
@@ -18,7 +27,8 @@ use TgkwAdc\Helper\Log\LogHelper;
 use TgkwAdc\Helper\XxlJobTaskHelper;
 
 #[Listener]
-class MainWorkerStartListener implements ListenerInterface {
+class MainWorkerStartListener implements ListenerInterface
+{
     public function listen(): array
     {
         return [
@@ -36,23 +46,20 @@ class MainWorkerStartListener implements ListenerInterface {
                 LogHelper::info('MainWorkerStartListener skipped due to Redis key already exists');
                 return;
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             LogHelper::error('Redis connection failed: ' . $e->getMessage());
             return;
         }
 
-
-
-//        // 生产环境，执行下 preStart，初始下sql语句
-//        if (! isDevEnv()) {
-//            $input = new ArrayInput(['command' => 'preStart']);
-//            $output = new ConsoleOutput();
-//            $application = container()->get(ApplicationInterface::class);
-//            $application->setAutoExit(false);
-//            $exitCode = $application->run($input, $output);
-//            LogHelper::info('preStart result：', [$exitCode]);
-//        }
-
+        //        // 生产环境，执行下 preStart，初始下sql语句
+        //        if (! isDevEnv()) {
+        //            $input = new ArrayInput(['command' => 'preStart']);
+        //            $output = new ConsoleOutput();
+        //            $application = container()->get(ApplicationInterface::class);
+        //            $application->setAutoExit(false);
+        //            $exitCode = $application->run($input, $output);
+        //            LogHelper::info('preStart result：', [$exitCode]);
+        //        }
 
         // 检测mq的queue、exchange是否以当前服务名开始，避免复制其他代码导致queue相同，引发问题（system.开头的代表系统级）
         if (env('AMQP_USER') && env('AMQP_PASSWORD') && env('APP_NAME')) {
@@ -109,6 +116,5 @@ class MainWorkerStartListener implements ListenerInterface {
                 LogHelper::error('rabbit vhost create error：' . $e->getMessage());
             }
         }
-
     }
 }

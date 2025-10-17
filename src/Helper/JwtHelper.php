@@ -1,13 +1,24 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
+
 namespace TgkwAdc\Helper;
 
+use Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Hyperf\HttpServer\Contract\RequestInterface;
 
 class JwtHelper
 {
     private static string $key;
+
     private static string $alg;
 
     public static function init(): void
@@ -17,7 +28,7 @@ class JwtHelper
     }
 
     /**
-     * 生成 Token
+     * 生成 Token.
      */
     public static function createToken(array $payload, int $ttl = 3600): string
     {
@@ -33,7 +44,7 @@ class JwtHelper
     }
 
     /**
-     * 解析 Token
+     * 解析 Token.
      */
     public static function parseToken(string $token): array
     {
@@ -41,13 +52,13 @@ class JwtHelper
     }
 
     /**
-     * 从请求头获取并解析 Token
+     * 从请求头获取并解析 Token.
      */
-    public static function getPayloadFromRequest(\Hyperf\HttpServer\Contract\RequestInterface $request): array
+    public static function getPayloadFromRequest(RequestInterface $request): array
     {
         $authHeader = $request->header('Authorization', '');
         if (! $authHeader || ! str_starts_with($authHeader, 'Bearer ')) {
-            throw new \Exception('Authorization header not found', 401);
+            throw new Exception('Authorization header not found', 401);
         }
 
         $token = substr($authHeader, 7);

@@ -1,9 +1,14 @@
 <?php
 
 declare(strict_types=1);
-
-use Monolog\Handler;
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
 use Monolog\Formatter;
+use Monolog\Handler;
 use Monolog\Level;
 use TgkwAdc\Helper\Log\AppendRequestIdProcessor;
 

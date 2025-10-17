@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
 
 namespace TgkwAdc\Annotation;
 
@@ -20,8 +26,8 @@ class EnumI18nGroup extends AbstractAnnotation
     public string $info;
 
     /**
-     * @param  string  $groupCode  文本集合名称
-     * @param  string  $info  错误类的描述
+     * @param string $groupCode 文本集合名称
+     * @param string $info 错误类的描述
      */
     public function __construct(
         string $groupCode,

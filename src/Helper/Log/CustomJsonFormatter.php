@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
 
 namespace TgkwAdc\Helper\Log;
 
@@ -11,7 +17,6 @@ class CustomJsonFormatter extends JsonFormatter
 {
     public function format(LogRecord $record): string
     {
-        
         // 重新排列字段顺序，将 datetime 放在第一位
         $formatted = [
             'datetime' => $record->datetime->format($this->dateFormat),
@@ -23,7 +28,7 @@ class CustomJsonFormatter extends JsonFormatter
         ];
 
         // 添加 extra 字段（如果存在）
-        if (!empty($record->extra)) {
+        if (! empty($record->extra)) {
             $formatted['extra'] = $record->extra;
         }
 

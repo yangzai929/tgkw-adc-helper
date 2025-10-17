@@ -1,12 +1,10 @@
 <?php
 
 $header = <<<'EOF'
-This file is part of Hyperf.
+This file is part of tgkw-adc.
 
-@link     https://www.hyperf.io
+@link     https://www.tgkw.com
 @document https://hyperf.wiki
-@contact  group@hyperf.io
-@license  https://github.com/hyperf/hyperf/blob/master/LICENSE
 EOF;
 
 return (new PhpCsFixer\Config())

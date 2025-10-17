@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
 
 namespace TgkwAdc\Annotation;
 
@@ -24,7 +30,7 @@ interface EnumCodeInterface
     /**
      * 获取i18n的内容.
      */
-    public function getI18nMsg(?string $key = null): string|array|null;
+    public function getI18nMsg(?string $key = null): array|string|null;
 
     /**
      * 获取i18n的组装内容，用于返回.

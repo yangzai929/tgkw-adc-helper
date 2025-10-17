@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
 
 namespace TgkwAdc\Annotation;
 
@@ -20,8 +26,8 @@ class EnumCodePrefix extends AbstractAnnotation
     public ?string $info;
 
     /**
-     * @param  int  $prefixCode  错误码前缀，从100开始
-     * @param  string  $info  错误类的描述
+     * @param int $prefixCode 错误码前缀，从100开始
+     * @param string $info 错误类的描述
      */
     public function __construct(
         ?int $prefixCode,

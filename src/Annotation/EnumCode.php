@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
 
 namespace TgkwAdc\Annotation;
 
@@ -20,8 +26,8 @@ class EnumCode extends AbstractAnnotation
     public ?array $i18nMsg = null;
 
     /**
-     * @param  string  $msg  中文错误提示
-     * @param  ?array  $i18nMsg  错误提示，i18n格式 {en: 'xxxxx', zh_hk: 'xxxxxx', zh_tw: 'xxxxxx'}
+     * @param string $msg 中文错误提示
+     * @param ?array $i18nMsg 错误提示，i18n格式 {en: 'xxxxx', zh_hk: 'xxxxxx', zh_tw: 'xxxxxx'}
      */
     public function __construct(
         string $msg,

@@ -1,17 +1,23 @@
 <?php
 
 declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
 
 namespace TgkwAdc\Middleware;
 
-use TgkwAdc\Constants\LocaleConstants;
+use Hyperf\Context\ApplicationContext;
 use Hyperf\Context\Context;
 use Hyperf\Contract\TranslatorInterface;
-use Hyperf\Context\ApplicationContext;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use TgkwAdc\Constants\LocaleConstants;
 
 class LocaleMiddleware implements MiddlewareInterface
 {
@@ -21,23 +27,39 @@ class LocaleMiddleware implements MiddlewareInterface
     {
         // 获取语言设置
         $locale = $this->detectLocale($request);
-        
+
         // 懒加载翻译器实例（单例模式，性能更好）
         if ($this->translator === null) {
             $container = ApplicationContext::getContainer();
             $this->translator = $container->get(TranslatorInterface::class);
         }
-        
+
         // 设置到翻译器
         $this->translator->setLocale($locale);
-        
+
         // 将语言设置存储到上下文中，供其他地方使用
         Context::set('locale', $locale);
-        
+
         // 将语言设置添加到请求属性中
         $request = $request->withAttribute('locale', $locale);
-        
+
         return $handler->handle($request);
+    }
+
+    /**
+     * 获取支持的语言列表.
+     */
+    public function getSupportedLocales(): array
+    {
+        return LocaleConstants::getSupportedLocaleCodes();
+    }
+
+    /**
+     * 获取当前语言
+     */
+    public function getCurrentLocale(): string
+    {
+        return Context::get('locale', LocaleConstants::getDefaultLocale());
     }
 
     /**
@@ -87,15 +109,15 @@ class LocaleMiddleware implements MiddlewareInterface
     }
 
     /**
-     * 解析Accept-Language头
+     * 解析Accept-Language头.
      */
     protected function parseAcceptLanguage(string $acceptLanguage): ?string
     {
         $languages = explode(',', $acceptLanguage);
-        
+
         foreach ($languages as $language) {
             $language = trim(explode(';', $language)[0]);
-            
+
             // 处理完整语言代码 (如 zh-CN, en-US)
             if (strpos($language, '-') !== false) {
                 $parts = explode('-', $language);
@@ -104,37 +126,21 @@ class LocaleMiddleware implements MiddlewareInterface
                     return $locale;
                 }
             }
-            
+
             // 处理简单语言代码 (如 zh, en)
             if ($this->isValidLocale($language)) {
                 return $language;
             }
         }
-        
+
         return null;
     }
 
     /**
-     * 验证语言代码是否有效
+     * 验证语言代码是否有效.
      */
     protected function isValidLocale(string $locale): bool
     {
         return LocaleConstants::isSupported($locale);
-    }
-
-    /**
-     * 获取支持的语言列表
-     */
-    public function getSupportedLocales(): array
-    {
-        return LocaleConstants::getSupportedLocaleCodes();
-    }
-
-    /**
-     * 获取当前语言
-     */
-    public function getCurrentLocale(): string
-    {
-        return Context::get('locale', LocaleConstants::getDefaultLocale());
     }
 }

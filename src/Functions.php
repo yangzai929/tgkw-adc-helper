@@ -1,17 +1,22 @@
 <?php
 
 declare(strict_types=1);
-
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
+use Carbon\Carbon;
 use Hyperf\Context\ApplicationContext;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Redis\RedisFactory;
-use Carbon\Carbon;
 
-if (!function_exists('cfg')) {
+if (! function_exists('cfg')) {
     /**
-     * 获取配置
+     * 获取配置.
      *
-     * @param string|null $key 配置键，例如 'jwt.secret'
+     * @param null|string $key 配置键，例如 'jwt.secret'
      * @param mixed $default 默认值
      * @return mixed
      */
@@ -32,7 +37,7 @@ if (! function_exists('redis')) {
     /**
      * 获取 Redis 客户端（连接池名可选，默认 default）。
      *
-     * @param string|null $pool 连接池名称，如 'default'
+     * @param null|string $pool 连接池名称，如 'default'
      * @return mixed Redis 客户端实例（PhpRedis 代理）
      */
     function redis(?string $pool = 'default')
@@ -43,10 +48,9 @@ if (! function_exists('redis')) {
     }
 }
 
-
 /**
  * 将对象或嵌套对象转换为数组
- * 递归处理对象和数组，将所有对象转换为关联数组
+ * 递归处理对象和数组，将所有对象转换为关联数组.
  *
  * @param mixed $array 要转换的对象或数组
  * @return array 转换后的数组
@@ -67,7 +71,7 @@ function object_array($array): array
 if (! function_exists('mb_rtrim')) {
     /**
      * 多字节字符串右修剪
-     * 从字符串右侧移除指定的字符
+     * 从字符串右侧移除指定的字符.
      *
      * @param string $string 要修剪的字符串
      * @param string $trim 要移除的字符
@@ -107,7 +111,7 @@ if (! function_exists('mb_rtrim')) {
 if (! function_exists('mb_ltrim')) {
     /**
      * 多字节字符串左修剪
-     * 从字符串左侧移除指定的字符
+     * 从字符串左侧移除指定的字符.
      *
      * @param string $str 要修剪的字符串
      * @param string $char 要移除的字符，默认为空格
@@ -129,7 +133,7 @@ if (! function_exists('mb_ltrim')) {
 if (! function_exists('mb_trim')) {
     /**
      * 多字节字符串两端修剪
-     * 从字符串两端移除指定的字符
+     * 从字符串两端移除指定的字符.
      *
      * @param string $str 要修剪的字符串
      * @param string $char 要移除的字符，默认为空格
@@ -144,12 +148,12 @@ if (! function_exists('mb_trim')) {
 
 /**
  * 数字金额转换成中文大写金额
- * 将阿拉伯数字金额转换为中文大写金额，精确到分
+ * 将阿拉伯数字金额转换为中文大写金额，精确到分.
  *
- * @param int|float|string $num 要转换的金额数字或字符串
+ * @param float|int|string $num 要转换的金额数字或字符串
  * @return string 转换后的中文大写金额，如：壹佰贰拾叁元肆角伍分
  */
-function toRmb(int|float|string $num): string
+function toRmb(float|int|string $num): string
 {
     $c1 = '零壹贰叁肆伍陆柒捌玖';
     $c2 = '分角元拾佰仟万拾佰仟亿';
@@ -215,7 +219,7 @@ function toRmb(int|float|string $num): string
 
 /**
  * 阿拉伯数字转中文数字
- * 将阿拉伯数字转换为中文小写数字
+ * 将阿拉伯数字转换为中文小写数字.
  *
  * @param int|string $num 要转换的数字
  * @return string 转换后的中文数字，如：一百二十三
@@ -230,11 +234,11 @@ function numToCn(int|string $num): string
 
     $num_str = (string) $num;
     $count = strlen($num_str);
-    $last_flag = true; //上一个 是否为0
-    $zero_flag = true; //是否第一个
-    $temp_num = null; //临时数字
-    $chiStr = ''; //拼接结果
-    if ($count == 2) {//两位数
+    $last_flag = true; // 上一个 是否为0
+    $zero_flag = true; // 是否第一个
+    $temp_num = null; // 临时数字
+    $chiStr = ''; // 拼接结果
+    if ($count == 2) {// 两位数
         $temp_num = $num_str[0];
         $chiStr = $temp_num == 1 ? $chiUni[1] : $chiNum[$temp_num] . $chiUni[1];
         $temp_num = $num_str[1];
@@ -271,7 +275,7 @@ function numToCn(int|string $num): string
 
 /**
  * 从字符串中提取数字
- * 使用正则表达式匹配并提取字符串中的数字部分（包括小数点）
+ * 使用正则表达式匹配并提取字符串中的数字部分（包括小数点）.
  *
  * @param string $string 要提取数字的字符串
  * @return float|string 提取到的数字，如果没有数字则返回空字符串
@@ -288,13 +292,13 @@ function findNum(string $string = ''): float|string
 
 /**
  * 格式化价格
- * 按指定精度格式化价格数值，整数保持为整数，小数按精度四舍五入
+ * 按指定精度格式化价格数值，整数保持为整数，小数按精度四舍五入.
  *
- * @param int|float|string $price 要格式化的价格
+ * @param float|int|string $price 要格式化的价格
  * @param int $format 保留的小数位数，默认为2位
- * @return int|float 格式化后的价格
+ * @return float|int 格式化后的价格
  */
-function priceFormat(int|float|string $price, int $format = 2): int|float
+function priceFormat(float|int|string $price, int $format = 2): float|int
 {
     $precision = $format; // 保留小数点后面的位数
     return is_int($price) ? intval($price) : (float) sprintf('%.' . $precision . 'f', round(floatval($price), $precision));
@@ -302,7 +306,7 @@ function priceFormat(int|float|string $price, int $format = 2): int|float
 
 /**
  * 处理URL别名参数
- * 将URL参数数组添加到别名URL中
+ * 将URL参数数组添加到别名URL中.
  *
  * @param string $alias URL别名
  * @param array $urlPatch URL参数数组
@@ -315,7 +319,7 @@ function handelUrlAliasParam(string $alias, array $urlPatch): string
 
 /**
  * 二维数组根据指定键去重
- * 根据数组中指定的键值对二维数组进行去重处理
+ * 根据数组中指定的键值对二维数组进行去重处理.
  *
  * @param array $arr 要去重的二维数组
  * @param string $key 用于去重的键名
@@ -337,102 +341,102 @@ function second_array_unique_bykey(array $arr, string $key): array
 
 /**
  * 精确加法
- * 使用BC Math进行高精度加法运算，避免浮点数精度问题
+ * 使用BC Math进行高精度加法运算，避免浮点数精度问题.
  *
- * @param int|float|string $a 加数
- * @param int|float|string $b 被加数
+ * @param float|int|string $a 加数
+ * @param float|int|string $b 被加数
  * @param int $scale 小数点后保留的位数，默认为2位
  * @return string 计算结果
  */
-function math_add(int|float|string $a, int|float|string $b, int $scale = 2): string
+function math_add(float|int|string $a, float|int|string $b, int $scale = 2): string
 {
     return bcadd((string) $a, (string) $b, $scale);
 }
 
 /**
  * 精确减法
- * 使用BC Math进行高精度减法运算，避免浮点数精度问题
+ * 使用BC Math进行高精度减法运算，避免浮点数精度问题.
  *
- * @param int|float|string $a 被减数
- * @param int|float|string $b 减数
+ * @param float|int|string $a 被减数
+ * @param float|int|string $b 减数
  * @param int $scale 小数点后保留的位数，默认为2位
  * @return string 计算结果
  */
-function math_sub(int|float|string $a, int|float|string $b, int $scale = 2): string
+function math_sub(float|int|string $a, float|int|string $b, int $scale = 2): string
 {
     return bcsub((string) $a, (string) $b, $scale);
 }
 
 /**
  * 精确乘法
- * 使用BC Math进行高精度乘法运算，避免浮点数精度问题
+ * 使用BC Math进行高精度乘法运算，避免浮点数精度问题.
  *
- * @param int|float|string $a 乘数
- * @param int|float|string $b 被乘数
+ * @param float|int|string $a 乘数
+ * @param float|int|string $b 被乘数
  * @param int $scale 小数点后保留的位数，默认为2位
  * @return string 计算结果
  */
-function math_mul(int|float|string $a, int|float|string $b, int $scale = 2): string
+function math_mul(float|int|string $a, float|int|string $b, int $scale = 2): string
 {
     return bcmul((string) $a, (string) $b, $scale);
 }
 
 /**
  * 精确除法
- * 使用BC Math进行高精度除法运算，避免浮点数精度问题
+ * 使用BC Math进行高精度除法运算，避免浮点数精度问题.
  *
- * @param int|float|string $a 被除数
- * @param int|float|string $b 除数
+ * @param float|int|string $a 被除数
+ * @param float|int|string $b 除数
  * @param int $scale 小数点后保留的位数，默认为2位
  * @return string 计算结果
  */
-function math_div(int|float|string $a, int|float|string $b, int $scale = 2): string
+function math_div(float|int|string $a, float|int|string $b, int $scale = 2): string
 {
     return bcdiv((string) $a, (string) $b, $scale);
 }
 
 /**
  * 精确求余/取模
- * 使用BC Math进行高精度求余运算
+ * 使用BC Math进行高精度求余运算.
  *
- * @param int|float|string $a 被除数
- * @param int|float|string $b 除数
+ * @param float|int|string $a 被除数
+ * @param float|int|string $b 除数
  * @return string 余数
  */
-function math_mod(int|float|string $a, int|float|string $b): string
+function math_mod(float|int|string $a, float|int|string $b): string
 {
     return bcmod((string) $a, (string) $b);
 }
 
 /**
  * 比较数值大小
- * 使用BC Math进行高精度数值比较
+ * 使用BC Math进行高精度数值比较.
  *
- * @param int|float|string $a 第一个数
- * @param int|float|string $b 第二个数
+ * @param float|int|string $a 第一个数
+ * @param float|int|string $b 第二个数
  * @param int $scale 比较的小数位数，默认为5位
  * @return int 返回1表示a>b，返回0表示a=b，返回-1表示a<b
  */
-function math_comp(int|float|string $a, int|float|string $b, int $scale = 5): int
+function math_comp(float|int|string $a, float|int|string $b, int $scale = 5): int
 {
     return bccomp((string) $a, (string) $b, $scale);
 }
 
 /**
  * 比例转化为百分比
- * 将小数比例转换为百分比数值（如0.25转换为25）
+ * 将小数比例转换为百分比数值（如0.25转换为25）.
  *
- * @param int|float|string $num 要转换的比例数值
+ * @param float|int|string $num 要转换的比例数值
  * @return float 转换后的百分比数值，保留2位小数
  */
-function getRate(int|float|string $num): float
+function getRate(float|int|string $num): float
 {
     return round(floatval($num) * 100, 2);
 }
 
 /**
  * 检查是否为JSON字符串
- * 判断传入的内容是否为有效的JSON格式字符串
+ * 判断传入的内容是否为有效的JSON格式字符串.
  *
  * @param mixed $content 要检查的内容
  * @return bool true表示是JSON字符串，false表示不是
@@ -446,10 +450,9 @@ function isJson(mixed $content): bool
     return false;
 }
 
-
 /**
  * 数组百分比转换
- * 将数组中的数值转换为百分比，并确保总和为100%
+ * 将数组中的数值转换为百分比，并确保总和为100%.
  *
  * @param array|mixed $array 要转换的数组
  * @return array|false 转换后的百分比数组，如果参数不是数组则返回false
@@ -471,7 +474,6 @@ function percentArray(mixed $array): array|false
     }
     return $array;
 }
-
 
 /**
  * 查询指定时间范围内的所有日期、月份、季度或年份
@@ -501,7 +503,6 @@ function getDateYMD(string $startDate, string $endDate, string $type): array|str
             $returnData[] = $currentDate;
             ++$i;
         } while (strtotime($currentDate) < $endTimestamp);
-
     } elseif ($type == 'month') {
         $tempDate = $startDate;
         do {
@@ -509,13 +510,12 @@ function getDateYMD(string $startDate, string $endDate, string $type): array|str
             $temp = [
                 'name' => ltrim(date('m', $month), '0'),
                 'startDate' => date('Y-m-01', $month),
-                'endDate' => date('Y-m-t', $month)
+                'endDate' => date('Y-m-t', $month),
             ];
             $tempDate = $temp['endDate'];
             $returnData[] = $temp;
             ++$i;
         } while (strtotime($tempDate) < $endTimestamp);
-
     } elseif ($type == 'quarter') {
         $tempDate = $startDate;
         do {
@@ -525,13 +525,12 @@ function getDateYMD(string $startDate, string $endDate, string $type): array|str
             $temp = [
                 'name' => $year . '第' . $q . '季度',
                 'startDate' => date('Y-m-01', mktime(0, 0, 0, $q * 3 - 3 + 1, 1, $year)),
-                'endDate' => date('Y-m-t', mktime(23, 59, 59, $q * 3, 1, $year))
+                'endDate' => date('Y-m-t', mktime(23, 59, 59, $q * 3, 1, $year)),
             ];
             $tempDate = $temp['endDate'];
             $returnData[] = $temp;
             $i += 3;
         } while (strtotime($tempDate) < $endTimestamp);
-
     } elseif ($type == 'year') {
         $tempDate = $startDate;
         do {
@@ -539,7 +538,7 @@ function getDateYMD(string $startDate, string $endDate, string $type): array|str
             $temp = [
                 'name' => date('Y', $year),
                 'startDate' => date('Y-01-01', $year),
-                'endDate' => date('Y-12-31', $year)
+                'endDate' => date('Y-12-31', $year),
             ];
             $tempDate = $temp['endDate'];
             $returnData[] = $temp;
@@ -552,7 +551,7 @@ function getDateYMD(string $startDate, string $endDate, string $type): array|str
 
 /**
  * 计算账单收缴率
- * 计算已缴账单数占全部账单数的百分比
+ * 计算已缴账单数占全部账单数的百分比.
  *
  * @param int $val1 已缴账单数
  * @param int $val2 全部账单数
@@ -572,7 +571,7 @@ function getCollectionRate(int $val1, int $val2): float
 if (! function_exists('isDateValid')) {
     /**
      * 校验日期格式是否合法
-     * 检查日期字符串是否符合指定的格式
+     * 检查日期字符串是否符合指定的格式.
      *
      * @param string $date 要校验的日期字符串
      * @param array $formats 支持的日期格式数组，默认['Y-m-d', 'Y/m/d', 'Ymd']
@@ -615,9 +614,9 @@ if (! function_exists('createNonceStr')) {
                 $orderNumber .= $characters[mt_rand(0, strlen($characters) - 1)];
             }
 
-//            if (! OrgAppid::query()->where('app_id', $orderNumber)->exists()) {
-//                break; // 跳出循环
-//            }
+            //            if (! OrgAppid::query()->where('app_id', $orderNumber)->exists()) {
+            //                break; // 跳出循环
+            //            }
             $orderNumber = ''; // 重置订单号
         }
         return $orderNumber;
@@ -627,7 +626,7 @@ if (! function_exists('createNonceStr')) {
 if (! function_exists('getMonthsCovered')) {
     /**
      * 计算两个日期之间跨越的月数
-     * 返回从开始日期到结束日期之间包含的月份数量
+     * 返回从开始日期到结束日期之间包含的月份数量.
      *
      * @param string $startDate 开始日期
      * @param string $endDate 结束日期
@@ -680,11 +679,10 @@ if (! function_exists('getDiffYear')) {
     }
 }
 
-
 if (! function_exists('delHis')) {
     /**
      * 日期去除时分秒
-     * 将完整的日期时间格式转换为只保留年月日的格式
+     * 将完整的日期时间格式转换为只保留年月日的格式.
      *
      * @param string $date 完整的日期时间字符串
      * @return string 只包含年月日的日期字符串(Y-m-d格式)
@@ -699,7 +697,7 @@ if (! function_exists('delHis')) {
 if (! function_exists('safeGetValue')) {
     /**
      * SQL格式化入参
-     * 对输入字符串进行安全处理，防止SQL注入和XSS攻击
+     * 对输入字符串进行安全处理，防止SQL注入和XSS攻击.
      *
      * @param string $string 要处理的字符串
      * @return string 安全处理后的字符串
@@ -714,12 +712,12 @@ if (! function_exists('isDateTime')) {
     /**
      * 是否为正常的时间格式
      * 验证字符串是否可以被解析为有效的日期时间（用于校验前端传值）
-     * 若前端传值为"Invalid date"等无效值，可用此方法校验
+     * 若前端传值为"Invalid date"等无效值，可用此方法校验.
      *
-     * @param string|null $dateTime 要验证的日期时间字符串
+     * @param null|string $dateTime 要验证的日期时间字符串
      * @return bool true表示是有效的日期时间，false表示无效
      */
-    function isDateTime(string|null $dateTime): bool
+    function isDateTime(?string $dateTime): bool
     {
         if (empty($dateTime)) {
             return false;
