@@ -2,22 +2,43 @@
 
 declare(strict_types=1);
 /**
- * This file is part of tgkw-adc.
+ * This file is part of Hyperf.
  *
- * @link     https://www.tgkw.com
+ * @link     https://www.hyperf.io
  * @document https://hyperf.wiki
+ * @contact  group@hyperf.io
+ * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
-use Monolog\Formatter;
-use Monolog\Handler;
+use Monolog\Formatter\JsonFormatter;
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\RotatingFileHandler;
 use Monolog\Level;
 use TgkwAdc\Helper\Log\AppendRequestIdProcessor;
+use TgkwAdc\Helper\Log\CustomJsonFormatter;
 
-// 获取环境变量，用于区分不同环境的日志文件名
 $appEnv = env('APP_ENV', 'dev');
 $appName = env('APP_NAME', 'hyperf');
+$logPath = env('LOG_PATH', BASE_PATH . '/runtime/logs');
+
+$defaultLineFormatter = [
+    'class' => LineFormatter::class,
+    'constructor' => [
+        'format' => "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n",
+        'dateFormat' => 'Y-m-d H:i:s',
+        'allowInlineLineBreaks' => true,
+    ],
+];
+
+$defaultJsonFormatter = [
+    'class' => CustomJsonFormatter::class,
+    'constructor' => [
+        'batchMode' => JsonFormatter::BATCH_MODE_JSON,
+        'appendNewline' => true,
+    ],
+];
 
 return [
-    // 默认日志配置
+    // 默认日志组
     'default' => [
         'handler' => [
             'class' => Monolog\Handler\StreamHandler::class,
@@ -36,186 +57,136 @@ return [
         ],
     ],
 
-    // 单文件日志处理器 - 支持日志轮转
+    // 单文件日志
     'single' => [
-        'handler' => [
-            'class' => Handler\RotatingFileHandler::class,
-            'constructor' => [
-                // 方式1: 使用环境变量自定义文件名
-                'filename' => BASE_PATH . "/runtime/logs/{$appName}-{$appEnv}.log",
-                // 方式2: 直接指定文件名
-                // 'filename' => BASE_PATH . '/runtime/logs/my-app.log',
-                // 方式3: 使用日期作为文件名
-                // 'filename' => BASE_PATH . '/runtime/logs/app-' . date('Y-m-d') . '.log',
-                'level' => Level::Info,
-                'maxFiles' => 30, // 保留30天的日志
+        'handlers' => [
+            [
+                'class' => RotatingFileHandler::class,
+                'constructor' => [
+                    'filename' => "{$logPath}/{$appName}-{$appEnv}.log",
+                    'level' => Level::Info,
+                    'maxFiles' => 30,
+                ],
+                'formatter' => $defaultLineFormatter,
             ],
         ],
-        'formatter' => [
-            'class' => Formatter\LineFormatter::class,
-            'constructor' => [
-                'format' => null,
-                'dateFormat' => null,
-                'allowInlineLineBreaks' => true,
-            ],
+        'processors' => [
+            ['class' => AppendRequestIdProcessor::class],
         ],
     ],
 
-    // 按日期轮转的日志处理器 - 自定义文件名示例
+    // 每日调试日志
     'daily' => [
-        'handler' => [
-            'class' => Handler\RotatingFileHandler::class,
-            'constructor' => [
-                // 方式1: 使用环境变量
-                'filename' => BASE_PATH . "/runtime/logs/{$appName}-debug-{$appEnv}.log",
-                // 方式2: 直接指定文件名
-                // 'filename' => BASE_PATH . '/runtime/logs/my-app-debug.log',
-                // 方式3: 按模块分类
-                // 'filename' => BASE_PATH . '/runtime/logs/api-debug.log',
-                'level' => Level::Debug,
-                'maxFiles' => 30, // 保留30天的日志
-            ],
-        ],
-        'formatter' => [
-            'class' => Formatter\JsonFormatter::class,
-            'constructor' => [
-                'batchMode' => Formatter\JsonFormatter::BATCH_MODE_JSON,
-                'appendNewline' => true,
+        'handlers' => [
+            [
+                'class' => RotatingFileHandler::class,
+                'constructor' => [
+                    'filename' => "{$logPath}/{$appName}-debug-{$appEnv}.log",
+                    'level' => Level::Debug,
+                    'maxFiles' => 30,
+                ],
+                'formatter' => $defaultJsonFormatter,
             ],
         ],
     ],
 
-    // 业务日志配置 - 支持日志轮转
+    // 业务日志
     'business' => [
-        'handler' => [
-            'class' => Handler\RotatingFileHandler::class,
-            'constructor' => [
-                // 方式1: 按模块分类
-                'filename' => BASE_PATH . "/runtime/logs/{$appName}-business-{$appEnv}.log",
-                // 方式2: 按功能分类
-                // 'filename' => BASE_PATH . '/runtime/logs/order-business.log',
-                // 方式3: 按日期分类
-                // 'filename' => BASE_PATH . '/runtime/logs/business-' . date('Y-m-d') . '.log',
-                'level' => Level::Info,
-                'maxFiles' => 30, // 保留30天的日志
-            ],
-        ],
-        'formatter' => [
-            'class' => Formatter\LineFormatter::class,
-            'constructor' => [
-                'format' => "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n",
-                'dateFormat' => 'Y-m-d H:i:s',
-                'allowInlineLineBreaks' => true,
+        'handlers' => [
+            [
+                'class' => RotatingFileHandler::class,
+                'constructor' => [
+                    'filename' => "{$logPath}/{$appName}-business-{$appEnv}.log",
+                    'level' => Level::Info,
+                    'maxFiles' => 90,
+                ],
+                'formatter' => $defaultLineFormatter,
             ],
         ],
     ],
 
-    // 访问日志配置 - 支持日志轮转
+    // 访问日志（带 request_id）
     'access' => [
-        'handler' => [
-            'class' => Handler\RotatingFileHandler::class,
-            'constructor' => [
-                // 方式1: 按环境分类
-                'filename' => BASE_PATH . "/runtime/logs/{$appName}-access-{$appEnv}.log",
-                // 方式2: 按服务分类
-                // 'filename' => BASE_PATH . '/runtime/logs/api-access.log',
-                // 方式3: 按日期分类
-                // 'filename' => BASE_PATH . '/runtime/logs/access-' . date('Y-m-d') . '.log',
-                'level' => Level::Info,
-                'maxFiles' => 30, // 保留30天的日志
+        'handlers' => [
+            [
+                'class' => RotatingFileHandler::class,
+                'constructor' => [
+                    'filename' => "{$logPath}/{$appName}-access-{$appEnv}.log",
+                    'level' => Level::Info,
+                    'maxFiles' => 30,
+                ],
+                'formatter' => $defaultJsonFormatter,
             ],
         ],
-        'formatter' => [
-            'class' => Formatter\JsonFormatter::class,
-            'constructor' => [
-                'batchMode' => Formatter\JsonFormatter::BATCH_MODE_JSON,
-                'appendNewline' => true,
-            ],
+        'processors' => [
+            ['class' => AppendRequestIdProcessor::class],
         ],
     ],
 
-    // 系统日志配置 - 支持日志轮转
+    // 系统日志
     'system' => [
-        'handler' => [
-            'class' => Handler\RotatingFileHandler::class,
-            'constructor' => [
-                // 方式1: 按环境分类
-                'filename' => BASE_PATH . "/runtime/logs/{$appName}-system-{$appEnv}.log",
-                // 方式2: 按服务分类
-                // 'filename' => BASE_PATH . '/runtime/logs/monitor-system.log',
-                'level' => Level::Warning,
-                'maxFiles' => 30, // 保留30天的日志
-            ],
-        ],
-        'formatter' => [
-            'class' => Formatter\LineFormatter::class,
-            'constructor' => [
-                'format' => "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n",
-                'dateFormat' => 'Y-m-d H:i:s',
-                'allowInlineLineBreaks' => true,
+        'handlers' => [
+            [
+                'class' => RotatingFileHandler::class,
+                'constructor' => [
+                    'filename' => "{$logPath}/{$appName}-system-{$appEnv}.log",
+                    'level' => Level::Warning,
+                    'maxFiles' => 30,
+                ],
+                'formatter' => $defaultLineFormatter,
             ],
         ],
     ],
 
-    // 异常日志配置 - 支持日志轮转
+    // 异常日志
     'exception' => [
-        'handler' => [
-            'class' => Handler\RotatingFileHandler::class,
-            'constructor' => [
-                // 方式1: 按环境分类
-                'filename' => BASE_PATH . "/runtime/logs/{$appName}-exception-{$appEnv}.log",
-                // 方式2: 按服务分类
-                // 'filename' => BASE_PATH . '/runtime/logs/error-exception.log',
-                'level' => Level::Error,
-                'maxFiles' => 30, // 保留30天的日志
-            ],
-        ],
-        'formatter' => [
-            'class' => Formatter\LineFormatter::class,
-            'constructor' => [
-                'format' => "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n",
-                'dateFormat' => 'Y-m-d H:i:s',
-                'allowInlineLineBreaks' => true,
-                'includeStacktraces' => true,
-            ],
-        ],
-    ],
-
-    // 自定义日志配置示例 - 按模块分类，支持日志轮转
-    'api' => [
-        'handler' => [
-            'class' => Handler\RotatingFileHandler::class,
-            'constructor' => [
-                'filename' => BASE_PATH . "/runtime/logs/{$appName}-api-{$appEnv}.log",
-                'level' => Level::Info,
-                'maxFiles' => 30, // 保留30天的日志
-            ],
-        ],
-        'formatter' => [
-            'class' => Formatter\LineFormatter::class,
-            'constructor' => [
-                'format' => "[%datetime%] API.%level_name%: %message% %context% %extra%\n",
-                'dateFormat' => 'Y-m-d H:i:s',
-                'allowInlineLineBreaks' => true,
+        'handlers' => [
+            [
+                'class' => RotatingFileHandler::class,
+                'constructor' => [
+                    'filename' => "{$logPath}/{$appName}-exception-{$appEnv}.log",
+                    'level' => Level::Error,
+                    'maxFiles' => 30,
+                ],
+                'formatter' => [
+                    'class' => LineFormatter::class,
+                    'constructor' => [
+                        'format' => "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n",
+                        'dateFormat' => 'Y-m-d H:i:s',
+                        'allowInlineLineBreaks' => true,
+                        'includeStacktraces' => true,
+                    ],
+                ],
             ],
         ],
     ],
 
-    // 自定义日志配置示例 - 按功能分类
+    // 调试日志
+    'debug' => [
+        'handlers' => [
+            [
+                'class' => RotatingFileHandler::class,
+                'constructor' => [
+                    'filename' => "{$logPath}/{$appName}-debug-{$appEnv}.log",
+                    'level' => Level::Debug,
+                    'maxFiles' => 7,
+                ],
+                'formatter' => $defaultLineFormatter,
+            ],
+        ],
+    ],
+
+    // 支付日志
     'payment' => [
-        'handler' => [
-            'class' => Handler\RotatingFileHandler::class,
-            'constructor' => [
-                'filename' => BASE_PATH . "/runtime/logs/{$appName}-payment-{$appEnv}.log",
-                'level' => Level::Info,
-                'maxFiles' => 90, // 支付日志保留90天
-            ],
-        ],
-        'formatter' => [
-            'class' => Formatter\JsonFormatter::class,
-            'constructor' => [
-                'batchMode' => Formatter\JsonFormatter::BATCH_MODE_JSON,
-                'appendNewline' => true,
+        'handlers' => [
+            [
+                'class' => RotatingFileHandler::class,
+                'constructor' => [
+                    'filename' => "{$logPath}/{$appName}-payment-{$appEnv}.log",
+                    'level' => Level::Info,
+                    'maxFiles' => 90,
+                ],
+                'formatter' => $defaultJsonFormatter,
             ],
         ],
     ],
