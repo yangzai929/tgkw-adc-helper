@@ -1,5 +1,6 @@
 # 天宫开物 ADC composer helper
 
 ```
-todo
+ vendor/bin/php-cs-fixer fix src
+
 ```
