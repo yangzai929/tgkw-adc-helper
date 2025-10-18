@@ -33,6 +33,7 @@ class LocaleMiddleware implements MiddlewareInterface
             $container = ApplicationContext::getContainer();
             $this->translator = $container->get(TranslatorInterface::class);
         }
+        echo '44444444444444444444444444444444444444444';
 
         // 设置到翻译器
         $this->translator->setLocale($locale);

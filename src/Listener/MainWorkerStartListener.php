@@ -38,7 +38,7 @@ class MainWorkerStartListener implements ListenerInterface
 
     public function process(object $event): void
     {
-        // 避免框架偶尔二次执行
+        // 避免框架二次执行
         try {
             $redisResult = redis()->set('mainWorkerStart', 'rate', ['NX', 'EX' => 10]);
             LogHelper::info('Redis set result: ' . ($redisResult ? 'success' : 'failed'));

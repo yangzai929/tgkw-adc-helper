@@ -14,6 +14,7 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 use TgkwAdc\Helper\Log\AppendRequestIdProcessor;
 use TgkwAdc\Helper\Log\CustomJsonFormatter;
+use TgkwAdc\Helper\Log\TraceIdProcessor;
 
 $appEnv = env('APP_ENV', 'dev');
 $appName = env('APP_NAME', 'hyperf');
@@ -22,7 +23,7 @@ $logPath = env('LOG_PATH', BASE_PATH . '/runtime/logs');
 $defaultLineFormatter = [
     'class' => LineFormatter::class,
     'constructor' => [
-        'format' => "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n",
+        'format' => "[%datetime%] [trace_id: %extra.trace_id%] %channel%.%level_name%: %message% %context% %extra%\n",
         'dateFormat' => 'Y-m-d H:i:s',
         'allowInlineLineBreaks' => true,
     ],
@@ -54,6 +55,9 @@ return [
                 'allowInlineLineBreaks' => true,
             ],
         ],
+        'processors' => [
+            ['class' => TraceIdProcessor::class],
+        ],
     ],
 
     // 单文件日志
@@ -70,7 +74,7 @@ return [
             ],
         ],
         'processors' => [
-            ['class' => AppendRequestIdProcessor::class],
+            ['class' => TraceIdProcessor::class],
         ],
     ],
 
@@ -87,6 +91,9 @@ return [
                 'formatter' => $defaultJsonFormatter,
             ],
         ],
+        'processors' => [
+            ['class' => TraceIdProcessor::class],
+        ],
     ],
 
     // 业务日志
@@ -101,6 +108,9 @@ return [
                 ],
                 'formatter' => $defaultLineFormatter,
             ],
+        ],
+        'processors' => [
+            ['class' => TraceIdProcessor::class],
         ],
     ],
 
@@ -119,6 +129,7 @@ return [
         ],
         'processors' => [
             ['class' => AppendRequestIdProcessor::class],
+            ['class' => TraceIdProcessor::class],
         ],
     ],
 
@@ -158,6 +169,9 @@ return [
                 ],
             ],
         ],
+        'processors' => [
+            ['class' => TraceIdProcessor::class],
+        ],
     ],
 
     // 调试日志
@@ -173,6 +187,9 @@ return [
                 'formatter' => $defaultLineFormatter,
             ],
         ],
+        'processors' => [
+            ['class' => TraceIdProcessor::class],
+        ],
     ],
 
     // 支付日志
@@ -187,6 +204,9 @@ return [
                 ],
                 'formatter' => $defaultJsonFormatter,
             ],
+        ],
+        'processors' => [
+            ['class' => TraceIdProcessor::class],
         ],
     ],
 ];

@@ -36,7 +36,7 @@
         "hyperf/db-connection": "^3.1",
         "hyperf/engine": "^2.10",
         "hyperf/filesystem": "~3.1.0",
-        "hyperf/flysystem-oss": "~3.1.0",
+        "hyperf/flysystem-oss": "~1.4.0",
         "hyperf/framework": "~3.1.0",
         "hyperf/guzzle": "^3.1",
         "hyperf/helper": "~3.1.0",
@@ -61,7 +61,8 @@
         "league/flysystem-aws-s3-v3": "3.0",
         "mpdf/mpdf": "^8.2",
         "overtrue/flysystem-cos": "5.0",
-        "overtrue/flysystem-qiniu": "3.0"
+        "overtrue/flysystem-qiniu": "3.0",
+        "ramsey/uuid": "^4.9"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.0",
