@@ -197,7 +197,7 @@ class LogHelper
         string $message,
         array $context = [],
         string $name = 'log',
-        string $group = 'single',
+        string $group = 'default',
         ?string $filename = null,
         bool $async = false
     ): void {

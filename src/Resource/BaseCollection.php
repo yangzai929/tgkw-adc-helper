@@ -6,7 +6,6 @@ declare(strict_types=1);
  *
  * @link     https://www.tgkw.com
  * @document https://hyperf.wiki
- *
  */
 
 namespace TgkwAdc\Resource;
@@ -142,7 +141,6 @@ abstract class BaseCollection extends ResourceCollection
         return $this;
     }
 
-
     /**
      * 转换为简单数组格式.
      */
@@ -185,18 +183,13 @@ abstract class BaseCollection extends ResourceCollection
             return [];
         }
 
-        $pagination = [
+        return [
             'total' => $this->total(),
-            "current_items" => $this->count(),
+            'current_items' => $this->count(),
             'current_page' => $this->currentPage(),
             'per_page' => $this->perPage(),
             'last_page' => $this->lastPage(),
             'has_more' => $this->hasMorePages(),
         ];
-
-
-        return $pagination;
     }
-
-
 }

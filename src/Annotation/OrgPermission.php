@@ -13,86 +13,97 @@ namespace TgkwAdc\Annotation;
 use Attribute;
 use Hyperf\Di\Annotation\AbstractAnnotation;
 
+/**
+ * 机构（租户）菜单注解
+ * 用于在类或方法上定义菜单/按钮权限信息.
+ */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
 class OrgPermission extends AbstractAnnotation
 {
-    public string $module = ''; // 管理后台:系统设置:角色管理
+    public int $parentId = 0; // 上级菜单id（这里用 bigint 存，但注解用 int 或 string 都行）
 
-    public string $action = ''; // 查看、增加、修改、删除
 
-    public string $icon = ''; // 图标
+    public string $name = ''; // 菜单名称
 
-    public string $activeIcon = ''; // 选中后图标
+    public string $icon = ''; // 菜单图标
 
-    public array $i18nName = []; // 多语言名称
+    public string $activeIcon = ''; // 菜单图标(选中)
 
-    public array $i18nActionName = []; // 多语言操作名称
+    public int $sort = 0; // 排序
 
-    public int $menuType = 1; // 1展示，0归类
+    public string $accessCode = ''; // 唯一权限标识
 
+    public string $frontRouteAlias = ''; // 前端路由别名   前端路由别名，用于前端路由匹配（必填，唯一标识路由）
+
+    // 菜单链接
+    // 默认情况下此字段无需填写.
+    // 前端生成路由时：
+    // 如果 url 有值 → 直接用。
+    // 如果 url 为空 → 从前端的别名映射表中查找对应路径。
+    // 如果此字段有值， 且 urlType 为 path 时，即指定前端路由，例 /user/add，
+    public string $url = '';
+
+    //path → Vue Router 正常跳转
+    //frame_url → 用内嵌 iframe 展示第三方页面
+    //target_url → window.open() 打开外部链接
     public string $urlType = 'path'; // 	URL类别(path, frame_url, target_url)
 
-    public string $alias = ''; // 路由别名
 
-    public string $url = ''; // 菜单链接
+    public string $redirect = ''; // 子菜单此值为空，如果没有特殊情况，父级路由的 redirect 属性不需要指定，前端应默认指向第一个子路由。
 
-    public int $keepAlive = 1; // 前端是否缓存
+    public int $keepAlive = 0; // 前端是否缓存: 0=否, 1=是
 
-    public int $sort = 0; // 排序，越大越前，一级菜单千进位，二级菜单百进位，默认0
+    public int $status = 1; // 显示状态: 1显示，0隐藏
 
-    public int $status = 1; // 状态（0、1、2），默认1， 2仅在子应用展示
+    public int $isEnable = 1; // 是否启用: 0=否, 1=是
 
-    public string $type = ''; // 类型，label作为小标识，无法点击
+    public string $method = ''; // 请求方法, 目录时填 #
 
-    public int $appId = 0; // 是否关联应用，填写 appid 表的自增ID
+    public int $showMobile = 1; // 移动端是否显示: 0=否, 1=是
 
     public string $app = ''; // 微前端提供者
 
-    public int $orgId = 0; // 固定的自增ID
+    public string $micro = ''; // 微服务提供者
 
-    public int $parentOrgId = 0; // 固定的父自增ID
-
-    public bool $hideInternationalize = true; // 是否在多语言环境隐藏
+    public int $appId = 0; // 应用ID (预留字段)
 
     public function __construct(
-        string $module = '',
-        string $action = '',
+        int|string $parentId = 0,
+        string $name = '',
         string $icon = '',
         string $activeIcon = '',
-        array $i18nName = [],
-        array $i18nActionName = [],
-        int $menuType = 1,
-        string $urlType = 'path',
-        string $alias = '',
-        string $url = '',
-        int $keepAlive = 1,
         int $sort = 0,
+        string $accessCode = '',
+        string $frontRouteAlias = '',
+        string $url = '',
+        string $urlType = '',
+        string $redirect = '',
+        int $keepAlive = 0,
         int $status = 1,
-        string $type = '',
-        int $appId = 0,
+        int $isEnable = 1,
+        string $method = '',
+        int $showMobile = 1,
         string $app = '',
-        int $orgId = 0,
-        int $parentOrgId = 0,
-        bool $hideInternationalize = false
+        string $micro = '',
+        int $appId = 0
     ) {
-        $this->module = $module;
-        $this->action = $action;
+        $this->parentId = is_string($parentId) ? (int) $parentId : $parentId;
+        $this->name = $name;
         $this->icon = $icon;
         $this->activeIcon = $activeIcon;
-        $this->i18nName = $i18nName;
-        $this->i18nActionName = $i18nActionName;
-        $this->menuType = $menuType;
-        $this->urlType = $urlType;
-        $this->alias = $alias;
-        $this->url = $url;
-        $this->keepAlive = $keepAlive;
         $this->sort = $sort;
+        $this->accessCode = $accessCode;
+        $this->frontRouteAlias = $frontRouteAlias;
+        $this->url = $url;
+        $this->urlType = $urlType;
+        $this->redirect = $redirect;
+        $this->keepAlive = $keepAlive;
         $this->status = $status;
-        $this->type = $type;
-        $this->appId = $appId;
+        $this->isEnable = $isEnable;
+        $this->method = $method;
+        $this->showMobile = $showMobile;
         $this->app = $app;
-        $this->orgId = $orgId;
-        $this->parentOrgId = $parentOrgId;
-        $this->hideInternationalize = $hideInternationalize;
+        $this->micro = $micro;
+        $this->appId = $appId;
     }
 }

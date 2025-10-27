@@ -9,6 +9,7 @@ declare(strict_types=1);
  */
 use Carbon\Carbon;
 use Hyperf\Context\ApplicationContext;
+use Hyperf\Context\Context;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Redis\Redis;
 use Hyperf\Redis\RedisFactory;
@@ -46,6 +47,20 @@ if (! function_exists('redis')) {
         /** @var RedisFactory $factory */
         $factory = ApplicationContext::getContainer()->get(RedisFactory::class);
         return $factory->get($pool ?? 'default');
+    }
+}
+
+if (! function_exists('context_get')) {
+    function context_get(string $key, $default = null)
+    {
+        return Context::get($key, $default);
+    }
+}
+
+if (! function_exists('context_set')) {
+    function context_set(string $key, $value)
+    {
+        return Context::set($key, $value);
     }
 }
 

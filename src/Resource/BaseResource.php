@@ -6,7 +6,6 @@ declare(strict_types=1);
  *
  * @link     https://www.tgkw.com
  * @document https://hyperf.wiki
- *
  */
 
 namespace TgkwAdc\Resource;
@@ -45,7 +44,6 @@ abstract class BaseResource extends JsonResource
             ];
         }
     }
-
 
     /**
      * 附加自定义数据.

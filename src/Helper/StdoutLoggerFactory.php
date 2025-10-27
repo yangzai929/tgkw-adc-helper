@@ -17,6 +17,6 @@ class StdoutLoggerFactory
 {
     public function __invoke(ContainerInterface $container)
     {
-        return LogHelper::get('app');
+        return LogHelper::get('app', 'default');
     }
 }

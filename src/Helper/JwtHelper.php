@@ -14,24 +14,49 @@ use Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Hyperf\HttpServer\Contract\RequestInterface;
+use TgkwAdc\Exception\TokenParseException;
 
 class JwtHelper
 {
-    private static string $key;
+    private static ?string $sys_key = null;
+    private static ?string $org_key = null;
 
-    private static string $alg;
+    private static ?string $alg = 'HS256';
 
     public static function init(): void
     {
-        self::$key = cfg('jwt.secret', 'default-secret');
-        self::$alg = cfg('jwt.alg', 'default-secret');
+        if(self::$sys_key == null){
+            $sysCfgJson = cfg('systemConfig');
+            $systemCfg = json_decode($sysCfgJson, true);
+            self::$sys_key = $systemCfg['JWT_SYSTEM_KEY'];
+        }
+
+
+        if(self::$org_key == null){
+            $sysCfgJson = cfg('systemConfig');
+            $systemCfg = json_decode($sysCfgJson, true);
+            self::$org_key = $systemCfg['JWT_ORG_KEY'];
+        }
+
+
+
+
+    }
+
+    private static function getKey(string $type='ORG'): string
+    {
+        if ($type == 'SYS'){
+            return self::$sys_key;
+        }
+        return self::$org_key;
     }
 
     /**
      * 生成 Token.
      */
-    public static function createToken(array $payload, int $ttl = 3600): string
+    public static function createToken(string $type='ORG',array $payload=[], int $ttl = 3600): string
     {
+        self::init();
         $issuedAt = time();
         $expire = $issuedAt + $ttl;
 
@@ -40,25 +65,38 @@ class JwtHelper
             'exp' => $expire,
         ]);
 
-        return JWT::encode($tokenPayload, self::$key, self::$alg);
+        return JWT::encode($tokenPayload, self::getKey($type), self::$alg);
     }
+
 
     /**
      * 解析 Token.
      */
-    public static function parseToken(string $token): array
+    public static function parseToken(string $type='ORG',string $token=''): array
     {
-        return (array) JWT::decode($token, new Key(self::$key, self::$alg));
+        self::init();
+        return (array) JWT::decode($token, new Key(self::getKey($type), self::$alg));
+
     }
 
     /**
      * 从请求头获取并解析 Token.
      */
-    public static function getPayloadFromRequest(RequestInterface $request): array
+    public static function getPayloadFromRequest(RequestInterface $request,string $type = 'ORG'): array
     {
-        $authHeader = $request->header('Authorization', '');
-        if (! $authHeader || ! str_starts_with($authHeader, 'Bearer ')) {
-            throw new Exception('Authorization header not found', 401);
+        self::init();
+
+        $token_key = 'Org-Token';
+        if ($type == 'SYS'){
+            $token_key = 'System-Token';
+        }
+
+        $authHeader = $request->header($token_key);
+        if (! $authHeader ) {
+            throw new \UnexpectedValueException('Authorization header not found', 401);
+        }
+        if(!str_starts_with($authHeader, 'Bearer ')){
+            $authHeader = 'Bearer ' . $authHeader;
         }
 
         $token = substr($authHeader, 7);

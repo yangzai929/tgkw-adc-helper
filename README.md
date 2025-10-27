@@ -307,3 +307,12 @@ vendor/bin/php-cs-fixer fix src
 vendor/bin/phpstan analyse --memory-limit 1024M -l 0 ./src
 ```
 
+
+```bash
+# 新建1.0.1版本标签
+git tag -a 1.0.1 -m "1.0.1版本"
+
+# 标签推送到github
+git push origin 1.0.1
+
+```

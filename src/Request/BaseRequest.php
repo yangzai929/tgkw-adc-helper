@@ -6,7 +6,6 @@ declare(strict_types=1);
  *
  * @link     https://www.tgkw.com
  * @document https://hyperf.wiki
- *
  */
 
 namespace TgkwAdc\Request;
