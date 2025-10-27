@@ -22,6 +22,7 @@
     },
     "require": {
         "php": ">=8.1",
+        "donjan-deng/hyperf-casbin": "^3.23",
         "firebase/php-jwt": "^6.11",
         "hyperf/amqp": "^3.1",
         "hyperf/cache": "~3.1.0",
