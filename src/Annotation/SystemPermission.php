@@ -24,7 +24,7 @@ class SystemPermission extends AbstractAnnotation
 
     public string $type = ''; // 菜单类型: DIR=目录，MENU=菜单，BUTTON=按钮
 
-    public string $name = ''; // 菜单名称
+    public string $module = ''; // 菜单模块 管理后台:系统设置:角色管理
 
     public string $icon = ''; // 菜单图标
 
@@ -33,7 +33,6 @@ class SystemPermission extends AbstractAnnotation
     public int $sort = 0; // 排序
 
     public string $accessCode = ''; // 唯一权限标识
-
 
     public string $frontRouteAlias = ''; // 前端路由别名   前端路由别名，用于前端路由匹配（必填，唯一标识路由）
 
@@ -44,11 +43,10 @@ class SystemPermission extends AbstractAnnotation
     // 如果 url 为空 → 从前端的别名映射表中查找对应路径。
     public string $url = '';
 
-    //path → Vue Router 正常跳转
-    //frame_url → 用内嵌 iframe 展示第三方页面
-    //target_url → window.open() 打开外部链接
+    // path → Vue Router 正常跳转
+    // frame_url → 用内嵌 iframe 展示第三方页面
+    // target_url → window.open() 打开外部链接
     public string $urlType = 'path'; // 	URL类别(path, frame_url, target_url)
-
 
     public string $redirect = ''; // 子菜单此值为空，如果没有特殊情况，父级路由的 redirect 属性不需要指定，前端应默认指向第一个子路由。
 
@@ -61,7 +59,6 @@ class SystemPermission extends AbstractAnnotation
     public string $method = ''; // 请求方法, 目录时填 #
 
     public int $showMobile = 1; // 移动端是否显示: 0=否, 1=是
-
 
     public function __construct(
         int|string $parentId = 0,

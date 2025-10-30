@@ -20,18 +20,19 @@ use Hyperf\Di\Annotation\AbstractAnnotation;
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
 class OrgPermission extends AbstractAnnotation
 {
-    public int $parentId = 0; // 上级菜单id（这里用 bigint 存，但注解用 int 或 string 都行）
+    public string $parentAccessCode = ''; // 父菜单的唯一标识
 
+    public string $accessCode = ''; // 唯一权限标识
 
     public string $name = ''; // 菜单名称
+
+    public string $type = ''; // 菜单名称
 
     public string $icon = ''; // 菜单图标
 
     public string $activeIcon = ''; // 菜单图标(选中)
 
     public int $sort = 0; // 排序
-
-    public string $accessCode = ''; // 唯一权限标识
 
     public string $frontRouteAlias = ''; // 前端路由别名   前端路由别名，用于前端路由匹配（必填，唯一标识路由）
 
@@ -43,11 +44,10 @@ class OrgPermission extends AbstractAnnotation
     // 如果此字段有值， 且 urlType 为 path 时，即指定前端路由，例 /user/add，
     public string $url = '';
 
-    //path → Vue Router 正常跳转
-    //frame_url → 用内嵌 iframe 展示第三方页面
-    //target_url → window.open() 打开外部链接
+    // path → Vue Router 正常跳转
+    // frame_url → 用内嵌 iframe 展示第三方页面
+    // target_url → window.open() 打开外部链接
     public string $urlType = 'path'; // 	URL类别(path, frame_url, target_url)
-
 
     public string $redirect = ''; // 子菜单此值为空，如果没有特殊情况，父级路由的 redirect 属性不需要指定，前端应默认指向第一个子路由。
 
@@ -68,8 +68,9 @@ class OrgPermission extends AbstractAnnotation
     public int $appId = 0; // 应用ID (预留字段)
 
     public function __construct(
-        int|string $parentId = 0,
+        string $parentAccessCode = '',
         string $name = '',
+        string $type = '',
         string $icon = '',
         string $activeIcon = '',
         int $sort = 0,
@@ -87,8 +88,9 @@ class OrgPermission extends AbstractAnnotation
         string $micro = '',
         int $appId = 0
     ) {
-        $this->parentId = is_string($parentId) ? (int) $parentId : $parentId;
+        $this->parentAccessCode = $parentAccessCode;
         $this->name = $name;
+        $this->type = $type;
         $this->icon = $icon;
         $this->activeIcon = $activeIcon;
         $this->sort = $sort;
