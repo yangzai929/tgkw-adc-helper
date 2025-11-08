@@ -30,10 +30,10 @@ enum TokenCode: int implements EnumCodeInterface
     case INVALID_TOKEN = 1;
 
     #[EnumCode(
-        msg: '令牌已过期，请重新登录',
+        msg: '令牌已过期，请重新获取令牌',
         i18nMsg: [
             'en' => 'Token has expired, please log in',
-            'zh_hk' => '令牌已過期，請登入',
+            'zh_hk' => '令牌已過期，請重新获取令牌',
         ]
     )]
     case EXPIRED_TOKEN = 2;
