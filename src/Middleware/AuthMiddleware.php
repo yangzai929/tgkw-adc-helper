@@ -25,9 +25,9 @@ class AuthMiddleware implements MiddlewareInterface
     {
         $path = $request->getUri()->getPath();
         // 白名单路由 再此列表中的不需要检查登录态 从配置文件读取白名单
-        $a_whitelist = cfg('auth_whitelist.auth_whitelist', []);
+        $a_whitelist = cfg('route_whitelist.auth_whitelist', []);
         if (! in_array($path, $a_whitelist, true)) {
-            $t_whitelist = cfg('auth_whitelist.tenant_whitelist', []);
+            $t_whitelist = cfg('route_whitelist.tenant_whitelist', []);
             $tenantId = $request->getHeaderLine('Current-Tenant-Id');
             // 如果命中白名单，跳过租户 ID 检查
             if (! in_array($path, $t_whitelist, true) && empty($tenantId)) {
