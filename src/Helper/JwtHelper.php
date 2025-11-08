@@ -10,10 +10,13 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Helper;
 
+use Exception;
+use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Hyperf\HttpServer\Contract\RequestInterface;
-use UnexpectedValueException;
+use Psr\Http\Message\ServerRequestInterface;
+use TgkwAdc\Constants\Code\TokenCode;
+use TgkwAdc\Exception\TokenException;
 
 class JwtHelper
 {
@@ -60,33 +63,49 @@ class JwtHelper
      */
     public static function parseToken(string $type = 'ORG', string $token = ''): array
     {
-        self::init();
-        return (array) JWT::decode($token, new Key(self::getKey($type), self::$alg));
+        try {
+            self::init();
+
+            return (array) JWT::decode($token, new Key(self::getKey($type), self::$alg));
+        } catch (Exception $e) {
+            if ($e instanceof ExpiredException) {
+                throw new TokenException(TokenCode::EXPIRED_TOKEN);
+            }
+            throw new TokenException(TokenCode::INVALID_TOKEN);
+        }
     }
 
     /**
      * 从请求头获取并解析 Token.
      */
-    public static function getPayloadFromRequest(RequestInterface $request, string $type = 'ORG'): array
+    public static function getPayloadFromRequest(ServerRequestInterface $request, string $type = 'ORG'): array
     {
-        self::init();
+        try {
+            self::init();
 
-        $token_key = 'Org-Token';
-        if ($type == 'SYS') {
-            $token_key = 'System-Token';
+            $token_key = 'Org-Token';
+            if ($type == 'SYS') {
+                $token_key = 'System-Token';
+            }
+
+            $authHeader = $request->getHeaderLine($token_key);
+            if (! $authHeader) {
+                throw new TokenException(TokenCode::INVALID_TOKEN);
+            }
+            if (! str_starts_with($authHeader, 'Bearer ')) {
+                $authHeader = 'Bearer ' . $authHeader;
+            }
+
+            $token = substr($authHeader, 7);
+
+            return self::parseToken(token: $token);
+        } catch (ExpiredException $e) {
+            // 单独处理过期异常
+            throw new TokenException(TokenCode::EXPIRED_TOKEN);
+        } catch (Exception $e) {
+            // 所有其他异常统一视为无效令牌
+            throw new TokenException(TokenCode::INVALID_TOKEN);
         }
-
-        $authHeader = $request->header($token_key);
-        if (! $authHeader) {
-            throw new UnexpectedValueException('Authorization header not found', 401);
-        }
-        if (! str_starts_with($authHeader, 'Bearer ')) {
-            $authHeader = 'Bearer ' . $authHeader;
-        }
-
-        $token = substr($authHeader, 7);
-
-        return self::parseToken($token);
     }
 
     private static function getKey(string $type = 'ORG'): string
@@ -94,6 +113,7 @@ class JwtHelper
         if ($type == 'SYS') {
             return self::$sys_key;
         }
+
         return self::$org_key;
     }
 }

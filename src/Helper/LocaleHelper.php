@@ -65,6 +65,7 @@ class LocaleHelper
     public static function isChinese(): bool
     {
         $locale = self::getCurrentLocale();
+
         return LocaleConstants::isChinese($locale);
     }
 
@@ -90,6 +91,7 @@ class LocaleHelper
     public static function getLocaleName(?string $locale = null): string
     {
         $locale = $locale ?: self::getCurrentLocale();
+
         return LocaleConstants::getLocaleName($locale);
     }
 }

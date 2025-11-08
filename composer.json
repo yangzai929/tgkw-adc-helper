@@ -85,7 +85,8 @@
     "scripts": {
         "test": "phpunit -c phpunit.xml --colors=always",
         "analyse": "phpstan analyse --memory-limit 1024M -l 0 ./src",
-        "cs-fix": "php-cs-fixer fix $1"
+        "cs-fix": "php-cs-fixer fix --config=.php-cs-fixer.php",
+        "cs-check": "php-cs-fixer fix --config=.php-cs-fixer.php --dry-run --diff"
     },
     "extra": {
         "hyperf": {

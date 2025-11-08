@@ -16,9 +16,12 @@ class LocaleConstants
      * 支持的语言列表.
      */
     public const SUPPORTED_LOCALES = [
+        'zh_cn' => 'zh_CN',
         'zh_CN' => 'zh_CN',
+        'zh_hk' => 'zh_HK',
         'zh_HK' => 'zh_HK',
         'zh_TW' => 'zh_TW',
+        'zh_tw' => 'zh_TW',
         'en' => 'en',
         'ja' => 'ja',
         'ko' => 'ko',
@@ -34,9 +37,12 @@ class LocaleConstants
      * 语言显示名称.
      */
     public const LOCALE_NAMES = [
+        'zh_cn' => '简体中文',
         'zh_CN' => '简体中文',
         'zh_HK' => '繁體中文(香港)',
+        'zh_hk' => '繁體中文(香港)',
         'zh_TW' => '繁體中文(台灣)',
+        'zh_tw' => '繁體中文(台灣)',
         'en' => 'English',
         'ja' => '日本語',
         'ko' => '한국어',
@@ -51,12 +57,12 @@ class LocaleConstants
     /**
      * 默认语言
      */
-    public const DEFAULT_LOCALE = 'zh_CN';
+    public const DEFAULT_LOCALE = 'zh_cn';
 
     /**
      * 中文语言列表.
      */
-    public const CHINESE_LOCALES = ['zh_CN', 'zh_HK', 'zh_TW'];
+    public const CHINESE_LOCALES = ['zh_cn', 'zh_hk', 'zh_tw'];
 
     /**
      * 获取支持的语言代码列表.

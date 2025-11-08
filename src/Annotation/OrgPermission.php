@@ -24,17 +24,15 @@ class OrgPermission extends AbstractAnnotation
 
     public string $accessCode = ''; // 唯一权限标识
 
-    public string $name = ''; // 菜单名称
+    public string $module = ''; // 菜单模块层级标识 管理后台:系统设置:角色管理
+
+    public array $i18nName = []; // 国际化菜单名
 
     public string $type = ''; // 菜单名称
 
-    public string $icon = ''; // 菜单图标
-
-    public string $activeIcon = ''; // 菜单图标(选中)
-
     public int $sort = 0; // 排序
 
-    public string $frontRouteAlias = ''; // 前端路由别名   前端路由别名，用于前端路由匹配（必填，唯一标识路由）
+    public string $frontRouteAlias = ''; // 前端路由别名   前端路由别名，用于前端路由匹配（必填，前端路由标识）
 
     // 菜单链接
     // 默认情况下此字段无需填写.
@@ -69,10 +67,9 @@ class OrgPermission extends AbstractAnnotation
 
     public function __construct(
         string $parentAccessCode = '',
-        string $name = '',
+        string $module = '',
+        array $i18nName = [],
         string $type = '',
-        string $icon = '',
-        string $activeIcon = '',
         int $sort = 0,
         string $accessCode = '',
         string $frontRouteAlias = '',
@@ -86,13 +83,12 @@ class OrgPermission extends AbstractAnnotation
         int $showMobile = 1,
         string $app = '',
         string $micro = '',
-        int $appId = 0
+        int $appId = 0,
     ) {
         $this->parentAccessCode = $parentAccessCode;
-        $this->name = $name;
+        $this->module = $module;
+        $this->i18nName = $i18nName;
         $this->type = $type;
-        $this->icon = $icon;
-        $this->activeIcon = $activeIcon;
         $this->sort = $sort;
         $this->accessCode = $accessCode;
         $this->frontRouteAlias = $frontRouteAlias;

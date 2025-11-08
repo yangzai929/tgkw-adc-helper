@@ -20,7 +20,6 @@ if (! function_exists('cfg')) {
      *
      * @param null|string $key 配置键，例如 'jwt.secret'
      * @param mixed $default 默认值
-     * @return mixed
      */
     function cfg(?string $key = null, $default = null)
     {
@@ -46,6 +45,7 @@ if (! function_exists('redis')) {
     {
         /** @var RedisFactory $factory */
         $factory = ApplicationContext::getContainer()->get(RedisFactory::class);
+
         return $factory->get($pool ?? 'default');
     }
 }
@@ -64,6 +64,13 @@ if (! function_exists('context_set')) {
     }
 }
 
+if (! function_exists('container_get')) {
+    function container_get(string $id)
+    {
+        return ApplicationContext::getContainer()->get($id);
+    }
+}
+
 /**
  * 将对象或嵌套对象转换为数组
  * 递归处理对象和数组，将所有对象转换为关联数组.
@@ -71,7 +78,7 @@ if (! function_exists('context_set')) {
  * @param mixed $array 要转换的对象或数组
  * @return array 转换后的数组
  */
-function object_array($array): array
+function object_array($array)
 {
     if (is_object($array)) {
         $array = (array) $array;
@@ -81,6 +88,7 @@ function object_array($array): array
             $array[$key] = object_array($value);
         }
     }
+
     return $array;
 }
 
@@ -142,6 +150,7 @@ if (! function_exists('mb_ltrim')) {
         while (mb_substr($str, 0, 1, $encoding) == $char) {
             $str = mb_substr($str, 1, null, $encoding);
         }
+
         return $str;
     }
 }
@@ -160,6 +169,147 @@ if (! function_exists('mb_trim')) {
     {
         return mb_rtrim(mb_ltrim($str, $char, $encoding), $char, $encoding);
     }
+}
+
+function i18nEnumArrConvert(array $data, array $value_map = [])
+{
+    $res = [];
+    foreach ($data as $key => $value) {
+        $item = [
+            'txt' => $value['txt'],
+            'field' => $value['value'],
+            'i18n_txt' => $value['i18nTxt'],
+            'i18n_key' => $value['i18nKey'],
+        ];
+        if (isset($value_map[$value['value']])) {
+            $item['value_map_key'] = $value_map[$value['value']];
+        }
+        $res[] = $item;
+    }
+    return $res;
+}
+
+function i18nEnumArrConvertValue(array $data, array $value_map = [])
+{
+    $res = [];
+    foreach ($data as $key => $value) {
+        $item = [
+            'txt' => $value['txt'],
+            'field' => $value['value'],
+            'i18n_txt' => $value['i18nTxt'],
+            'i18n_key' => $value['i18nKey'],
+        ];
+        if (isset($value_map[$value['value']])) {
+            $item['value_map_key'] = make($value_map[$value['value']])::getEnums();
+        }
+        $res[] = $item;
+    }
+    return $res;
+}
+
+use TgkwAdc\Annotation\EnumI18nInterface;
+
+/**
+ * 构建表格列配置和值映射的通用方法.
+ *
+ * 功能说明：根据枚举类生成表格列配置（columns），并根据值映射配置生成对应的值映射表（value_maps）
+ * 枚举类需实现 EnumI18nInterface 接口，以提供统一的枚举数据获取方式
+ *
+ * @param string $listEnumClass 列表枚举类（如 RoleListI18n::class）
+ *                              该类需实现 EnumI18nInterface 接口，用于定义表格列的基础信息（键名、国际化文本等）
+ *
+ * @param array $valueMapConfig 值映射配置数组，格式：
+ *                              [
+ *                              'field_key' => EnumClass::class,  // 键为表格列的字段名（对应列配置中的 'key'），值为该字段的映射枚举类
+ *                              ...
+ *                              ]
+ *                              示例：['status' => RoleStatusI18n::class] 表示对 'status' 字段的值使用 RoleStatusI18n 枚举进行映射
+ *
+ * @return array 返回包含表格配置的数组，结构如下：
+ *               [
+ *               'columns' => [                // 表格列配置数组
+ *               [
+ *               'key' => string,          // 列对应的字段名
+ *               'i18n' => array,          // 国际化文本数组（如 ['zh_cn' => '名称', 'en' => 'Name']）
+ *               'i18n_key' => string,     // 国际化键名
+ *               'value_map_key' => string // 若该列配置了值映射，则为映射键名（可选）
+ *               ],
+ *               ...
+ *               ],
+ *               'value_maps' => [             // 值映射表数组
+ *               'map_key' => [              // 映射键名（由映射枚举类定义）
+ *               'value' => [              // 枚举值对应的映射信息
+ *               'i18n' => array,        // 国际化文本数组
+ *               'i18n_key' => string    // 国际化键名
+ *               ],
+ *               ...
+ *               ],
+ *               ...
+ *               ]
+ *               ]
+ *
+ * @throws InvalidArgumentException 当 $listEnumClass 未实现 EnumI18nInterface 接口时抛出
+ */
+function buildTableColumnsWithValueMaps(string $listEnumClass, array $valueMapConfig = []): array
+{
+    if (! is_subclass_of($listEnumClass, EnumI18nInterface::class)) {
+        throw new InvalidArgumentException("{$listEnumClass} must implement EnumI18nInterface");
+    }
+
+    // 构建 columns 数组
+    $columns = [];
+    $listEnums = call_user_func([$listEnumClass, 'getEnums']);
+
+    foreach ($listEnums as $enumName => $enumData) {
+        $column = [
+            'key' => $enumData['value'],
+            'i18n' => $enumData['i18nTxt'] ?? [],
+            'i18n_key' => $enumData['i18nKey'] ?? '',
+        ];
+
+        // 检查该字段是否需要值映射
+        $fieldKey = $enumData['value'];
+        if (isset($valueMapConfig[$fieldKey])) {
+            $column['value_map_key'] = call_user_func([$valueMapConfig[$fieldKey], 'getEnumsGroupCode'])['groupCode'];
+        }
+
+        $columns[] = $column;
+    }
+
+    // 构建 value_maps
+    $valueMaps = [];
+
+    foreach ($valueMapConfig as $fieldKey => $config) {
+        $mapKey = call_user_func([$valueMapConfig[$fieldKey], 'getEnumsGroupCode'])['groupCode'];
+        $enumClass = $valueMapConfig[$fieldKey];
+
+        if (! is_subclass_of($enumClass, EnumI18nInterface::class)) {
+            continue;
+        }
+
+        $enumMap = [];
+        $enumDataList = call_user_func([$enumClass, 'getEnums']);
+
+        foreach ($enumDataList as $enumName => $enumData) {
+            $i18nTxt = $enumData['i18nTxt'] ?? [];
+            // 确保包含 zh_cn（如果不存在，使用 txt 作为默认值）
+            if (! isset($i18nTxt['zh_cn'])) {
+                $i18nTxt['zh_cn'] = $enumData['txt'] ?? '';
+            }
+
+            $enumMap[(string) $enumData['value']] = [
+                'i18n' => $i18nTxt,
+                'i18n_key' => $enumData['i18nKey'] ?? '',
+            ];
+        }
+
+        $valueMaps[$mapKey] = $enumMap;
+    }
+
+    return [
+        'columns' => $columns,
+        'value_maps' => $valueMaps,
+    ];
 }
 
 /**
@@ -230,6 +380,7 @@ function toRmb(float|int|string $num): string
     if (empty($c)) {
         return '零元整';
     }
+
     return $c . '整';
 }
 
@@ -286,6 +437,7 @@ function numToCn(int|string $num): string
     } else {
         $chiStr = $chiNum[$num_str[0]];
     }
+
     return $chiStr;
 }
 
@@ -303,6 +455,7 @@ function findNum(string $string = ''): float|string
         return '';
     }
     $num = preg_replace('/[^.0123456789]/s', '', $string);
+
     return ! empty($num) ? floatval($num) : '';
 }
 
@@ -317,6 +470,7 @@ function findNum(string $string = ''): float|string
 function priceFormat(float|int|string $price, int $format = 2): float|int
 {
     $precision = $format; // 保留小数点后面的位数
+
     return is_int($price) ? intval($price) : (float) sprintf('%.' . $precision . 'f', round(floatval($price), $precision));
 }
 
@@ -351,6 +505,7 @@ function second_array_unique_bykey(array $arr, string $key): array
             $tmp_arr[$k] = $v[$key];  // 将不同的值放在该数组中保存
         }
     }
+
     // ksort($arr); //ksort函数对数组进行排序(保留原键值key)  sort为不保留key值
     return $arr;
 }
@@ -461,8 +616,10 @@ function isJson(mixed $content): bool
 {
     if (is_string($content)) {
         $jObject = json_decode($content);
+
         return (is_object($jObject) || is_array($jObject)) ? true : false;
     }
+
     return false;
 }
 
@@ -488,6 +645,7 @@ function percentArray(mixed $array): array|false
             $array[$max_key] = round($array[$max_key] + round($d, 2), 2);
         }
     }
+
     return $array;
 }
 
@@ -581,6 +739,7 @@ function getCollectionRate(int $val1, int $val2): float
     }
 
     $ratio = ($val1 / $val2) * 100;
+
     return round($ratio, 2);
 }
 
@@ -614,6 +773,7 @@ if (! function_exists('isDateValid')) {
                 return true;
             }
         }
+
         return false;
     }
 }
@@ -635,6 +795,7 @@ if (! function_exists('createNonceStr')) {
             //            }
             $orderNumber = ''; // 重置订单号
         }
+
         return $orderNumber;
     }
 }
@@ -654,6 +815,7 @@ if (! function_exists('getMonthsCovered')) {
         $end = new DateTime($endDate);
         $interval = DateInterval::createFromDateString('1 month');
         $period = new DatePeriod($start, $interval, $end);
+
         return iterator_count($period);
     }
 }
@@ -671,6 +833,7 @@ if (! function_exists('getDiffDay')) {
     {
         $datetime1 = Carbon::parse($startDate); // 第一个时间点
         $datetime2 = Carbon::parse($endDate); // 第二个时间点
+
         return $datetime1->diffInDays($datetime2); // 计算两个时间点相差的天数
     }
 }
@@ -691,6 +854,7 @@ if (! function_exists('getDiffYear')) {
         }
         $datetime1 = Carbon::parse($startDate); // 第一个时间点
         $datetime2 = Carbon::parse($endDate); // 第二个时间点
+
         return $datetime1->diffInYears($datetime2); // 计算两个时间点相差的年数
     }
 }
@@ -706,6 +870,7 @@ if (! function_exists('delHis')) {
     function delHis(string $date): string
     {
         $timestamp = strtotime($date);
+
         return date('Y-m-d', $timestamp);
     }
 }
@@ -739,6 +904,7 @@ if (! function_exists('isDateTime')) {
             return false;
         }
         $ret = strtotime($dateTime);
+
         return $ret !== false && $ret != -1;
     }
 }

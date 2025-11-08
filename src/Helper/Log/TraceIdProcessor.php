@@ -19,6 +19,7 @@ class TraceIdProcessor implements ProcessorInterface
     public function __invoke(array|LogRecord $record)
     {
         $record['extra']['trace_id'] = Context::get('trace_id', '');
+
         return $record;
     }
 }

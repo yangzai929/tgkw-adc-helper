@@ -48,6 +48,8 @@ abstract class BaseCollection extends ResourceCollection
         // 保证输出结构稳定
         if (! isset($data['data']) && isset($data[0])) {
             $data = ['items' => $data];
+        } else {
+            $data = ['items' => []];
         }
 
         if ($this->withPagination && $this->isPaginator()) {

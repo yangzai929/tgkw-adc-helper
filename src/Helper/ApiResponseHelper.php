@@ -10,9 +10,11 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Helper;
 
+use Exception;
 use Hyperf\Context\ApplicationContext;
 use Hyperf\HttpServer\Contract\ResponseInterface;
 use Psr\Http\Message\ResponseInterface as Psr7ResponseInterface;
+use TgkwAdc\Helper\Log\LogHelper;
 
 class ApiResponseHelper
 {
@@ -39,5 +41,43 @@ class ApiResponseHelper
             'error' => $error,
             'timestamp' => time(),
         ])->withStatus($httpStatusCode);
+    }
+
+    // 远程服务调用成功
+    public static function genServiceSuccess($data = null, $messges = 'succcess', $code = 0)
+    {
+        return [
+            'code' => $code,
+            'message' => $messges,
+            'data' => $data,
+            'timestamp' => time(),
+        ];
+    }
+
+    // 远程服务执行失败
+    public static function genServiceError(Exception $exception, $data = null, $messges = 'RPC Service Error', $code = 400)
+    {
+        LogHelper::error($exception->getMessage(), context: ['trace' => $exception->getTraceAsString()]);
+
+        return [
+            'code' => $code,
+            'message' => $messges,
+            'data' => $data,
+            'timestamp' => time(),
+        ];
+    }
+
+    // 远程服务调用失败
+    public static function callServiceError(string $serviceName, Exception $exception)
+    {
+        LogHelper::error($exception->getMessage(), context: ['rpc_service_name' => $serviceName, 'trace' => $exception->getTraceAsString()]);
+
+        return [
+            'code' => $exception->getCode(),
+            'message' => $exception->getMessage(),
+            'data' => null,
+            'error' => [],
+            'timestamp' => time(),
+        ];
     }
 }

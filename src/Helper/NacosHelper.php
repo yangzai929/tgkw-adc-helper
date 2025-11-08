@@ -65,6 +65,7 @@ class NacosHelper
             ]);
 
             LogHelper::info('写入配置到 Nacos', [$this->group, $this->namespaceId]);
+
             return $response->getStatusCode() === 200;
         } catch (GuzzleException $e) {
             return false;

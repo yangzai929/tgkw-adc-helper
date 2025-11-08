@@ -44,7 +44,7 @@ class LogHelper
         string $filename,
         string $level = 'info',
         int $maxFiles = 30,
-        bool $async = false
+        bool $async = false,
     ): LoggerInterface {
         $cacheKey = "{$name}_{$filename}_{$level}_{$maxFiles}_{$async}";
 
@@ -118,7 +118,7 @@ class LogHelper
         string $name = 'app_log',
         string $group = 'debug', // 默认走 debug 组
         ?string $filename = null,
-        bool $async = false
+        bool $async = false,
     ): void {
         self::log('debug', $message, $context, $name, $group, $filename, $async);
     }
@@ -199,7 +199,7 @@ class LogHelper
         string $name = 'log',
         string $group = 'default',
         ?string $filename = null,
-        bool $async = false
+        bool $async = false,
     ): void {
         $level = self::getConfigLevel($group);
 

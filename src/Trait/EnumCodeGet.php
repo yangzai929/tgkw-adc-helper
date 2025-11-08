@@ -16,6 +16,7 @@ use TgkwAdc\Annotation\EnumCode;
 use TgkwAdc\Annotation\EnumCodePrefix;
 use TgkwAdc\Helper\EnumStore;
 use TgkwAdc\Helper\Intl\I18nHelper;
+use TgkwAdc\Helper\LocaleHelper;
 
 trait EnumCodeGet
 {
@@ -89,11 +90,11 @@ trait EnumCodeGet
      */
     public function getI18nMsg(?string $key = null): array|string|null
     {
-        if ($key !== null) {
-            return self::getEnums()[$this->name]['i18nMsg'][$key] ?? null;
+        if ($key === null) {
+            $key = strtolower(LocaleHelper::getCurrentLocale());
         }
 
-        return self::getEnums()[$this->name]['i18nMsg'] ?? null;
+        return self::getEnums()[$this->name]['i18nMsg'][$key] ?? self::getEnums()[$this->name]['msg'];
     }
 
     /**

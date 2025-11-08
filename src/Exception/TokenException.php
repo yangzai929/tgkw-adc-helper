@@ -13,7 +13,7 @@ namespace TgkwAdc\Exception;
 use Hyperf\Server\Exception\ServerException;
 use TgkwAdc\Annotation\EnumCodeInterface;
 
-class BusinessException extends ServerException
+class TokenException extends ServerException
 {
     public function __construct(EnumCodeInterface $code, array $vars = [])
     {

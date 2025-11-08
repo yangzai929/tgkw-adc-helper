@@ -10,19 +10,14 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Exception\Handler;
 
-use Firebase\JWT\BeforeValidException;
-use Firebase\JWT\ExpiredException;
-use Firebase\JWT\SignatureInvalidException;
 use Hyperf\Contract\StdoutLoggerInterface;
-use Hyperf\ExceptionHandler\ExceptionHandler;
-use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
+use TgkwAdc\Exception\TokenException;
 use TgkwAdc\Helper\ApiResponseHelper;
 use TgkwAdc\Helper\Log\LogHelper;
 use Throwable;
-use UnexpectedValueException;
 
-class TokenExceptionHandler extends ExceptionHandler
+class TokenExceptionHandler extends BaseExceptionHandler
 {
     public function __construct(protected StdoutLoggerInterface $logger)
     {
@@ -30,14 +25,10 @@ class TokenExceptionHandler extends ExceptionHandler
 
     public function handle(Throwable $throwable, ResponseInterface $response)
     {
-        if ($throwable instanceof InvalidArgumentException
-            || $throwable instanceof UnexpectedValueException
-            || $throwable instanceof SignatureInvalidException
-            || $throwable instanceof BeforeValidException
-            || $throwable instanceof ExpiredException
-        ) {
+        if ($throwable instanceof TokenException) {
             $this->stopPropagation(); // 阻止继续向下传播异常
             LogHelper::error(message: $throwable->getMessage(), context: [$throwable], filename: 'invalidToken');
+
             return ApiResponseHelper::error($throwable->getMessage(), code: 401);
         }
 
@@ -47,6 +38,6 @@ class TokenExceptionHandler extends ExceptionHandler
 
     public function isValid(Throwable $throwable): bool
     {
-        return true;
+        return $throwable instanceof TokenException;
     }
 }

@@ -26,9 +26,7 @@ class SystemPermission extends AbstractAnnotation
 
     public string $module = ''; // 菜单模块 管理后台:系统设置:角色管理
 
-    public string $icon = ''; // 菜单图标
-
-    public string $activeIcon = ''; // 菜单图标(选中)
+    public array $i18nName = []; // 国际化菜单名
 
     public int $sort = 0; // 排序
 
@@ -63,7 +61,8 @@ class SystemPermission extends AbstractAnnotation
     public function __construct(
         int|string $parentId = 0,
         string $type = '',
-        string $name = '',
+        string $module = '',
+        array $i18nName = [],
         string $icon = '',
         string $activeIcon = '',
         int $sort = 0,
@@ -80,9 +79,8 @@ class SystemPermission extends AbstractAnnotation
     ) {
         $this->parentId = is_string($parentId) ? (int) $parentId : $parentId;
         $this->type = $type;
-        $this->name = $name;
-        $this->icon = $icon;
-        $this->activeIcon = $activeIcon;
+        $this->module = $module;
+        $this->i18nName = $i18nName;
         $this->sort = $sort;
         $this->accessCode = $accessCode;
         $this->frontRouteAlias = $frontRouteAlias;

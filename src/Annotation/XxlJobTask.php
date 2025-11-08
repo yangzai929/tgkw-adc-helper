@@ -50,7 +50,7 @@ class XxlJobTask extends AbstractAnnotation
         string $jobParam = '',
         string $routeStrategy = '',
         int $jobTimeout = 0,
-        int $jobRetry = 0
+        int $jobRetry = 0,
     ) {
         $this->xxlVersion = $xxlVersion;
         $this->author = $author;

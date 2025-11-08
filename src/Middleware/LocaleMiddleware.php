@@ -92,7 +92,7 @@ class LocaleMiddleware implements MiddlewareInterface
         }
 
         // 4. 从自定义语言头获取
-        $customLanguage = $request->getHeaderLine('X-Language');
+        $customLanguage = $request->getHeaderLine('Language');
         if ($customLanguage && $this->isValidLocale($customLanguage)) {
             return LocaleConstants::SUPPORTED_LOCALES[$customLanguage];
         }

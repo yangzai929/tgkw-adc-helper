@@ -10,9 +10,11 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Helper\Intl;
 
+use TgkwAdc\Helper\LocaleHelper;
+
 class I18nHelper
 {
-    protected static string $defaultLang = 'zh_CN';
+    protected static string $defaultLang = 'zh_cn';
 
     public static function getNowLang(string $overrideLang = ''): string
     {
@@ -20,6 +22,6 @@ class I18nHelper
             return $overrideLang;
         }
 
-        return $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? self::$defaultLang;
+        return strtolower(LocaleHelper::getCurrentLocale()) ?? self::$defaultLang;
     }
 }

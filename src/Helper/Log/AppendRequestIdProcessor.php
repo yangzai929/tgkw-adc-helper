@@ -23,6 +23,7 @@ class AppendRequestIdProcessor implements ProcessorInterface
     {
         $record['extra']['request_id'] = Context::getOrSet(self::REQUEST_ID, uniqid());
         $record['extra']['coroutine_id'] = Coroutine::id();
+
         return $record;
     }
 }
