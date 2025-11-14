@@ -66,18 +66,4 @@ class ApiResponseHelper
             'timestamp' => time(),
         ];
     }
-
-    // 远程服务调用失败
-    public static function callServiceError(string $serviceName, Exception $exception)
-    {
-        LogHelper::error($exception->getMessage(), context: ['rpc_service_name' => $serviceName, 'trace' => $exception->getTraceAsString()]);
-
-        return [
-            'code' => $exception->getCode(),
-            'message' => $exception->getMessage(),
-            'data' => null,
-            'error' => [],
-            'timestamp' => time(),
-        ];
-    }
 }

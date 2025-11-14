@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace TgkwAdc;
 
+use TgkwAdc\Aspect\RpcServiceAspect;
 use TgkwAdc\Listener\MainWorkerStartListener;
 
 class ConfigProvider
@@ -20,6 +21,9 @@ class ConfigProvider
             'dependencies' => [
             ],
             'commands' => [
+            ],
+            'aspects' => [
+                RpcServiceAspect::class,
             ],
             'listeners' => [
                 MainWorkerStartListener::class,

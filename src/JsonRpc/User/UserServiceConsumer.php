@@ -10,9 +10,7 @@ declare(strict_types=1);
 
 namespace TgkwAdc\JsonRpc\User;
 
-use Exception;
 use Hyperf\RpcClient\AbstractServiceClient;
-use TgkwAdc\Helper\ApiResponseHelper;
 
 class UserServiceConsumer extends AbstractServiceClient implements UserServiceInterface
 {
@@ -33,46 +31,26 @@ class UserServiceConsumer extends AbstractServiceClient implements UserServiceIn
 
     public function checkAccessPermission(array $param): array
     {
-        try {
-            return $this->__request(__FUNCTION__, compact('param'));
-        } catch (Exception $exception) {
-            return ApiResponseHelper::callServiceError($this->serviceName, $exception);
-        }
+        return $this->__request(__FUNCTION__, compact('param'));
     }
 
     public function addMenu(array $param): array
     {
-        try {
-            return $this->__request(__FUNCTION__, compact('param'));
-        } catch (Exception $exception) {
-            return ApiResponseHelper::callServiceError($this->serviceName, $exception);
-        }
+        return $this->__request(__FUNCTION__, compact('param'));
     }
 
-    public function getMenu(array $nowUser, string $micro): array
+    public function getMenu(array $nowUser, string $micro = ''): array
     {
-        try {
-            return $this->__request(__FUNCTION__, compact('nowUser', 'micro'));
-        } catch (Exception $exception) {
-            return ApiResponseHelper::callServiceError($this->serviceName, $exception);
-        }
+        return $this->__request(__FUNCTION__, compact('nowUser', 'micro'));
     }
 
-    public function getUserInfo(int $userId): array
+    public function getUserInfo(int $userId, string $micro = ''): array
     {
-        try {
-            return $this->__request(__FUNCTION__, compact('userId', 'micro'));
-        } catch (Exception $exception) {
-            return ApiResponseHelper::callServiceError($this->serviceName, $exception);
-        }
+        return $this->__request(__FUNCTION__, compact('userId', 'micro'));
     }
 
-    public function getUsers(array $userIds): array
+    public function getUsers(array $userIds, string $micro = ''): array
     {
-        try {
-            return $this->__request(__FUNCTION__, compact('userIds', 'micro'));
-        } catch (Exception $exception) {
-            return ApiResponseHelper::callServiceError($this->serviceName, $exception);
-        }
+        return $this->__request(__FUNCTION__, compact('userIds', 'micro'));
     }
 }
