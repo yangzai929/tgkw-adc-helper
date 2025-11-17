@@ -22,6 +22,7 @@
     },
     "require": {
         "php": ">=8.1",
+        "doctrine/dbal": "^3.0",
         "donjan-deng/hyperf-casbin": "^3.23",
         "firebase/php-jwt": "^6.11",
         "hyperf/amqp": "^3.1",
@@ -34,7 +35,6 @@
         "hyperf/constants": "^3.1",
         "hyperf/crontab": "~3.1.0",
         "hyperf/database": "~3.1.0",
-        "doctrine/dbal":"^3.0",
         "hyperf/db-connection": "^3.1",
         "hyperf/engine": "^2.10",
         "hyperf/filesystem": "~3.1.0",
@@ -60,11 +60,12 @@
         "hyperf/translation": "^3.1",
         "hyperf/validation": "^3.1",
         "hyperf/xxl-job-incubator": "^0.7.0",
-        "league/flysystem-aws-s3-v3": "^2.0",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "mpdf/mpdf": "^8.2",
-        "overtrue/flysystem-cos": "^4.0",
-        "overtrue/flysystem-qiniu": "^2.0",
-        "ramsey/uuid": "^4.9"
+        "overtrue/flysystem-cos": "^5.0",
+        "overtrue/flysystem-qiniu": "^3.0",
+        "ramsey/uuid": "^4.9",
+        "tgkw-adc/flysystem-huaweicloud-obs": "^1.0"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.0",
@@ -98,7 +99,7 @@
             "description": "华为Composer全量镜像",
             "type": "composer",
             "url": "https://repo.huaweicloud.com/repository/php/",
-            "canonical": false
+            "canonical": true
         },
         {
             "description": "官方源",
