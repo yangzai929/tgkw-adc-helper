@@ -1,6 +1,15 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
+
 namespace TgkwAdc\FileSystem;
+
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Filesystem\Adapter\LocalAdapterFactory;
 use Hyperf\Filesystem\Contract\AdapterFactoryInterface;
@@ -11,9 +20,9 @@ use League\Flysystem\Config;
 use League\Flysystem\Filesystem;
 use Psr\Container\ContainerInterface;
 
-class FilesystemFactory extends BaseFilesystemFactory{
-
-    //重写BaseFilesystemFactory
+class FilesystemFactory extends BaseFilesystemFactory
+{
+    // 重写BaseFilesystemFactory
     public function __construct(private ContainerInterface $container, private ConfigInterface $config)
     {
     }
@@ -30,11 +39,11 @@ class FilesystemFactory extends BaseFilesystemFactory{
             ],
         ];
 
-        $options = cfg('file' ); //从nacos配置中心获取文件系统配置
-        if(!$options){
+        $options = cfg('file'); // 从nacos配置中心获取文件系统配置
+        if (! $options) {
             $options = $default;
-        }else{
-            $options =json_decode($options, true);
+        } else {
+            $options = json_decode($options, true);
         }
 
         $adapter = $this->getAdapter($options, $adapterName);
