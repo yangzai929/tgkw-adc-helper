@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace TgkwAdc;
 
 use TgkwAdc\Aspect\RpcServiceAspect;
+use TgkwAdc\FileSystem\S3AdapterFactory;
 use TgkwAdc\Listener\MainWorkerStartListener;
 
 class ConfigProvider
@@ -19,6 +20,7 @@ class ConfigProvider
     {
         return [
             'dependencies' => [
+                S3AdapterFactory::class => S3AdapterFactory::class, // 修复S3AdapterFactory运行时报错
             ],
             'commands' => [
             ],
