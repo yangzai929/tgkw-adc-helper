@@ -17,11 +17,14 @@ class FileSystemHelper
 {
     public static function genFileTempUrl($object_key)
     {
+        $nacos = cfg('file'); // 从nacos配置中心获取文件系统配置
+        if (! $nacos) {
+           return  '暂无文件系统配置';
+        }
+        $fileConfig = json_decode($nacos, true);
+        $adapterName = $fileConfig['default'];
         $factory = make(FilesystemFactory::class);
-        echo 'FilesystemFactory 实例哈希: ' . spl_object_hash($factory) . "\n";
-
-        $local = $factory->get('rustfs');
-        echo 'rustfs 客户端实例哈希: ' . spl_object_hash($local) . "\n";
+        $local = $factory->get($adapterName);
 
         return $local->temporaryUrl($object_key, new DateTime('+10 seconds'));
     }

@@ -29,6 +29,7 @@ class FilesystemFactory extends BaseFilesystemFactory
 
     public function get($adapterName): Filesystem
     {
+
         $default = [
             'default' => 'local',
             'storage' => [
@@ -42,8 +43,10 @@ class FilesystemFactory extends BaseFilesystemFactory
         $options = cfg('file'); // 从nacos配置中心获取文件系统配置
         if (! $options) {
             $options = $default;
+            $adapterName = $default['default'];
         } else {
             $options = json_decode($options, true);
+            $adapterName = $options['default'];
         }
 
         $adapter = $this->getAdapter($options, $adapterName);
