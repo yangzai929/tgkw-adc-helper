@@ -103,11 +103,12 @@
             "type": "composer",
             "url": "https://repo.huaweicloud.com/repository/php/",
             "canonical": false
-        }, {
+        },
+        {
             "description": "Packagist Composer中国全量镜像",
             "type": "composer",
             "url": "https://packagist.phpcomposer.com",
-            "canonical": false
+            "canonical": true
         },
         {
             "description": "官方源",
