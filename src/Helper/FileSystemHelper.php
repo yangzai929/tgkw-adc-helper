@@ -11,21 +11,79 @@ declare(strict_types=1);
 namespace TgkwAdc\Helper;
 
 use DateTime;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\UnableToWriteFile;
+use Ramsey\Uuid\Uuid;
+use RuntimeException;
 use TgkwAdc\FileSystem\FilesystemFactory;
+use TgkwAdc\Helper\Log\LogHelper;
 
 class FileSystemHelper
 {
-    public static function genFileTempUrl($object_key)
-    {
-        $nacos = cfg('file'); // 从nacos配置中心获取文件系统配置
-        if (! $nacos) {
-           return  '暂无文件系统配置';
-        }
-        $fileConfig = json_decode($nacos, true);
-        $adapterName = $fileConfig['default'];
-        $factory = make(FilesystemFactory::class);
-        $local = $factory->get($adapterName);
+    protected $local;
 
-        return $local->temporaryUrl($object_key, new DateTime('+10 seconds'));
+    protected $urlExpiresAt;
+
+    public function __construct($adapterName = null, $urlExpiresAt = '+10 seconds')
+    {
+        if (! $adapterName) {
+            $nacos = cfg('file'); // 从nacos配置中心获取文件系统配置
+            if (! $nacos) {
+                throw new RuntimeException('文件系统配置缺失（nacos未配置file节点）');
+            }
+            $fileConfig = json_decode($nacos, true);
+            $adapterName = $fileConfig['default'];
+        }
+        /** @var FilesystemFactory $factory */
+        $factory = make(FilesystemFactory::class);
+        $this->local = $factory->get($adapterName);
+        $this->urlExpiresAt = $urlExpiresAt;
+
+        return $this;
+    }
+
+    public function genFileTempUrl($object_key)
+    {
+        return $this->local->temporaryUrl($object_key, new DateTime($this->urlExpiresAt));
+    }
+
+    public function upload($object_key, $path)
+    {
+        try {
+            $content = file_get_contents($path);
+            $this->local->write($object_key, $content);
+            return $object_key;
+        } catch (FilesystemException|UnableToWriteFile $exception) {
+            LogHelper::error('文件上传失败', [
+                'object_key' => $object_key,
+                'local_path' => $path,
+                'error' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString(),
+            ]);
+            return '';
+        }
+    }
+
+    public function importErrorFileUpload($path)
+    {
+        try {
+            $object_key = env('APP_ENV') . '/import_excel/' . env('APP_NAME') . '/' . Uuid::uuid1() . time() . '.xlsx';
+            $content = file_get_contents($path);
+            $this->local->write($object_key, $content);
+            return $object_key;
+        } catch (FilesystemException|UnableToWriteFile $exception) {
+            LogHelper::error('文件上传失败', [
+                'object_key' => $object_key,
+                'local_path' => $path,
+                'error' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString(),
+            ]);
+            return '';
+        }
+    }
+
+    public function genFileName($extension)
+    {
+        return env('APP_ENV') . '/' . Uuid::uuid1() . '.' . $extension;
     }
 }

@@ -14,7 +14,14 @@ use Attribute;
 use Hyperf\Di\Annotation\AbstractAnnotation;
 
 /**
- * excel导入导出元数据。
+ * Excel属性注解类.
+ *
+ * 该注解用于标记类的属性，定义该属性在Excel导入导出时的行为和样式。
+ * 可以配置列名、示例数据、提示信息、样式等属性。
+ *
+ * 使用示例：
+ * #[ExcelProperty("用户名", 0, demo: "张三", tip: "请输入用户真实姓名")]
+ * public string $username;
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class ExcelProperty extends AbstractAnnotation
@@ -95,7 +102,7 @@ class ExcelProperty extends AbstractAnnotation
     public array $dictData;
 
     /**
-     * 字典名单（将自动前往org服务查找字典内容，自行引入org服务）.
+     * 字典名单（将自动前往public服务查找字典内容，自行引入public服务）.
      */
     public string $dictName;
 
@@ -109,6 +116,28 @@ class ExcelProperty extends AbstractAnnotation
      */
     public string $dateTime;
 
+    /**
+     * 构造函数.
+     *
+     * @param string $value 列表头名称
+     * @param int $index 列顺序
+     * @param string $demo 示例数据
+     * @param string $tip 字段提示
+     * @param array $i18nValue 列表头名称（国际化）
+     * @param array $i18nDemo 示例数据（国际化）
+     * @param array $i18nTip 字段提示（国际化）
+     * @param null|int $width 宽度
+     * @param null|int $height 高度
+     * @param null|string $align 对齐方式
+     * @param bool $required 是否必填
+     * @param null|int $headHeight 列表头高度
+     * @param null|int|string $color 字体颜色
+     * @param null|int|string $bgColor 背景颜色
+     * @param string $dictName 字典名称
+     * @param array $dictData 字典数据
+     * @param null|string $path 数据路径
+     * @param string $dateTime 日期时间格式
+     */
     public function __construct(
         string $value,
         int $index,

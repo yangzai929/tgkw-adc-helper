@@ -136,4 +136,10 @@ enum CommonCode: int implements EnumCodeInterface
 
     #[EnumCode(msg: '图片mime类型（{file_mime}）不允许，只允许（{allow_mime}）', i18nMsg: ['en' => 'Image mime type ({file_mime}) is not allowed, only allow ({allow_mime})', 'zh_hk' => '圖片mime類型（{file_mime}）不允许，只允許（{allow_mime}）'])]
     case FILE_MIME_NOT_ALLOW = 39;
+
+    #[EnumCode(msg: '导入部分出错', i18nMsg: ['en' => 'Import part failed', 'zh_hk' => '導入部分出錯'])]
+    case IMPORT_PART_FAILED = 40;
+
+    #[EnumCode(msg: '文件格式不允许', i18nMsg: ['en' => 'Import part failed', 'zh_hk' => '導入部分出錯'])]
+    case FILE_EXTENSION_NOT_ALLOWED = 41;
 }

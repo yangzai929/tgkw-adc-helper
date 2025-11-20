@@ -80,6 +80,7 @@ class MainWorkerStartListener implements ListenerInterface
                 foreach ($class as $item) {
                     if (! empty($item->queue) && stripos($item->queue, env('APP_NAME')) !== 0) {
                         LogHelper::error('❌ 失败发现mq消费者的queue不符合规则，必须以服务名（' . env('APP_NAME') . '）开始：' . $item->queue);
+                        echo '❌ 失败发现mq消费者的queue不符合规则，必须以服务名（' . env('APP_NAME') . '）开始：' . $item->queue;
                         Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
                         break;
                     }
@@ -93,6 +94,7 @@ class MainWorkerStartListener implements ListenerInterface
                 foreach ($class as $item) {
                     if (! empty($item->exchange) && stripos($item->exchange, env('APP_NAME')) !== 0 && stripos($item->exchange, 'system') !== 0 && in_array($item->exchange, $consumerExchangeArr)) {
                         LogHelper::error('❌ 失败发现mq投递者的exchange不符合规则，必须以服务名（' . env('APP_NAME') . '）开始：' . $item->exchange);
+                        echo '❌ 失败发现mq投递者的exchange不符合规则，必须以服务名（' . env('APP_NAME') . '）开始：' . $item->exchange;
                         Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
                         break;
                     }
