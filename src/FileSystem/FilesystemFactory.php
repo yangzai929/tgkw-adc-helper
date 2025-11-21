@@ -25,9 +25,10 @@ class FilesystemFactory extends BaseFilesystemFactory
     // 重写BaseFilesystemFactory
     public function __construct(private ContainerInterface $container, private ConfigInterface $config)
     {
+        parent::__construct($container, $config);
     }
 
-    public function get($adapterName): Filesystem
+    public function get($adapterName = null): Filesystem
     {
         $default = [
             'default' => 'local',
@@ -39,11 +40,18 @@ class FilesystemFactory extends BaseFilesystemFactory
             ],
         ];
 
-        $options = cfg('file'); // 从nacos配置中心获取文件系统配置
+        $options = $this->config->get('file'); // 除public 服务外都从nacos配置中心获取文件系统配置
         if (! $options) {
             $options = $default;
-        } else {
+        }
+
+        if(is_string($options)){
             $options = json_decode($options, true);
+        }
+
+
+        if(!$adapterName){
+            $adapterName = $options['default'] ;
         }
 
         $adapter = $this->getAdapter($options, $adapterName);

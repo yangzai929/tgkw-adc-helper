@@ -26,19 +26,10 @@ class FileSystemHelper
 
     public function __construct($adapterName = null, $urlExpiresAt = '+10 seconds')
     {
-        if (! $adapterName) {
-            $nacos = cfg('file'); // 从nacos配置中心获取文件系统配置
-            if (! $nacos) {
-                throw new RuntimeException('文件系统配置缺失（nacos未配置file节点）');
-            }
-            $fileConfig = json_decode($nacos, true);
-            $adapterName = $fileConfig['default'];
-        }
         /** @var FilesystemFactory $factory */
         $factory = make(FilesystemFactory::class);
         $this->local = $factory->get($adapterName);
         $this->urlExpiresAt = $urlExpiresAt;
-
         return $this;
     }
 
