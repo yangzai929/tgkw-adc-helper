@@ -10,8 +10,11 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Helper;
 
-use PHPUnit\Event\RuntimeException;
+use RuntimeException;
 
+/**
+ * 适用于-次性会话加密
+ */
 class RsaHelper
 {
     public static function getPublicKey($keyPrefix = 'private_key', $expire = 60)
@@ -30,7 +33,7 @@ class RsaHelper
         ];
     }
 
-    public static function encrypt($encryptedData, $privateCacheKeyId)
+    public static function decrypt($encryptedData, $privateCacheKeyId)
     {
         $encryptedPassword = hex2bin($encryptedData);
         $privateKey = redis()->get($privateCacheKeyId);
