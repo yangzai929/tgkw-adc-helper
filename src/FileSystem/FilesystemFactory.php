@@ -45,13 +45,12 @@ class FilesystemFactory extends BaseFilesystemFactory
             $options = $default;
         }
 
-        if(is_string($options)){
+        if (is_string($options)) {
             $options = json_decode($options, true);
         }
 
-
-        if(!$adapterName){
-            $adapterName = $options['default'] ;
+        if (! $adapterName) {
+            $adapterName = $options['default'];
         }
 
         $adapter = $this->getAdapter($options, $adapterName);

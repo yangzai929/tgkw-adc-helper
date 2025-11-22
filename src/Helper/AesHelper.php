@@ -13,7 +13,7 @@ namespace TgkwAdc\Helper;
 class AesHelper
 {
     /**
-     * 加密.
+     * 服务端加密.
      */
     public static function encrypt(string $plaintext): string
     {
@@ -30,7 +30,7 @@ class AesHelper
     }
 
     /**
-     * 解密.
+     * 服务端解密.
      */
     public static function decrypt(string $ciphertext): string
     {
@@ -47,7 +47,7 @@ class AesHelper
     }
 
     /**
-     * 获取配置.
+     * 获取加密配置.
      */
     protected static function getConfig(): array
     {
