@@ -22,6 +22,7 @@ use Psr\Container\ContainerInterface;
 
 class FilesystemFactory extends BaseFilesystemFactory
 {
+    public $adapterName;
     // 重写BaseFilesystemFactory
     public function __construct(private ContainerInterface $container, private ConfigInterface $config)
     {
@@ -45,13 +46,16 @@ class FilesystemFactory extends BaseFilesystemFactory
             $options = $default;
         }
 
-        if (is_string($options)) {
+        if(is_string($options)){
             $options = json_decode($options, true);
         }
 
-        if (! $adapterName) {
-            $adapterName = $options['default'];
+
+        if(!$adapterName){
+            $adapterName = $options['default'] ;
         }
+
+        $this->adapterName = $adapterName;
 
         $adapter = $this->getAdapter($options, $adapterName);
         if (Version::isV2()) {

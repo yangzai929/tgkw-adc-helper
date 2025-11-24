@@ -12,4 +12,5 @@ namespace TgkwAdc\JsonRpc\Public;
 
 interface PublicServiceInterface
 {
+    public function handleFileUsed(string $object_key,int $is_used);
 }

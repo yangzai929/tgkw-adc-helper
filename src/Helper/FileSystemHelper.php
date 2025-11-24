@@ -20,39 +20,40 @@ use TgkwAdc\Helper\Log\LogHelper;
 
 class FileSystemHelper
 {
-    protected $adater;
+    protected $adapter;
 
-    protected $urlExpiresAt;
+    protected $adapterName;
 
-    public function __construct($adapterName = null, $urlExpiresAt = '+10 seconds')
+    public function __construct($adapterName = null)
     {
         /** @var FilesystemFactory $factory */
         $factory = make(FilesystemFactory::class);
-        $this->adater = $factory->get($adapterName);
-        $this->urlExpiresAt = $urlExpiresAt;
+        $this->adapter = $factory->get($adapterName);
+        $this->adapterName = $factory->adapterName;
         return $this;
     }
 
-    public function getAdater()
+    public function getAdapter()
     {
-        return $this->adater;
+        return $this->adapter;
     }
 
-    public function setUrlExpiresAt($urlExpiresAt)
+    public function getAdapterName()
     {
-        return   $this->urlExpiresAt = $urlExpiresAt;
+        return $this->adapterName;
     }
 
-    public function genFileTempUrl($object_key)
+
+    public function genFileTempUrl($object_key,string $expiresAt = '+10 seconds')
     {
-        return $this->adater->temporaryUrl($object_key, new DateTime($this->urlExpiresAt));
+        return $this->adapter->temporaryUrl($object_key, new DateTime($expiresAt));
     }
 
     public function upload($object_key, $path)
     {
         try {
             $content = file_get_contents($path);
-            $this->adater->write($object_key, $content);
+            $this->adapter->write($object_key, $content);
             return $object_key;
         } catch (FilesystemException|UnableToWriteFile $exception) {
             LogHelper::error('文件上传失败', [
@@ -70,7 +71,7 @@ class FileSystemHelper
         try {
             $object_key = env('APP_ENV') . '/import_excel/' . env('APP_NAME') . '/' . Uuid::uuid1() . time() . '.xlsx';
             $content = file_get_contents($path);
-            $this->adater->write($object_key, $content);
+            $this->adapter->write($object_key, $content);
             return $object_key;
         } catch (FilesystemException|UnableToWriteFile $exception) {
             LogHelper::error('文件上传失败', [
