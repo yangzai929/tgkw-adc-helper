@@ -14,12 +14,13 @@ use DateTime;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\UnableToWriteFile;
 use Ramsey\Uuid\Uuid;
+use RuntimeException;
 use TgkwAdc\FileSystem\FilesystemFactory;
 use TgkwAdc\Helper\Log\LogHelper;
 
 class FileSystemHelper
 {
-    protected $local;
+    protected $adater;
 
     protected $urlExpiresAt;
 
@@ -27,21 +28,31 @@ class FileSystemHelper
     {
         /** @var FilesystemFactory $factory */
         $factory = make(FilesystemFactory::class);
-        $this->local = $factory->get($adapterName);
+        $this->adater = $factory->get($adapterName);
         $this->urlExpiresAt = $urlExpiresAt;
         return $this;
     }
 
+    public function getAdater()
+    {
+        return $this->adater;
+    }
+
+    public function setUrlExpiresAt($urlExpiresAt)
+    {
+        return   $this->urlExpiresAt = $urlExpiresAt;
+    }
+
     public function genFileTempUrl($object_key)
     {
-        return $this->local->temporaryUrl($object_key, new DateTime($this->urlExpiresAt));
+        return $this->adater->temporaryUrl($object_key, new DateTime($this->urlExpiresAt));
     }
 
     public function upload($object_key, $path)
     {
         try {
             $content = file_get_contents($path);
-            $this->local->write($object_key, $content);
+            $this->adater->write($object_key, $content);
             return $object_key;
         } catch (FilesystemException|UnableToWriteFile $exception) {
             LogHelper::error('文件上传失败', [
@@ -59,7 +70,7 @@ class FileSystemHelper
         try {
             $object_key = env('APP_ENV') . '/import_excel/' . env('APP_NAME') . '/' . Uuid::uuid1() . time() . '.xlsx';
             $content = file_get_contents($path);
-            $this->local->write($object_key, $content);
+            $this->adater->write($object_key, $content);
             return $object_key;
         } catch (FilesystemException|UnableToWriteFile $exception) {
             LogHelper::error('文件上传失败', [

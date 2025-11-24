@@ -20,44 +20,53 @@ use TgkwAdc\Constants\LocaleConstants;
 abstract class BaseRequest extends FormRequest
 {
     /**
-     * 获取国际化验证消息.
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * 获取自定义验证消息.
+     * 支持类特定的自定义消息翻译：
+     * 1. validation.custom.{ClassName}.{field}.{rule} - 类特定翻译
+     * 2. validation.custom.{field}.{rule} - 通用翻译
+     * 3. validation.{rule} - 默认规则消息（由 Hyperf 验证器自动处理）
      */
     public function messages(): array
     {
-        $locale = $this->getLocale();
-        $translator = $this->getTranslator();
+        $translator = ApplicationContext::getContainer()->get(TranslatorInterface::class);
+        $locale = $translator->getLocale();
+        $className = get_class($this);
         $messages = [];
 
-        foreach ($this->rules() as $field => $rule) {
+        // 获取当前场景的规则
+        $rules = $this->getRules();
+
+        foreach ($rules as $field => $rule) {
             $ruleArray = is_string($rule) ? explode('|', $rule) : $rule;
+
             foreach ($ruleArray as $singleRule) {
                 $ruleName = explode(':', $singleRule)[0];
 
-                // 1. 优先尝试获取 custom 格式的验证消息
-                $customKey = "validation.custom.{$field}.{$ruleName}";
-                $customMessage = $translator->trans($customKey, [], $locale);
+                // 1. 优先尝试获取类特定的自定义消息
+                $classKey = "validation.custom.{$className}.{$field}.{$ruleName}";
+                $classMessage = $translator->trans($classKey, [], $locale);
 
-                if ($customMessage !== $customKey) {
-                    $messages["{$field}.{$ruleName}"] = $customMessage;
+                if ($classMessage !== $classKey) {
+                    $messages["{$field}.{$ruleName}"] = $classMessage;
                     continue;
                 }
 
-                // 2. 尝试获取字段特定的验证消息
-                $fieldRuleKey = "validation.{$field}.{$ruleName}";
-                $fieldRuleMessage = $translator->trans($fieldRuleKey, [], $locale);
-
-                if ($fieldRuleMessage !== $fieldRuleKey) {
-                    $messages["{$field}.{$ruleName}"] = $fieldRuleMessage;
-                    continue;
-                }
-
-                // 3. 如果字段特定消息不存在，使用通用验证消息
-                $generalKey = "validation.{$ruleName}";
+                // 2. 尝试获取通用自定义消息
+                $generalKey = "validation.custom.{$field}.{$ruleName}";
                 $generalMessage = $translator->trans($generalKey, [], $locale);
 
                 if ($generalMessage !== $generalKey) {
                     $messages["{$field}.{$ruleName}"] = $generalMessage;
                 }
+                // 3. 如果都找不到，让 Hyperf 验证器自动处理（从 validation.{rule} 获取）
             }
         }
 
@@ -65,115 +74,42 @@ abstract class BaseRequest extends FormRequest
     }
 
     /**
-     * 获取国际化字段名称.
+     * 获取自定义字段名称.
+     * 支持类特定的字段名称翻译：
+     * 1. validation.attributes.{ClassName}.{field} - 类特定翻译
+     * 2. validation.attributes.{field} - 通用翻译
      */
     public function attributes(): array
     {
-        $locale = $this->getLocale();
-        $translator = $this->getTranslator();
+        $translator = ApplicationContext::getContainer()->get(TranslatorInterface::class);
+        $locale = $translator->getLocale();
+        $className = get_class($this);
         $attributes = [];
 
-        foreach (array_keys($this->rules()) as $field) {
-            $key = "validation.attributes.{$field}";
-            $attribute = $translator->trans($key, [], $locale);
-            if ($attribute !== $key) {
-                $attributes[$field] = $attribute;
+        // 获取当前场景的规则字段
+        $rules = $this->getRules();
+
+        foreach (array_keys($rules) as $field) {
+            // 1. 优先尝试获取类特定的字段名称
+            $classKey = "validation.attributes.{$className}.{$field}";
+            $classAttribute = $translator->trans($classKey, [], $locale);
+
+            if ($classAttribute !== $classKey) {
+                $attributes[$field] = $classAttribute;
+                continue;
+            }
+
+            // 2. 尝试获取通用字段名称
+            $generalKey = "validation.attributes.{$field}";
+            $generalAttribute = $translator->trans($generalKey, [], $locale);
+
+            if ($generalAttribute !== $generalKey) {
+                $attributes[$field] = $generalAttribute;
             }
         }
 
         return $attributes;
     }
 
-    /**
-     * 配置验证器.
-     * @param mixed $validator
-     */
-    public function withValidator($validator)
-    {
-        $locale = $this->getLocale();
-        $validator->getTranslator()->setLocale($locale);
 
-        // 设置字段名称翻译
-        $attributesTranslation = $this->attributes();
-        if (! empty($attributesTranslation) && method_exists($validator, 'setAttributeNames')) {
-            $validator->setAttributeNames($attributesTranslation);
-        }
-
-        // 设置自定义验证消息
-        $customMessages = $this->messages();
-        if (! empty($customMessages) && method_exists($validator, 'setCustomMessages')) {
-            $validator->setCustomMessages($customMessages);
-        }
-    }
-
-    /**
-     * 获取当前语言环境.
-     */
-    protected function getLocale(): string
-    {
-        // 优先从 Context 获取（中间件可能已设置）
-        if ($locale = Context::get('locale')) {
-            return $locale;
-        }
-
-        // 从请求属性获取（中间件设置）
-        if ($locale = $this->getAttribute('locale')) {
-            return $locale;
-        }
-
-        // 从输入参数获取
-        $locale = $this->input('lang', LocaleConstants::getDefaultLocale());
-
-        return LocaleConstants::isSupported($locale) ? $locale : LocaleConstants::getDefaultLocale();
-    }
-
-    /**
-     * 验证前准备数据.
-     */
-    protected function prepareForValidation()
-    {
-        $locale = $this->getLocale();
-        $translator = $this->getTranslator();
-
-        // 设置翻译器语言环境
-        $translator->setLocale($locale);
-
-        // 保存到 Context
-        Context::set('locale', $locale);
-        Context::set('debug_locale', $locale);
-    }
-
-    /**
-     * 获取翻译器实例.
-     */
-    protected function getTranslator(): TranslatorInterface
-    {
-        return ApplicationContext::getContainer()->get(TranslatorInterface::class);
-    }
-
-    /**
-     * 重写验证器生成逻辑
-     * 确保 attributes() 和 withValidator() 始终被调用.
-     */
-    protected function getValidatorInstance(): ValidatorInterface
-    {
-        $validator = parent::getValidatorInstance();
-
-        // 调用字段翻译
-        $attributes = $this->attributes();
-        if (! empty($attributes)) {
-            $validator->setAttributeNames($attributes);
-        }
-
-        // 调用自定义消息
-        $customMessages = $this->messages();
-        if (! empty($customMessages) && method_exists($validator, 'setCustomMessages')) {
-            $validator->setCustomMessages($customMessages);
-        }
-
-        // 调用验证器额外配置
-        $this->withValidator($validator);
-
-        return $validator;
-    }
 }
