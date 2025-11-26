@@ -44,9 +44,9 @@ class MainWorkerStartListener implements ListenerInterface
         try {
             //  Redis 分布式锁 确保启动时只有一个进程执行
             $lockKey = 'mainWorkerStart';
-            $ttl = 300; // 锁过期时间，单位秒
+            $ttl = 10; // 锁过期时间，单位秒
             // 尝试获取锁
-            $isLocked = redis()->set('mainWorkerStart', 'rate', ['NX', 'EX' => 10]);
+            $isLocked = redis()->set($lockKey, 'rate', ['NX', 'EX' => $ttl]);
 
             LogHelper::info('Redis set result: ' . ($isLocked ? 'success' : 'failed'));
 
@@ -71,30 +71,66 @@ class MainWorkerStartListener implements ListenerInterface
         //            LogHelper::info('preStart result：', [$exitCode]);
         //        }
 
-        // 检测mq的queue、exchange是否以当前服务名开始，避免复制其他代码导致queue相同，引发问题（system.开头的代表系统级）
+        // 检测mq的queue、exchange命名规范（修正跨服务通信问题）
         if (env('AMQP_USER') && env('AMQP_PASSWORD') && env('APP_NAME')) {
-            $consumerExchangeArr = [];
-            // Consumer的queue必须以当前服务名开始
-            $class = AnnotationCollector::getClassesByAnnotation(Consumer::class);
-            if (! empty($class)) {
-                foreach ($class as $item) {
-                    if (! empty($item->queue) && stripos($item->queue, env('APP_NAME')) !== 0) {
-                        LogHelper::error('❌ 失败发现mq消费者的queue不符合规则，必须以服务名（' . env('APP_NAME') . '）开始：' . $item->queue);
-                        echo '❌ 失败发现mq消费者的queue不符合规则，必须以服务名（' . env('APP_NAME') . '）开始：' . $item->queue;
+            $currentServiceName = env('APP_NAME');
+            $localConsumerExchanges = []; // 记录当前服务Consumer使用的Exchange（本服务消费的Exchange）
+
+            // 1. Consumer校验：Queue和Exchange必须以当前服务名开头（或系统级），避免消费冲突
+            $consumerClasses = AnnotationCollector::getClassesByAnnotation(Consumer::class);
+            if (! empty($consumerClasses)) {
+                foreach ($consumerClasses as $item) {
+                    // 校验Queue：必须以服务名开头（系统级可例外，可选）
+                    if (! empty($item->queue) && stripos($item->queue, $currentServiceName) !== 0 && stripos($item->queue, 'system') !== 0) {
+                        $errorMsg = "❌ MQ Consumer 校验失败：Queue[{$item->queue}] 必须以服务名[{$currentServiceName}]或系统前缀[system]开头";
+                        LogHelper::error($errorMsg);
+                        echo $errorMsg . PHP_EOL;
                         Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
                         break;
                     }
-                    $consumerExchangeArr[] = $item->exchange;
+
+                    // 校验Exchange：必须以服务名开头（系统级可例外）
+                    if (! empty($item->exchange) && stripos($item->exchange, $currentServiceName) !== 0 && stripos($item->exchange, 'system') !== 0) {
+                        $errorMsg = "❌ MQ Consumer 校验失败：Exchange[{$item->exchange}] 必须以服务名[{$currentServiceName}]或系统前缀[system]开头";
+                        LogHelper::error($errorMsg);
+                        echo $errorMsg . PHP_EOL;
+                        Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                        break;
+                    }
+
+                    $localConsumerExchanges[] = $item->exchange; // 记录本服务消费的Exchange
                 }
             }
 
-            // Producer的exchange必须要以本服务名开始，特别是当本服务的Consumer存在的时候，避免命令为其他服务。
-            $class = AnnotationCollector::getClassesByAnnotation(Producer::class);
-            if (! empty($class)) {
-                foreach ($class as $item) {
-                    if (! empty($item->exchange) && stripos($item->exchange, env('APP_NAME')) !== 0 && stripos($item->exchange, 'system') !== 0 && in_array($item->exchange, $consumerExchangeArr)) {
-                        LogHelper::error('❌ 失败发现mq投递者的exchange不符合规则，必须以服务名（' . env('APP_NAME') . '）开始：' . $item->exchange);
-                        echo '❌ 失败发现mq投递者的exchange不符合规则，必须以服务名（' . env('APP_NAME') . '）开始：' . $item->exchange;
+            // 2. Producer校验：仅限制Exchange命名规范（非空、不非法），不限制归属（允许投递到其他服务的Exchange）
+            $producerClasses = AnnotationCollector::getClassesByAnnotation(Producer::class);
+            if (! empty($producerClasses)) {
+                foreach ($producerClasses as $item) {
+                    // 基础校验：Exchange不能为空（避免无效配置）
+                    if (empty($item->exchange)) {
+                        $errorMsg = '❌ MQ Producer 校验失败：Exchange 不能为空';
+                        LogHelper::error($errorMsg);
+                        echo $errorMsg . PHP_EOL;
+                        Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                        break;
+                    }
+
+                    // Exchange必须包含服务名（目标服务名或当前服务名），避免无意义命名
+                    if (! preg_match('/^[a-zA-Z0-9.-]+$/', $item->exchange) || substr_count($item->exchange, '.') < 1) {
+                        $errorMsg = "❌ MQ Producer 校验失败：Exchange[{$item->exchange}] 命名不规范！" . PHP_EOL
+                                  . '允许字符：字母（a-z/A-Z）、数字（0-9）、点（.）、连字符（-）' . PHP_EOL
+                                  . '建议格式：[服务名].[功能模块].[操作]（如 orderService.order.createOrder）';
+                        LogHelper::error($errorMsg);
+                        echo $errorMsg . PHP_EOL;
+                        Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                        break;
+                    }
+
+                    // 保留原逻辑：若Producer投递的Exchange是本服务Consumer正在使用的，需符合Consumer的规则（避免本服务Exchange命名冲突）
+                    if (in_array($item->exchange, $localConsumerExchanges) && stripos($item->exchange, $currentServiceName) !== 0 && stripos($item->exchange, 'system') !== 0) {
+                        $errorMsg = "❌ MQ Producer 校验失败：Exchange[{$item->exchange}] 是本服务Consumer使用的，必须以服务名[{$currentServiceName}]或系统前缀[system]开头";
+                        LogHelper::error($errorMsg);
+                        echo $errorMsg . PHP_EOL;
                         Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
                         break;
                     }
@@ -105,7 +141,7 @@ class MainWorkerStartListener implements ListenerInterface
         // 初始化打开 xxl-job
         LogHelper::info('xxl-job-task init now');
         if (env('XXL_JOB_ENABLE') === true) {
-            LogHelper::info('xxl-job is enable!✅ ');
+            LogHelper::info('xxl-job is enable! ✅ ');
             $XxlJobTaskHelper = new XxlJobTaskHelper();
             $XxlJobTaskHelper->build(true);
         }
@@ -130,7 +166,7 @@ class MainWorkerStartListener implements ListenerInterface
 
                 $mqResultCode = $response->getStatusCode();
                 if ($mqResultCode == 201 || $mqResultCode == 204) {
-                    LogHelper::info('rabbit-mq vhost create OK !✅ ');
+                    LogHelper::info('rabbit-mq vhost create OK ! ✅ ');
                 }
             } catch (GuzzleException $e) {
                 LogHelper::error('rabbit vhost create error：' . $e->getMessage());
