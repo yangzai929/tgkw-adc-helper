@@ -13,7 +13,7 @@ namespace TgkwAdc\Helper;
 use RuntimeException;
 
 /**
- * 适用于-次性会话加密
+ * 适用于-次性会话加密.
  */
 class RsaHelper
 {
@@ -38,7 +38,7 @@ class RsaHelper
         $encryptedPassword = hex2bin($encryptedData);
         $privateKey = redis()->get($privateCacheKeyId);
         if (! $privateKey) {
-            throw new RuntimeException('临时公钥已过期或不存在',1);
+            throw new RuntimeException('临时公钥已过期或不存在', 1);
         }
 
         $decryptedPassword = openssl_private_decrypt(
@@ -49,7 +49,7 @@ class RsaHelper
         );
 
         if (! $decryptedPassword) {
-            throw new RuntimeException('解密失败',2);
+            throw new RuntimeException('解密失败', 2);
         }
 
         return $decryptedData;

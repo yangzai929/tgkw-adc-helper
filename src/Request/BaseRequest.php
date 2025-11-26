@@ -11,11 +11,8 @@ declare(strict_types=1);
 namespace TgkwAdc\Request;
 
 use Hyperf\Context\ApplicationContext;
-use Hyperf\Context\Context;
 use Hyperf\Contract\TranslatorInterface;
-use Hyperf\Contract\ValidatorInterface;
 use Hyperf\Validation\Request\FormRequest;
-use TgkwAdc\Constants\LocaleConstants;
 
 abstract class BaseRequest extends FormRequest
 {
@@ -32,7 +29,7 @@ abstract class BaseRequest extends FormRequest
      * 支持类特定的自定义消息翻译：
      * 1. validation.custom.{ClassName}.{field}.{rule} - 类特定翻译
      * 2. validation.custom.{field}.{rule} - 通用翻译
-     * 3. validation.{rule} - 默认规则消息（由 Hyperf 验证器自动处理）
+     * 3. validation.{rule} - 默认规则消息（由 Hyperf 验证器自动处理）.
      */
     public function messages(): array
     {
@@ -77,7 +74,7 @@ abstract class BaseRequest extends FormRequest
      * 获取自定义字段名称.
      * 支持类特定的字段名称翻译：
      * 1. validation.attributes.{ClassName}.{field} - 类特定翻译
-     * 2. validation.attributes.{field} - 通用翻译
+     * 2. validation.attributes.{field} - 通用翻译.
      */
     public function attributes(): array
     {
@@ -110,6 +107,4 @@ abstract class BaseRequest extends FormRequest
 
         return $attributes;
     }
-
-
 }

@@ -14,7 +14,6 @@ use DateTime;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\UnableToWriteFile;
 use Ramsey\Uuid\Uuid;
-use RuntimeException;
 use TgkwAdc\FileSystem\FilesystemFactory;
 use TgkwAdc\Helper\Log\LogHelper;
 
@@ -43,8 +42,7 @@ class FileSystemHelper
         return $this->adapterName;
     }
 
-
-    public function genFileTempUrl($object_key,string $expiresAt = '+10 seconds')
+    public function genFileTempUrl($object_key, string $expiresAt = '+10 seconds')
     {
         return $this->adapter->temporaryUrl($object_key, new DateTime($expiresAt));
     }

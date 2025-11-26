@@ -8,9 +8,8 @@ declare(strict_types=1);
  * @document https://hyperf.wiki
  */
 
-namespace TgkwAdc\JsonRpc\Public;
+namespace TgkwAdc\Aspect;
 
-interface PublicServiceInterface
+class OperationLogsAspect
 {
-    public function handleFileUsed(string $object_key, int $is_used);
 }
