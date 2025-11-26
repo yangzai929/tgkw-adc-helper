@@ -12,71 +12,114 @@ namespace TgkwAdc\Utils;
 
 use Exception;
 use Hyperf\Di\Annotation\Inject;
-use Hyperf\HttpServer\Contract\RequestInterface;
-use TgkwAdc\IP2Location\Database;
 use Ip2Region;
+use Psr\Http\Message\ServerRequestInterface;
+use TgkwAdc\IP2Location\Database;
 
 class IpTool
 {
-    #[Inject]
-    protected Ip2region $ip2region;
+    /**
+     * 常见的反向代理/CDN 透传 IP 的请求头（优先级从高到低）.
+     */
+    private const IP_HEADERS = [
+        'X-Forwarded-For',
+        'X-Real-IP',
+        'Proxy-Client-IP',
+        'WL-Proxy-Client-IP',
+        'HTTP_CLIENT_IP',
+        'HTTP_X_FORWARDED_FOR',
+    ];
 
     /**
-     * 第一步：获取真实客户端 IP（处理反向代理/CDN）.
+     * IPv4 内网地址段（含子网掩码说明）.
      */
-    public function getRealIp(RequestInterface $request): string
-    {
-        // 常见的反向代理/CDN 透传 IP 的请求头
-        $ipHeaders = [
-            'X-Forwarded-For',
-            'X-Real-IP',
-            'Proxy-Client-IP',
-            'WL-Proxy-Client-IP',
-            'HTTP_CLIENT_IP',
-            'HTTP_X_FORWARDED_FOR',
-        ];
+    private const IPv4_INTERNAL_RANGES = [
+        ['start' => '10.0.0.0', 'end' => '10.255.255.255', 'desc' => 'A类内网'],
+        ['start' => '172.16.0.0', 'end' => '172.31.255.255', 'desc' => 'B类内网'],
+        ['start' => '192.168.0.0', 'end' => '192.168.255.255', 'desc' => 'C类内网'],
+        ['start' => '127.0.0.0', 'end' => '127.255.255.255', 'desc' => '本地回环'],
+        ['start' => '169.254.0.0', 'end' => '169.254.255.255', 'desc' => '链路本地地址'],
+    ];
 
-        foreach ($ipHeaders as $header) {
-            $ip = $request->getHeaderLine($header);
-            if ($ip && $ip !== 'unknown') {
-                // X-Forwarded-For 可能包含多个 IP（逗号分隔），取第一个非内网 IP
-                $ipList = explode(',', $ip);
-                foreach ($ipList as $realIp) {
-                    $realIp = trim($realIp);
-                    // 排除内网 IP（10.0.0.0/8、172.16.0.0/12、192.168.0.0/16）
-                    if (! $this->isInternalIp($realIp)) {
-                        return $realIp;
-                    }
+    #[Inject]
+    protected Ip2Region $ip2region;
+
+    /**
+     * 获取真实客户端 IP（处理反向代理/CDN）.
+     *
+     * @param ServerRequestInterface $request 请求对象
+     * @return string 纯净的IP地址（默认0.0.0.0）
+     */
+    public static function getRealIp(ServerRequestInterface $request): string
+    {
+        // 1. 优先从反向代理头中获取
+        foreach (self::IP_HEADERS as $header) {
+            $ipLine = $request->getHeaderLine($header);
+            if (empty($ipLine) || $ipLine === 'unknown') {
+                continue;
+            }
+
+            // 分割多个IP（逗号分隔），过滤空值并去重
+            $ipList = array_filter(array_map('trim', explode(',', $ipLine)));
+            $ipList = array_unique($ipList);
+
+            // 优先返回第一个非内网IP
+            foreach ($ipList as $ip) {
+                if (self::isValidIp($ip) && ! self::isInternalIp($ip)) {
+                    return $ip;
                 }
-                return trim($ipList[0]); // 若全是内网 IP，取第一个
+            }
+
+            // 若全是内网IP，返回第一个有效IP
+            foreach ($ipList as $ip) {
+                if (self::isValidIp($ip)) {
+                    return $ip;
+                }
             }
         }
 
-        // 若没有反向代理，直接获取 REMOTE_ADDR
-        return $request->getServerParams()['remote_addr'] ?? '0.0.0.0';
+        // 2. 直接从服务器参数获取（无反向代理场景）
+        $remoteIp = $request->getServerParams()['remote_addr'] ?? '';
+        if (self::isValidIp($remoteIp)) {
+            return $remoteIp;
+        }
+
+        // 3. 默认返回（无效IP场景）
+        return '0.0.0.0';
+    }
+
+    /**
+     * 验证IP地址有效性（支持IPv4/IPv6）.
+     *
+     * @param string $ip IP地址
+     * @return bool 是否有效
+     */
+    public static function isValidIp(string $ip): bool
+    {
+        return filter_var($ip, FILTER_VALIDATE_IP) !== false;
     }
 
     /**
      * 判断 IP 是否为内网地址（同时支持 IPv4 / IPv6）.
      */
-    public function isInternalIp(string $ip): bool
+    public static function isInternalIp(string $ip): bool
     {
+        // 先验证IP有效性
+        if (! self::isValidIp($ip)) {
+            return false;
+        }
+
+        // IPv4 内网判断
         if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             $ipLong = ip2long($ip);
             if ($ipLong === false) {
                 return false;
             }
 
-            $ranges = [
-                ['start' => ip2long('10.0.0.0'), 'end' => ip2long('10.255.255.255')],
-                ['start' => ip2long('172.16.0.0'), 'end' => ip2long('172.31.255.255')],
-                ['start' => ip2long('192.168.0.0'), 'end' => ip2long('192.168.255.255')],
-                ['start' => ip2long('127.0.0.0'), 'end' => ip2long('127.255.255.255')], // loopback
-                ['start' => ip2long('169.254.0.0'), 'end' => ip2long('169.254.255.255')], // link-local
-            ];
-
-            foreach ($ranges as $range) {
-                if ($ipLong >= $range['start'] && $ipLong <= $range['end']) {
+            foreach (self::IPv4_INTERNAL_RANGES as $range) {
+                $startLong = ip2long($range['start']);
+                $endLong = ip2long($range['end']);
+                if ($ipLong >= $startLong && $ipLong <= $endLong) {
                     return true;
                 }
             }
@@ -84,31 +127,28 @@ class IpTool
             return false;
         }
 
-        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            $packed = inet_pton($ip);
-            if ($packed === false) {
-                return false;
-            }
-
-            // ::1 loopback
-            if ($packed === inet_pton('::1')) {
-                return true;
-            }
-
-            $first = ord($packed[0]);
-            $second = ord($packed[1]);
-
-            // fc00::/7 Unique Local Addresses
-            if (($first & 0xFE) === 0xFC) {
-                return true;
-            }
-
-            // fe80::/10 Link-local
-            if ($first === 0xFE && ($second & 0xC0) === 0x80) {
-                return true;
-            }
-
+        // IPv6 内网判断
+        $packedIp = inet_pton($ip);
+        if ($packedIp === false) {
             return false;
+        }
+
+        // ::1 本地回环
+        if ($packedIp === inet_pton('::1')) {
+            return true;
+        }
+
+        $firstByte = ord($packedIp[0]);
+        $secondByte = ord($packedIp[1]);
+
+        // fc00::/7 唯一本地地址（ULA）
+        if (($firstByte & 0xFE) === 0xFC) {
+            return true;
+        }
+
+        // fe80::/10 链路本地地址（LLA）
+        if ($firstByte === 0xFE && ($secondByte & 0xC0) === 0x80) {
+            return true;
         }
 
         return false;
@@ -120,16 +160,20 @@ class IpTool
     public function getIpLocation(string $ip): string
     {
         // 处理内网 IP
-        if ($this->isInternalIp($ip)) {
+        if (self::isInternalIp($ip)) {
             return '内网';
         }
 
-        $res = ip2region($ip);
-        if ($res) {
-            return $res;
+        // 2. 验证IP有效性
+        if (! self::isValidIp($ip)) {
+            return '未知';
         }
 
         try {
+            $res = ip2region($ip);
+            if ($res) {
+                return $res;
+            }
             // 初始化数据库连接（FILE_IO 模式，适合小数据库；MEMORY_CACHE 模式更高效，需更多内存）
             $db = new Database();
             $record = $db->lookup($ip, Database::ALL); // 解析所有信息

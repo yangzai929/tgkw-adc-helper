@@ -175,12 +175,20 @@ class MainWorkerStartListener implements ListenerInterface
 
         LogHelper::info('开始同步菜单');
 
-        $data = OrgPermissionHelper::build();
-        LogHelper::info('菜单数据', [$data]);
-        if (env('APP_NAME') == 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
-            $userServiceRes = make('\App\JsonRpc\Provider\UserService')->addMenu($data);
-        } else {
-            $userServiceRes = ApplicationContext::getContainer()->get(UserServiceInterface::class)->addMenu($data);
+        //同步菜单
+        $needAddMenuSrvArr = [
+            'user',
+            'public',
+            'hr',
+        ];
+        if (in_array(env('APP_NAME'), $needAddMenuSrvArr)) {
+            $data = OrgPermissionHelper::build();
+            LogHelper::info('菜单数据', [$data]);
+            if (env('APP_NAME') == 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
+                $userServiceRes = make('\App\JsonRpc\Provider\UserService')->addMenu($data);
+            } else {
+                $userServiceRes = ApplicationContext::getContainer()->get(UserServiceInterface::class)->addMenu($data);
+            }
         }
 
         LogHelper::info('启动完成！（耗时：' . number_format(microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'], 2) . 's）');
