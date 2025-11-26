@@ -14,7 +14,7 @@ use Exception;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use TgkwAdc\IP2Location\Database;
-use TgkwAdc\Ip2region\Ip2region;
+use Ip2Region;
 
 class IpTool
 {
@@ -124,9 +124,9 @@ class IpTool
             return '内网';
         }
 
-        $res = $this->ip2region->memorySearch($ip);
+        $res = ip2region($ip);
         if ($res) {
-            return $res['region'];
+            return $res;
         }
 
         try {
