@@ -51,7 +51,7 @@ class RsaHelper
         if (! $decryptedPassword) {
             throw new RuntimeException('解密失败', 2);
         }
-
+        redis()->del($privateCacheKeyId);
         return $decryptedData;
     }
 }

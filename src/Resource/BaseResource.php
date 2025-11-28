@@ -14,7 +14,6 @@ use ArrayAccess;
 use DateTime;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Contract\RequestInterface;
-use Hyperf\Resource\Json\JsonResource;
 use JsonSerializable;
 use Throwable;
 
@@ -24,6 +23,14 @@ use Throwable;
  */
 abstract class BaseResource extends JsonResource
 {
+    private const SENSITIVE_FIELDS = [
+        'password',
+        'token',
+        'secret',
+        'access_key',
+        'private_key',
+    ];
+
     #[Inject]
     protected RequestInterface $request;
 
@@ -78,7 +85,7 @@ abstract class BaseResource extends JsonResource
     /**
      * 递归隐藏敏感字段.
      */
-    protected function hideSensitiveFieldsRecursive(array $data, array $fields = ['password', 'token', 'secret', 'access_key', 'private_key']): array
+    protected function hideSensitiveFieldsRecursive(array $data, array $fields = self::SENSITIVE_FIELDS): array
     {
         foreach ($data as $key => &$value) {
             if (in_array(strtolower($key), $fields, true)) {

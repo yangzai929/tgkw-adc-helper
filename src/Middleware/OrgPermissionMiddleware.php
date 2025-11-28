@@ -18,7 +18,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TgkwAdc\Constants\Code\CommonCode;
+use TgkwAdc\Constants\Code\AuthCode;
 use TgkwAdc\Helper\ApiResponseHelper;
 use TgkwAdc\Helper\Log\LogHelper;
 use TgkwAdc\JsonRpc\User\UserServiceInterface;
@@ -54,7 +54,7 @@ class OrgPermissionMiddleware implements MiddlewareInterface
                 $user = context_get('nowUser');
                 $tenant_id = context_get('tenant_id');
                 if (! $user) {
-                    return ApiResponseHelper::error(CommonCode::NEED_LOGIN);
+                    return ApiResponseHelper::error(AuthCode::NEED_LOGIN);
                 }
                 // $hasAccess = Enforcer::enforce('user:1', 'tenant:1', 'App\Controller\V1\UserController@index');
                 $hasAccess = $this->hasAccess(['user:' . $user['id'], 'tenant:' . $tenant_id, $action]);
@@ -63,7 +63,7 @@ class OrgPermissionMiddleware implements MiddlewareInterface
                     return $handler->handle($request);
                 }
 
-                return ApiResponseHelper::error(CommonCode::AUTH_ERROR->getMsg(), code: CommonCode::AUTH_ERROR->getCode());
+                return ApiResponseHelper::error(AuthCode::AUTH_ERROR->getMsg(), code: AuthCode::AUTH_ERROR->getCode());
             }
             throw new Exception('权限中间件异常');
         }   // 菜单权限注解不存在 则不校验权限直接放行

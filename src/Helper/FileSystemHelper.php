@@ -84,6 +84,7 @@ class FileSystemHelper
 
     public function genFileName($extension)
     {
-        return env('APP_ENV') . '/' . Uuid::uuid1() . '.' . $extension;
+        $ilename = str_replace('-', '', Uuid::uuid1());
+        return env('APP_ENV') . '/' . $ilename . '.' . $extension;
     }
 }

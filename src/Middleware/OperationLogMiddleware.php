@@ -73,7 +73,7 @@ class OperationLogMiddleware implements MiddlewareInterface
 
         $type = '';
         if ($this->request->header(self::SYSTEM_JWT_TOKEN)) {
-            $type = 'SYSTEM';
+            $type = 'SYS';
         } elseif ($this->request->header(self::ORG_JWT_TOKEN)) {
             $type = 'ORG';
         }
@@ -91,20 +91,6 @@ class OperationLogMiddleware implements MiddlewareInterface
 
         // GET请求的不存
         if ($operationLog['method'] == 'GET') {
-            return $result;
-        }
-
-        // 新的固定列表查询页，不存
-        if ($operationLog['method'] == 'POST' && str_ends_with($operationLog['router'], '/query')) {
-            return $result;
-        }
-
-        // 如果是不请求的URL，不存
-        $filterStr = $operationLog['method'] . ':/' . $operationLog['router'];
-
-        // 是否开启操作日志
-        $config = config('enable_operation_log_report', true);
-        if (! empty($config) && in_array($filterStr, $config)) {
             return $result;
         }
 
@@ -131,6 +117,7 @@ class OperationLogMiddleware implements MiddlewareInterface
                 $userData = [
                     'id' => $jwtData->id,
                     'account' => $jwtData->account ?? '',
+                    'real_name' => $jwtData->real_name ?? '',
                     'mobile' => $jwtData->mobile ?? '',
                     'email' => $jwtData->email ?? '',
                     'tenant_id' => $jwtData->tenant_id ?? 0,

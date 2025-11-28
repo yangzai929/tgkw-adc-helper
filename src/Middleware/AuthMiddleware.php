@@ -14,7 +14,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TgkwAdc\Constants\Code\CommonCode;
+use TgkwAdc\Constants\Code\AuthCode;
 use TgkwAdc\Exception\BusinessException;
 use TgkwAdc\Helper\ApiResponseHelper;
 use TgkwAdc\Helper\JwtHelper;
@@ -31,19 +31,25 @@ class AuthMiddleware implements MiddlewareInterface
             $tenantId = $request->getHeaderLine('Current-Tenant-Id');
             // 如果命中白名单，跳过租户 ID 检查
             if (! in_array($path, $t_whitelist, true) && empty($tenantId)) {
-                throw new BusinessException(CommonCode::EMPTY_TENANT_ID);
+                throw new BusinessException(AuthCode::EMPTY_TENANT_ID);
             }
-            // 将租户id存储到上下文中，供其他地方使用
-            context_set('tenant_id', $tenantId);
 
             // 获取JWT数据
             $jwtData = JwtHelper::getPayloadFromRequest($request, 'ORG');
-            //        if (! $jwtData || time() - $jwtData->iat > 86400 * 14) { // 未登录，或登录状态超过14天
-            if (! $jwtData) { // 未登录，或登录状态超过14天
-                return ApiResponseHelper::error(CommonCode::NEED_LOGIN->getI18nMsg(), code: CommonCode::NEED_LOGIN->getCode());
+            if (! $jwtData) { // 未登录
+                return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN->getCode());
             }
 
-            context_set('nowUser', $jwtData); // 将登录信息存储到协程上下文
+            // 检查租户id 是否正确
+            if (! in_array($tenantId, $jwtData['tenantsArr'], true)) {
+                throw new BusinessException(AuthCode::ERROR_TENANT_ID);
+            }
+
+            // 将租户id存储到协程上下文
+            context_set('tenant_id', $tenantId);
+
+            // 将登录信息存储到协程上下文
+            context_set('nowUser', $jwtData);
         }
 
         return $handler->handle($request);

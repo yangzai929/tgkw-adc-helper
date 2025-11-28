@@ -175,7 +175,7 @@ class MainWorkerStartListener implements ListenerInterface
 
         LogHelper::info('开始同步菜单');
 
-        //同步菜单
+        // 同步菜单
         $needAddMenuSrvArr = [
             'user',
             'public',

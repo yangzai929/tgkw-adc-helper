@@ -24,11 +24,11 @@ class OrgPermission extends AbstractAnnotation
 
     public string $accessCode = ''; // 唯一权限标识
 
-    public string $module = ''; // 菜单模块层级标识 管理后台:系统设置:角色管理
+    public string $module = ''; // 菜单模块层级标识 管理后台:系统设置:角色管理   最低层级为名称
 
     public array $i18nName = []; // 国际化菜单名
 
-    public string $type = ''; // 菜单名称
+    public string $type = ''; // 菜单类型
 
     public int $sort = 0; // 排序
 
