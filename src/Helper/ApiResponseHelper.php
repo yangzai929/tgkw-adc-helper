@@ -66,6 +66,7 @@ class ApiResponseHelper
         ])->withStatus($httpStatusCode);
     }
 
+
     public static function error($message = 'error', $error = null, $data = [], $code = 400, $httpStatusCode = 200): Psr7ResponseInterface
     {
         $response = ApplicationContext::getContainer()->get(ResponseInterface::class);
@@ -105,6 +106,14 @@ class ApiResponseHelper
             'message' => $messges,
             'data' => $data,
             'timestamp' => time(),
+        ];
+    }
+
+
+    public static function debug($data = null)
+    {
+        return [
+            'data' => $data,
         ];
     }
 }
