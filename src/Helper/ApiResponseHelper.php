@@ -52,7 +52,7 @@ class ApiResponseHelper
                 ])->withStatus(400);
             }
 
-            $formattedData = $data->toArray(); // 此处显示调用，如果不显示调用，也会默认在ResponseInterface 示例中 toArray()
+            $formattedData = $data;
         } else {
             // 数据为空时，默认返回空数组
             $formattedData = [];
@@ -65,7 +65,6 @@ class ApiResponseHelper
             'timestamp' => time(),
         ])->withStatus($httpStatusCode);
     }
-
 
     public static function error($message = 'error', $error = null, $data = [], $code = 400, $httpStatusCode = 200): Psr7ResponseInterface
     {
@@ -108,7 +107,6 @@ class ApiResponseHelper
             'timestamp' => time(),
         ];
     }
-
 
     public static function debug($data = null)
     {
