@@ -26,6 +26,7 @@ use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use TgkwAdc\Helper\Log\LogHelper;
 use TgkwAdc\Helper\OrgPermissionHelper;
+use TgkwAdc\Helper\SystemPermissionHelper;
 use TgkwAdc\Helper\XxlJobTaskHelper;
 use TgkwAdc\JsonRpc\User\UserServiceInterface;
 
@@ -176,16 +177,23 @@ class MainWorkerStartListener implements ListenerInterface
         LogHelper::info('开始同步菜单');
 
         // 同步菜单
-        $needAddMenuSrvArr = [
-            'user',
-            'public',
-            'hr',
-        ];
-        if (in_array(env('APP_NAME'), $needAddMenuSrvArr)) {
+        $systemConfig = cfg('systemConfig');
+        $systemConfig = json_decode($systemConfig, true);
+        if (in_array(env('APP_NAME'), $systemConfig['needAddMenuSrv'])) {
+            //租户菜单
             $data = OrgPermissionHelper::build();
-            LogHelper::info('菜单数据', [$data]);
+            LogHelper::info('菜单数据', [$data],'org_menu_data');
             if (env('APP_NAME') == 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
                 $userServiceRes = make('\App\JsonRpc\Provider\UserService')->addMenu($data);
+            } else {
+                $userServiceRes = ApplicationContext::getContainer()->get(UserServiceInterface::class)->addMenu($data);
+            }
+
+            //系统总后台菜单
+            $data = SystemPermissionHelper::build();
+            LogHelper::info('菜单数据', [$data],'sys_menu_data');
+            if (env('APP_NAME') == 'public' && class_exists('\App\JsonRpc\Provider\SystemMenuService')) {
+                $userServiceRes = make('\App\JsonRpc\Provider\SystemMenuService')->addMenu($data);
             } else {
                 $userServiceRes = ApplicationContext::getContainer()->get(UserServiceInterface::class)->addMenu($data);
             }

@@ -56,6 +56,13 @@ class OrgPermissionMiddleware implements MiddlewareInterface
                 if (! $user) {
                     return ApiResponseHelper::error(AuthCode::NEED_LOGIN);
                 }
+                foreach ($user['tenants'] as $tenant){
+                    if ($tenant['admin_uid'] == $user['id']){
+                        //当前租户的超级管理员 默认具备所有权限直接放行
+                        return $handler->handle($request);
+                    }
+                }
+
                 // $hasAccess = Enforcer::enforce('user:1', 'tenant:1', 'App\Controller\V1\UserController@index');
                 $hasAccess = $this->hasAccess(['user:' . $user['id'], 'tenant:' . $tenant_id, $action]);
                 LogHelper::info('OrgPermissionMiddleware', ['controller' => $controller, 'action' => $action, 'res' => $hasAccess, $annotations]);
