@@ -69,6 +69,7 @@
         "phpoffice/phpword": "*",
         "ramsey/uuid": "^4.9",
         "tgkw-adc/flysystem-huaweicloud-obs": "1.0.3",
+        "tgkw-adc/hyperf-captcha": "^1.0",
         "tgkw-adc/ip2location-php": "^1.0",
         "viest/php-ext-xlswriter-ide-helper": "1.3.6",
         "zoujingli/ip2region": "3.0.8"
