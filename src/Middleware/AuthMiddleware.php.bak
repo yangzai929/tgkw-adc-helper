@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Middleware;
 
+use Hyperf\Context\Context;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -18,12 +19,12 @@ use TgkwAdc\Constants\Code\AuthCode;
 use TgkwAdc\Exception\BusinessException;
 use TgkwAdc\Helper\ApiResponseHelper;
 use TgkwAdc\Helper\JwtHelper;
-use Hyperf\Context\Context; // 明确引入协程上下文类（原代码可能依赖全局函数）
+
 
 class AuthMiddleware implements MiddlewareInterface
 {
     /**
-     * 处理请求：执行认证逻辑，通过后传递给下一个处理器
+     * 处理请求：执行认证逻辑，通过后传递给下一个处理器.
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
@@ -41,7 +42,7 @@ class AuthMiddleware implements MiddlewareInterface
 
         // 4. 租户ID校验（非租户白名单路由必须携带）
         $tenantId = trim($request->getHeaderLine('Current-Tenant-Id'));
-        if (!in_array($currentPath, $tenantWhitelist, true) && empty($tenantId)) {
+        if (! in_array($currentPath, $tenantWhitelist, true) && empty($tenantId)) {
             throw new BusinessException(AuthCode::EMPTY_TENANT_ID);
         }
 
@@ -54,7 +55,7 @@ class AuthMiddleware implements MiddlewareInterface
 
         // 6. 租户权限校验（确保用户有权访问当前租户）
         $userAuthorizedTenants = $jwtPayload['tenantsArr'] ?? [];
-        if (!empty($tenantId) && !in_array($tenantId, $userAuthorizedTenants, true)) {
+        if (! empty($tenantId) && ! in_array($tenantId, $userAuthorizedTenants, true)) {
             throw new BusinessException(AuthCode::ERROR_TENANT_ID);
         }
 
@@ -69,7 +70,7 @@ class AuthMiddleware implements MiddlewareInterface
     }
 
     /**
-     * 读取配置中的路由白名单
+     * 读取配置中的路由白名单.
      * @param string $key 白名单配置键名（auth_whitelist/tenant_whitelist）
      * @return array 白名单路由数组（默认空数组）
      */
@@ -81,7 +82,7 @@ class AuthMiddleware implements MiddlewareInterface
     }
 
     /**
-     * 批量存储数据到协程上下文
+     * 批量存储数据到协程上下文.
      * @param array $data 键值对数据
      */
     private function setContextData(array $data): void

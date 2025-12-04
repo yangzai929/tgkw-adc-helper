@@ -76,39 +76,137 @@ class LogHelper
     }
 
     // 以下是不同级别的快捷方法
-    public static function info(...$args): void
-    {
-        self::log('info', ...$args);
+    public static function info(
+        string $message,
+        array $context = [],
+        ?string $filename = null,
+        string $name = 'log',
+        string $group = 'default',
+        bool $async = false
+    ): void {
+        self::log(
+            'info',
+            $message,
+            $context,
+            $name,
+            $group,
+            $filename,
+            $async
+        );
     }
 
-    public static function notice(...$args): void
-    {
-        self::log('notice', ...$args);
+    public static function notice(
+        string $message,
+        array $context = [],
+        ?string $filename = null,
+        string $name = 'log',
+        string $group = 'default',
+        bool $async = false
+    ): void {
+        self::log(
+            'notice',
+            $message,
+            $context,
+            $name,
+            $group,
+            $filename,
+            $async
+        );
     }
 
-    public static function warning(...$args): void
-    {
-        self::log('warning', ...$args);
+    public static function warning(
+        string $message,
+        array $context = [],
+        ?string $filename = null,
+        string $name = 'log',
+        string $group = 'default',
+        bool $async = false
+    ): void {
+        self::log(
+            'warning',
+            $message,
+            $context,
+            $name,
+            $group,
+            $filename,
+            $async
+        );
     }
 
-    public static function error(...$args): void
-    {
-        self::log('error', ...$args);
+    public static function error(
+        string $message,
+        array $context = [],
+        ?string $filename = null,
+        string $name = 'log',
+        string $group = 'default',
+        bool $async = false
+    ): void {
+        self::log(
+            'error',
+            $message,
+            $context,
+            $name,
+            $group,
+            $filename,
+            $async
+        );
     }
 
-    public static function critical(...$args): void
-    {
-        self::log('critical', ...$args);
+    public static function critical(
+        string $message,
+        array $context = [],
+        ?string $filename = null,
+        string $name = 'log',
+        string $group = 'default',
+        bool $async = false
+    ): void {
+        self::log(
+            'critical',
+            $message,
+            $context,
+            $name,
+            $group,
+            $filename,
+            $async
+        );
     }
 
-    public static function alert(...$args): void
-    {
-        self::log('alert', ...$args);
+    public static function alert(
+        string $message,
+        array $context = [],
+        ?string $filename = null,
+        string $name = 'log',
+        string $group = 'default',
+        bool $async = false
+    ): void {
+        self::log(
+            'alert',
+            $message,
+            $context,
+            $name,
+            $group,
+            $filename,
+            $async
+        );
     }
 
-    public static function emergency(...$args): void
-    {
-        self::log('emergency', ...$args);
+    public static function emergency(
+        string $message,
+        array $context = [],
+        ?string $filename = null,
+        string $name = 'log',
+        string $group = 'default',
+        bool $async = false
+    ): void {
+        self::log(
+            'emergency',
+            $message,
+            $context,
+            $name,
+            $group,
+            $filename,
+            $async
+        );
     }
 
     // 调试日志

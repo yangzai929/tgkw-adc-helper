@@ -21,16 +21,13 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TgkwAdc\Amqp\Producer\OperationLogProducer;
+use TgkwAdc\Constants\GlobalConstants;
 use TgkwAdc\Helper\JwtHelper;
 use TgkwAdc\Helper\Log\LogHelper;
 use TgkwAdc\Utils\IpTool;
 
 class OperationLogMiddleware implements MiddlewareInterface
 {
-    public const SYSTEM_JWT_TOKEN = 'System-Token';
-
-    public const ORG_JWT_TOKEN = 'Org-Token';
-
     protected ContainerInterface $container;
 
     protected RequestInterface $request;
@@ -72,17 +69,17 @@ class OperationLogMiddleware implements MiddlewareInterface
         ];
 
         $type = '';
-        if ($this->request->header(self::SYSTEM_JWT_TOKEN)) {
-            $type = 'SYS';
-        } elseif ($this->request->header(self::ORG_JWT_TOKEN)) {
-            $type = 'ORG';
+        if ($this->request->header(GlobalConstants::SYS_TOKEN_KEY)) {
+            $type = GlobalConstants::SYS_TOKEN_TYPE;
+        } elseif ($this->request->header(GlobalConstants::ORG_TOKEN_KEY)) {
+            $type = GlobalConstants::ORG_TOKEN_TYPE;
         }
 
         // 获取用户登录信息.
         $user_data = $this->getUserData($request, $type);
         if ($user_data) {
             $operationLog['user_data'] = $user_data;
-            if ($type == 'ORG') {
+            if ($type == GlobalConstants::ORG_TOKEN_TYPE) {
                 $operationLog['tenant_id'] = $user_data['tenant_id'] ?: 0;
             }
         } else {

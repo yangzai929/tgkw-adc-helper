@@ -28,6 +28,7 @@ use TgkwAdc\Helper\Log\LogHelper;
 use TgkwAdc\Helper\OrgPermissionHelper;
 use TgkwAdc\Helper\SystemPermissionHelper;
 use TgkwAdc\Helper\XxlJobTaskHelper;
+use TgkwAdc\JsonRpc\Public\SystemServiceInterface;
 use TgkwAdc\JsonRpc\User\UserServiceInterface;
 
 #[Listener]
@@ -180,22 +181,22 @@ class MainWorkerStartListener implements ListenerInterface
         $systemConfig = cfg('systemConfig');
         $systemConfig = json_decode($systemConfig, true);
         if (in_array(env('APP_NAME'), $systemConfig['needAddMenuSrv'])) {
-            //租户菜单
+            // 租户菜单
             $data = OrgPermissionHelper::build();
-            LogHelper::info('菜单数据', [$data],'org_menu_data');
+            LogHelper::info('菜单数据', [$data], 'org_menu_data');
             if (env('APP_NAME') == 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
                 $userServiceRes = make('\App\JsonRpc\Provider\UserService')->addMenu($data);
             } else {
                 $userServiceRes = ApplicationContext::getContainer()->get(UserServiceInterface::class)->addMenu($data);
             }
 
-            //系统总后台菜单
+            // 系统总后台菜单
             $data = SystemPermissionHelper::build();
-            LogHelper::info('菜单数据', [$data],'sys_menu_data');
-            if (env('APP_NAME') == 'public' && class_exists('\App\JsonRpc\Provider\SystemMenuService')) {
-                $userServiceRes = make('\App\JsonRpc\Provider\SystemMenuService')->addMenu($data);
+            LogHelper::info('菜单数据', [$data], 'sys_menu_data');
+            if (env('APP_NAME') == 'public' && class_exists('\App\JsonRpc\Provider\SystemService')) {
+                $userServiceRes = make('\App\JsonRpc\Provider\SystemService')->addMenu($data);
             } else {
-                $userServiceRes = ApplicationContext::getContainer()->get(UserServiceInterface::class)->addMenu($data);
+                $userServiceRes = ApplicationContext::getContainer()->get(SystemServiceInterface::class)->addMenu($data);
             }
         }
 

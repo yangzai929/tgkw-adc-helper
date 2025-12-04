@@ -71,6 +71,20 @@ if (! function_exists('container_get')) {
     }
 }
 
+if (! function_exists('auth_user')) {
+    function auth_user($default = null)
+    {
+        return Context::get(GlobalConstants::ORG_USER_CONTEXT, $default);
+    }
+}
+
+if (! function_exists('system_admin')) {
+    function system_admin($default = null)
+    {
+        return Context::get(GlobalConstants::SYS_ADMIN_CONTEXT, $default);
+    }
+}
+
 /**
  * 将对象或嵌套对象转换为数组
  * 递归处理对象和数组，将所有对象转换为关联数组.
@@ -208,6 +222,7 @@ function i18nEnumArrConvertValue(array $data, array $value_map = [])
 }
 
 use TgkwAdc\Annotation\EnumI18nInterface;
+use TgkwAdc\Constants\GlobalConstants;
 
 /**
  * 构建表格列配置和值映射的通用方法.
