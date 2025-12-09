@@ -278,34 +278,6 @@ function buildTableColumnsWithValueMaps(string $listEnumClass, array $valueMapCo
     // 构建 value_maps
     $valueMaps = filedI18nMap($valueMapConfig);
 
-//    foreach ($valueMapConfig as $fieldKey => $config) {
-//        $mapKey = call_user_func([$valueMapConfig[$fieldKey], 'getEnumsGroupCode'])['groupCode'];
-//        $enumClass = $valueMapConfig[$fieldKey];
-//
-//        if (! is_subclass_of($enumClass, EnumI18nInterface::class)) {
-//            continue;
-//        }
-//
-//        $enumMap = [];
-//        $enumDataList = call_user_func([$enumClass, 'getEnums']);
-//
-//        foreach ($enumDataList as $enumName => $enumData) {
-//            $i18nTxt = $enumData['i18nTxt'] ?? [];
-//            // 确保包含 zh_cn（如果不存在，使用 txt 作为默认值）
-//            if (! isset($i18nTxt['zh_cn'])) {
-//                $i18nTxt['zh_cn'] = $enumData['txt'] ?? '';
-//            }
-//
-//            $enumMap[] = [
-//                'value' => $enumData['value'],
-//                'i18n_txt' => $i18nTxt,
-//                'i18n_key' => $enumData['i18nKey'] ?? '',
-//            ];
-//        }
-//
-//        $valueMaps[$mapKey] = $enumMap;
-//    }
-
     return [
         'columns' => $columns,
         'value_maps' => $valueMaps,

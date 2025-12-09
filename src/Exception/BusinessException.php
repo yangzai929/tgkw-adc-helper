@@ -15,9 +15,14 @@ use TgkwAdc\Annotation\EnumCodeInterface;
 
 class BusinessException extends ServerException
 {
-    public function __construct(EnumCodeInterface $code, array $vars = [])
+    public function __construct( $code, $message ='',array $i18nParam = [])
     {
-        $message = $vars ? $code->genI18nMsg($vars) : $code->getI18nMsg();
-        parent::__construct($message, $code->getCode() ?? 400);
+        if($code instanceof EnumCodeInterface){
+            $message = $i18nParam ? $code->genI18nMsg($i18nParam) : $code->getI18nMsg();
+            parent::__construct($message, $code->getCode() ?? 400);
+        }else{
+            parent::__construct($message, $code);
+        }
+
     }
 }
