@@ -109,12 +109,6 @@
             "canonical": true
         },
         {
-            "description": "Packagist Composer中国全量镜像",
-            "type": "composer",
-            "url": "https://packagist.phpcomposer.com",
-            "canonical": false
-        },
-        {
             "description": "华为Composer全量镜像",
             "type": "composer",
             "url": "https://repo.huaweicloud.com/repository/php/",
