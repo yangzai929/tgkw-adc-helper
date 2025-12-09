@@ -25,16 +25,8 @@ class RpcProviderServiceAspect extends AbstractAspect
      */
     public array $classes = [
         'App\JsonRpc\Provider\*::*',
-        'App\JsonRpc\Provider\*\*::*',
-        'App\JsonRpc\Provider\*\*\*::*',
-        'App\JsonRpc\Provider\*\*\*\*::*',
-        'App\JsonRpc\Provider\*\*\*\*\*::*',
-
         'TgkwAdc\JsonRpc\Provider\*::*',
-        'TgkwAdc\JsonRpc\Provider\*\*::*',
-        'TgkwAdc\JsonRpc\Provider\*\*\*::*',
-        'TgkwAdc\JsonRpc\Provider\*\*\*\*::*',
-        'TgkwAdc\JsonRpc\Provider\*\*\*\*\*::*',
+
     ];
 
     public function process(ProceedingJoinPoint $proceedingJoinPoint)
