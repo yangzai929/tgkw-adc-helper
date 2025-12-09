@@ -10,7 +10,8 @@ declare(strict_types=1);
 
 namespace TgkwAdc;
 
-use TgkwAdc\Aspect\RpcServiceAspect;
+use TgkwAdc\Aspect\RpcConsumerServiceAspect;
+use TgkwAdc\Aspect\RpcProviderServiceAspect;
 use TgkwAdc\FileSystem\S3AdapterFactory;
 use TgkwAdc\Listener\MainWorkerStartListener;
 
@@ -25,7 +26,8 @@ class ConfigProvider
             'commands' => [
             ],
             'aspects' => [
-                RpcServiceAspect::class,
+                RpcConsumerServiceAspect::class,
+                RpcProviderServiceAspect::class,
             ],
             'listeners' => [
                 MainWorkerStartListener::class,

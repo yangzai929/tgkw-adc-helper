@@ -100,7 +100,7 @@ trait EnumI18nGet
 
         return [
             'value' => $txtArr['txt'],
-            'i18n_value' => $txtArr['i18nTxt'],
+            'i18n_text' => $txtArr['i18nTxt'],
             'i18n_key' => $txtArr['i18nKey'],
             'i18n_params' => $i18nParams,
         ];

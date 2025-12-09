@@ -71,6 +71,8 @@ if (! function_exists('container_get')) {
     }
 }
 
+use TgkwAdc\Constants\GlobalConstants;
+
 if (! function_exists('auth_user')) {
     function auth_user($default = null)
     {
@@ -203,26 +205,10 @@ function i18nEnumArrConvert(array $data, array $value_map = [])
     return $res;
 }
 
-function i18nEnumArrConvertValue(array $data, array $value_map = [])
-{
-    $res = [];
-    foreach ($data as $key => $value) {
-        $item = [
-            'txt' => $value['txt'],
-            'field' => $value['value'],
-            'i18n_txt' => $value['i18nTxt'],
-            'i18n_key' => $value['i18nKey'],
-        ];
-        if (isset($value_map[$value['value']])) {
-            $item['value_map_key'] = make($value_map[$value['value']])::getEnums();
-        }
-        $res[] = $item;
-    }
-    return $res;
-}
+
+
 
 use TgkwAdc\Annotation\EnumI18nInterface;
-use TgkwAdc\Constants\GlobalConstants;
 
 /**
  * 构建表格列配置和值映射的通用方法.
@@ -245,7 +231,7 @@ use TgkwAdc\Constants\GlobalConstants;
  *               'columns' => [                // 表格列配置数组
  *               [
  *               'key' => string,          // 列对应的字段名
- *               'i18n' => array,          // 国际化文本数组（如 ['zh_cn' => '名称', 'en' => 'Name']）
+ *               'i18n_txt' => array,          // 国际化文本数组（如 ['zh_cn' => '名称', 'en' => 'Name']）
  *               'i18n_key' => string,     // 国际化键名
  *               'value_map_key' => string // 若该列配置了值映射，则为映射键名（可选）
  *               ],
@@ -254,7 +240,7 @@ use TgkwAdc\Constants\GlobalConstants;
  *               'value_maps' => [             // 值映射表数组
  *               'map_key' => [              // 映射键名（由映射枚举类定义）
  *               'value' => [              // 枚举值对应的映射信息
- *               'i18n' => array,        // 国际化文本数组
+ *               'i18n_txt' => array,        // 国际化文本数组
  *               'i18n_key' => string    // 国际化键名
  *               ],
  *               ...
@@ -278,24 +264,59 @@ function buildTableColumnsWithValueMaps(string $listEnumClass, array $valueMapCo
     foreach ($listEnums as $enumName => $enumData) {
         $column = [
             'key' => $enumData['value'],
-            'i18n' => $enumData['i18nTxt'] ?? [],
+            'i18n_txt' => $enumData['i18nTxt'] ?? [],
             'i18n_key' => $enumData['i18nKey'] ?? '',
         ];
 
         // 检查该字段是否需要值映射
         $fieldKey = $enumData['value'];
-        if (isset($valueMapConfig[$fieldKey])) {
-            $column['value_map_key'] = call_user_func([$valueMapConfig[$fieldKey], 'getEnumsGroupCode'])['groupCode'];
-        }
+        $column['value_map_key'] = $fieldKey;
 
         $columns[] = $column;
     }
 
     // 构建 value_maps
+    $valueMaps = filedI18nMap($valueMapConfig);
+
+//    foreach ($valueMapConfig as $fieldKey => $config) {
+//        $mapKey = call_user_func([$valueMapConfig[$fieldKey], 'getEnumsGroupCode'])['groupCode'];
+//        $enumClass = $valueMapConfig[$fieldKey];
+//
+//        if (! is_subclass_of($enumClass, EnumI18nInterface::class)) {
+//            continue;
+//        }
+//
+//        $enumMap = [];
+//        $enumDataList = call_user_func([$enumClass, 'getEnums']);
+//
+//        foreach ($enumDataList as $enumName => $enumData) {
+//            $i18nTxt = $enumData['i18nTxt'] ?? [];
+//            // 确保包含 zh_cn（如果不存在，使用 txt 作为默认值）
+//            if (! isset($i18nTxt['zh_cn'])) {
+//                $i18nTxt['zh_cn'] = $enumData['txt'] ?? '';
+//            }
+//
+//            $enumMap[] = [
+//                'value' => $enumData['value'],
+//                'i18n_txt' => $i18nTxt,
+//                'i18n_key' => $enumData['i18nKey'] ?? '',
+//            ];
+//        }
+//
+//        $valueMaps[$mapKey] = $enumMap;
+//    }
+
+    return [
+        'columns' => $columns,
+        'value_maps' => $valueMaps,
+    ];
+}
+
+function filedI18nMap($valueMapConfig)
+{
     $valueMaps = [];
 
     foreach ($valueMapConfig as $fieldKey => $config) {
-        $mapKey = call_user_func([$valueMapConfig[$fieldKey], 'getEnumsGroupCode'])['groupCode'];
         $enumClass = $valueMapConfig[$fieldKey];
 
         if (! is_subclass_of($enumClass, EnumI18nInterface::class)) {
@@ -312,21 +333,19 @@ function buildTableColumnsWithValueMaps(string $listEnumClass, array $valueMapCo
                 $i18nTxt['zh_cn'] = $enumData['txt'] ?? '';
             }
 
-            $enumMap[(string) $enumData['value']] = [
-                'i18n' => $i18nTxt,
+            $enumMap[] = [
+                'value' => $enumData['value'],
+                'i18n_txt' => $i18nTxt,
                 'i18n_key' => $enumData['i18nKey'] ?? '',
             ];
         }
 
-        $valueMaps[$mapKey] = $enumMap;
+        $valueMaps[$fieldKey] = $enumMap;
     }
 
-    return [
-        'columns' => $columns,
-        'value_maps' => $valueMaps,
-    ];
-}
+    return $valueMaps;
 
+}
 /**
  * 数字金额转换成中文大写金额
  * 将阿拉伯数字金额转换为中文大写金额，精确到分.

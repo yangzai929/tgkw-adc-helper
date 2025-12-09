@@ -32,7 +32,7 @@ class ApiResponseHelper
      * @param mixed $httpStatusCode
      * @throws InvalidArgumentException 若数据不是资源类
      */
-    public static function success($data = [], $message = 'success', $code = 0, $httpStatusCode = 200): Psr7ResponseInterface
+    public static function success($data = null, $message = 'success', $code = 0, $httpStatusCode = 200): Psr7ResponseInterface
     {
         $response = ApplicationContext::getContainer()->get(ResponseInterface::class);
 
@@ -55,7 +55,7 @@ class ApiResponseHelper
             $formattedData = $data;
         } else {
             // 数据为空时，默认返回空数组
-            $formattedData = [];
+            $formattedData = null;
         }
 
         return $response->json([
@@ -66,7 +66,7 @@ class ApiResponseHelper
         ])->withStatus($httpStatusCode);
     }
 
-    public static function error($message = 'error', $error = null, $data = [], $code = 400, $httpStatusCode = 200): Psr7ResponseInterface
+    public static function error($message = 'error', $error = null, $data = null, $code = 400, $httpStatusCode = 200): Psr7ResponseInterface
     {
         $response = ApplicationContext::getContainer()->get(ResponseInterface::class);
 
@@ -84,7 +84,7 @@ class ApiResponseHelper
         ])->withStatus($httpStatusCode);
     }
 
-    // 远程服务调用成功
+    // 远程服务调用成功 暂时无用 仅调用方和服务方开发语言不一样时需要包装
     public static function genServiceSuccess($data = null, $messges = 'succcess', $code = 0)
     {
         return [
@@ -95,8 +95,8 @@ class ApiResponseHelper
         ];
     }
 
-    // 远程服务执行失败
-    public static function genServiceError(Exception $exception, $data = null, $messges = 'RPC Service Error', $code = 400)
+    // 远程服务执行失败 暂时无用 仅调用方和服务方开发语言不一样时需要包装
+    public static function genServiceError(Exception $exception, $error = null, $data = null, $messges = 'RPC Service Error', $code = 400)
     {
         LogHelper::error($exception->getMessage(), context: ['trace' => $exception->getTraceAsString()]);
 
@@ -104,6 +104,25 @@ class ApiResponseHelper
             'code' => $code,
             'message' => $messges,
             'data' => $data,
+            'error' => $error,
+            'timestamp' => time(),
+        ];
+    }
+
+    public static function genRpcServiceRes( $data = null)
+    {
+        if(isset($data['code']) && isset($data['data']['class']) ){
+            if($data['data']['class'] == 'TgkwAdc\\Exception\\BusinessException'){
+                return ApiResponseHelper::error(message: $data['message'],code: $data['data']['code']);
+            }
+            return ApiResponseHelper::error(message:'service error',code: $data['code'],error: $data['message']);
+        }
+
+        return [
+            'code' => $code,
+            'message' => $messges,
+            'data' => $data,
+            'error' => $error,
             'timestamp' => time(),
         ];
     }

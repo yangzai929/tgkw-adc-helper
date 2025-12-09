@@ -25,7 +25,7 @@ class TraceIdMiddleware implements MiddlewareInterface
         $traceId = $request->getHeaderLine('X-Trace-Id');
         if (empty($traceId)) {
             // 生成 UUID 作为 Trace-Id（需先安装：composer require ramsey/uuid）
-            $traceId = Uuid::uuid4()->toString();
+            $traceId = str_replace('-', '', Uuid::uuid4()->toString());
         }
 
         // 2. 将 Trace-Id 存入上下文（方便全局获取）
