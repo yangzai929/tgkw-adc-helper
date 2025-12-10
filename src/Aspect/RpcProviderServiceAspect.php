@@ -21,12 +21,11 @@ class RpcProviderServiceAspect extends AbstractAspect
     /**
      * 要拦截的类/方法.
      *
-     * 可以拦截所有实现了 RPC 接口的类，也可以用通配符
+     * 用通配符拦截所有的远程服务提供者
      */
     public array $classes = [
         'App\JsonRpc\Provider\*::*',
         'TgkwAdc\JsonRpc\Provider\*::*',
-
     ];
 
     public function process(ProceedingJoinPoint $proceedingJoinPoint)
@@ -56,12 +55,12 @@ class RpcProviderServiceAspect extends AbstractAspect
 
             Context::set('locale', $lang);
 
-            LogHelper::info('RPC INFO', ['class' => $proceedingJoinPoint->className, 'method' => $proceedingJoinPoint->methodName, 'params' => $params]);
+            LogHelper::info('RPC PROVIDER PROCESS INFO', ['class' => $proceedingJoinPoint->className, 'method' => $proceedingJoinPoint->methodName, 'params' => $params]);
             // 执行原方法
             return $proceedingJoinPoint->process();
         } catch (Throwable $e) {
             //            // 统一记录日志
-            LogHelper::error('RPC PROVIDER ERROR', ['file' => $e->getFile(), 'line' => $e->getLine(), 'error_msg' => $e->getMessage()]);
+            LogHelper::error('RPC PROVIDER PROCESS ERROR', ['file' => $e->getFile(), 'line' => $e->getLine(), 'error_msg' => $e->getMessage()]);
             throw $e; //继续抛出
         }
     }

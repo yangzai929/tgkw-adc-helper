@@ -14,6 +14,7 @@ use Hyperf\Context\Context;
 use Hyperf\Coroutine\Coroutine;
 use Hyperf\Di\Aop\AbstractAspect;
 use Hyperf\Di\Aop\ProceedingJoinPoint;
+use Hyperf\JsonRpc\ResponseBuilder;
 use Ramsey\Uuid\Uuid;
 use TgkwAdc\Exception\BusinessException;
 use TgkwAdc\Helper\ApiResponseHelper;
@@ -24,8 +25,7 @@ class RpcConsumerServiceAspect extends AbstractAspect
 {
     /**
      * 要拦截的类/方法.
-     * 单个 * 匹配所有子目录
-     * 可以拦截所有实现了 RPC 接口的类，也可以用通配符
+     * 用通配符拦截所有的远程服务调用者
      */
     public array $classes = [
         'App\JsonRpc\Consumer\*::*',
@@ -56,28 +56,14 @@ class RpcConsumerServiceAspect extends AbstractAspect
             $this->injectLangParams($proceedingJoinPoint, $lang);
 
             $response =  $proceedingJoinPoint->process();
-            LogHelper::error('RPC CONSUMER SERVICE INFO call', $logContext);
-            LogHelper::error('RPC CONSUMER SERVICE INFO response', $response);
-            // 统一异常处理（逻辑同通用方法）
-            if (isset($response['code']) && isset($response['data']['class'])) {
-                $exceptionClass = $response['data']['class'];
-                if ($exceptionClass === BusinessException::class) {
-                    return [
-                        'is_exception' => true,
-                        'type' => 'business',
-                        'message' => $response['message'],
-                        'code' => $response['data']['code'],
-                    ];
-                }
-                return [
-                    'is_exception' => true,
-                    'type' => 'system',
-                    'message' => 'service error',
-                    'code' => $response['code'],
-                    'error' => $response['message'],
-                ];
-            }
 
+            if (isset($data['code']) && $data['code'] <0) {
+                LogHelper::error('RPC CONSUMER SERVICE  call', $logContext);
+                LogHelper::error('RPC CONSUMER SERVICE  response with error', $response);
+            }else{
+                LogHelper::info('RPC CONSUMER SERVICE  call', $logContext);
+                LogHelper::info('RPC CONSUMER SERVICE  response', $response);
+            }
             return $response;
         } catch (Throwable $e) {
             // 统一记录日志
@@ -88,7 +74,7 @@ class RpcConsumerServiceAspect extends AbstractAspect
                 'trace' => $e->getTraceAsString(),
                 'exception_class' => get_class($e),
             ];
-            LogHelper::error('RPC ERROR', $logContext);
+            LogHelper::error('RPC CONSUMER PROCESS ERROR', $logContext);
             // 统一返回错误响应
             $data = [
                 'error' => [
@@ -97,7 +83,11 @@ class RpcConsumerServiceAspect extends AbstractAspect
                     'error_msg' => $e->getMessage()
                 ]
             ];
-            return ApiResponseHelper::genServiceError($e, messges: 'RPC ERROR', data: $data);
+            return [
+                'code' => ResponseBuilder::INVALID_REQUEST,
+                'message' =>  $e->getMessage(),
+                'data' => $data
+            ];
         }
     }
 
