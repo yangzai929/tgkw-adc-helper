@@ -16,8 +16,6 @@ use Hyperf\Di\Aop\AbstractAspect;
 use Hyperf\Di\Aop\ProceedingJoinPoint;
 use Hyperf\JsonRpc\ResponseBuilder;
 use Ramsey\Uuid\Uuid;
-use TgkwAdc\Exception\BusinessException;
-use TgkwAdc\Helper\ApiResponseHelper;
 use TgkwAdc\Helper\Log\LogHelper;
 use Throwable;
 
@@ -25,7 +23,7 @@ class RpcConsumerServiceAspect extends AbstractAspect
 {
     /**
      * 要拦截的类/方法.
-     * 用通配符拦截所有的远程服务调用者
+     * 用通配符拦截所有的远程服务调用者.
      */
     public array $classes = [
         'App\JsonRpc\Consumer\*::*',
@@ -55,12 +53,12 @@ class RpcConsumerServiceAspect extends AbstractAspect
 
             $this->injectLangParams($proceedingJoinPoint, $lang);
 
-            $response =  $proceedingJoinPoint->process();
+            $response = $proceedingJoinPoint->process();
 
-            if (isset($data['code']) && $data['code'] <0) {
+            if (isset($data['code']) && $data['code'] < 0) {
                 LogHelper::error('RPC CONSUMER SERVICE  call', $logContext);
                 LogHelper::error('RPC CONSUMER SERVICE  response with error', $response);
-            }else{
+            } else {
                 LogHelper::info('RPC CONSUMER SERVICE  call', $logContext);
                 LogHelper::info('RPC CONSUMER SERVICE  response', $response);
             }
@@ -80,20 +78,19 @@ class RpcConsumerServiceAspect extends AbstractAspect
                 'error' => [
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
-                    'error_msg' => $e->getMessage()
-                ]
+                    'error_msg' => $e->getMessage(),
+                ],
             ];
             return [
                 'code' => ResponseBuilder::INVALID_REQUEST,
-                'message' =>  $e->getMessage(),
-                'data' => $data
+                'message' => $e->getMessage(),
+                'data' => $data,
             ];
         }
     }
 
-
     /**
-     * 注入语言参数（兼容非数组参数）
+     * 注入语言参数（兼容非数组参数）.
      */
     private function injectLangParams(ProceedingJoinPoint $pjp, string $lang): void
     {

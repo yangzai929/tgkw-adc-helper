@@ -34,14 +34,39 @@ class OrgMiddleware implements MiddlewareInterface
 {
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        // 获取当前请求的控制器名和方法名
-        // 1.登录认证
-        $jwtPayload = JwtHelper::getPayloadFromRequest($request, GlobalConstants::ORG_TOKEN_TYPE);
-        if (empty($jwtPayload)) {
-            // 未登录：直接返回错误响应（避免抛出异常，统一响应格式）
+        // 1.获取token
+        $token = JwtHelper::getTokenFromRequest($request, GlobalConstants::ORG_TOKEN_TYPE);
+        if (empty($token)) {
             return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN->getCode());
         }
-        $user = $jwtPayload;
+
+        $isOfflineAuth = false; // 标记是否走了离线认证
+
+        try {
+            $user = redis()->get($token);
+            if (! $user) {
+                return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN->getCode());
+            }
+        } catch (Exception $e) {
+            // 兜底
+            $jwtPayload = JwtHelper::getPayloadFromToken($token, GlobalConstants::ORG_TOKEN_TYPE);
+            if (empty($jwtPayload)) {
+                return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN->getCode());
+            }
+            $isOfflineAuth = true;
+            $user = $jwtPayload;
+            LogHelper::warning('Redis 异常，临时离线认证', [
+                'token' => $token,
+                'payload' => $jwtPayload,
+                'user' => $user,
+                'error' => $e->getMessage(),
+            ]);
+        }
+        // 如果是离线认证考虑做降级处理
+        if ($isOfflineAuth) {
+            // 例如：禁止敏感操作，提示用户稍后重试
+        }
+
         Context::set(GlobalConstants::ORG_USER_CONTEXT, $user);
 
         // 2.权限校验
@@ -70,7 +95,7 @@ class OrgMiddleware implements MiddlewareInterface
                 $action = $controller . '@' . $action;
 
                 // 租户关联校验（确保用户有权访问当前租户）
-                $userAuthorizedTenants = $jwtPayload['tenantsArr'] ?? [];
+                $userAuthorizedTenants = $user['tenantsArr'] ?? [];
                 if (! empty($tenantId) && ! in_array($tenantId, $userAuthorizedTenants, true)) {
                     throw new BusinessException(AuthCode::ERROR_TENANT_ID);
                 }
@@ -101,7 +126,6 @@ class OrgMiddleware implements MiddlewareInterface
 
     private function hasAccess($params): bool
     {
-        // TODO 此方法待完善 ，因在除用户服务外其他服务中所有请求的权限验证均为远程调用，高频调用情况下存在跨服务调用网络开销大的问题
         if (env('APP_NAME') == 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
             $userServiceRes = make('\App\JsonRpc\Provider\UserService')->checkAccessPermission($params);
         } else {

@@ -61,7 +61,7 @@ class RpcProviderServiceAspect extends AbstractAspect
         } catch (Throwable $e) {
             //            // 统一记录日志
             LogHelper::error('RPC PROVIDER PROCESS ERROR', ['file' => $e->getFile(), 'line' => $e->getLine(), 'error_msg' => $e->getMessage()]);
-            throw $e; //继续抛出
+            throw $e; // 继续抛出
         }
     }
 }

@@ -77,28 +77,12 @@ class JwtHelper
     }
 
     /**
-     * 从请求头获取并解析 Token.
+     * 解析 Token.
      */
-    public static function getPayloadFromRequest(ServerRequestInterface $request, string $type): array
+    public static function getPayloadFromToken(string $token, string $type): array
     {
         try {
             self::init();
-
-            $token_key = GlobalConstants::ORG_TOKEN_KEY;
-            if ($type == GlobalConstants::SYS_TOKEN_TYPE) {
-                $token_key = GlobalConstants::SYS_TOKEN_KEY;
-            }
-
-            $authHeader = $request->getHeaderLine($token_key);
-            if (! $authHeader) {
-                throw new TokenException(AuthCode::NEED_LOGIN);
-            }
-            if (! str_starts_with($authHeader, 'Bearer ')) {
-                $authHeader = 'Bearer ' . $authHeader;
-            }
-
-            $token = substr($authHeader, 7);
-
             return self::parseToken($type, token: $token);
         } catch (ExpiredException $e) {
             // 单独处理过期异常
@@ -107,6 +91,26 @@ class JwtHelper
             // 所有其他异常统一视为无效令牌
             throw new TokenException(AuthCode::NEED_LOGIN);
         }
+    }
+
+    public static function getTokenFromRequest(ServerRequestInterface $request, string $type)
+    {
+        self::init();
+
+        $token_key = GlobalConstants::ORG_TOKEN_KEY;
+        if ($type == GlobalConstants::SYS_TOKEN_TYPE) {
+            $token_key = GlobalConstants::SYS_TOKEN_KEY;
+        }
+
+        $authHeader = $request->getHeaderLine($token_key);
+        if (! $authHeader) {
+            throw new TokenException(AuthCode::NEED_LOGIN);
+        }
+        if (! str_starts_with($authHeader, 'Bearer ')) {
+            $authHeader = 'Bearer ' . $authHeader;
+        }
+
+        return substr($authHeader, 7);
     }
 
     private static function getKey(string $type): string

@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
+
 namespace TgkwAdc\Exception\Handler;
 
 use Hyperf\Context\ApplicationContext;
@@ -15,8 +23,8 @@ use TgkwAdc\Helper\LocaleHelper;
 use TgkwAdc\Helper\Log\LogHelper;
 use Throwable;
 
-class RpcValidationExceptionHandler extends ExceptionHandler {
-
+class RpcValidationExceptionHandler extends ExceptionHandler
+{
     public function handle(Throwable $throwable, ResponseInterface $response)
     {
         if ($throwable instanceof ValidationException) {
@@ -67,5 +75,4 @@ class RpcValidationExceptionHandler extends ExceptionHandler {
         // 只处理 ValidationException，让 BusinessException 等其他异常继续传播
         return $throwable instanceof ValidationException;
     }
-
 }

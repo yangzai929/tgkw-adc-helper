@@ -205,9 +205,6 @@ function i18nEnumArrConvert(array $data, array $value_map = [])
     return $res;
 }
 
-
-
-
 use TgkwAdc\Annotation\EnumI18nInterface;
 
 /**
@@ -316,7 +313,6 @@ function filedI18nMap($valueMapConfig)
     }
 
     return $valueMaps;
-
 }
 /**
  * 数字金额转换成中文大写金额

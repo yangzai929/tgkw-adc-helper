@@ -109,13 +109,13 @@ class ApiResponseHelper
         ];
     }
 
-    public static function genRpcServiceRes( $data = null)
+    public static function genRpcServiceRes($data = null)
     {
-        if(isset($data['code']) && isset($data['data']['class']) ){
-            if($data['data']['class'] == 'TgkwAdc\\Exception\\BusinessException'){
-                return ApiResponseHelper::error(message: $data['message'],code: $data['data']['code']);
+        if (isset($data['code'], $data['data']['class'])) {
+            if ($data['data']['class'] == 'TgkwAdc\Exception\BusinessException') {
+                return ApiResponseHelper::error(message: $data['message'], code: $data['data']['code']);
             }
-            return ApiResponseHelper::error(message:'service error',code: $data['code'],error: $data['message']);
+            return ApiResponseHelper::error(message: 'service error', code: $data['code'], error: $data['message']);
         }
 
         return [
