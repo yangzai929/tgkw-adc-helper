@@ -37,7 +37,7 @@ class OrgMiddleware implements MiddlewareInterface
         // 1.获取token
         $token = JwtHelper::getTokenFromRequest($request, GlobalConstants::ORG_TOKEN_TYPE);
         if (empty($token)) {
-            return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN->getCode());
+            return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN);
         }
 
         $isOfflineAuth = false; // 标记是否走了离线认证
@@ -45,13 +45,13 @@ class OrgMiddleware implements MiddlewareInterface
         try {
             $user = redis()->get($token);
             if (! $user) {
-                return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN->getCode());
+                return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN);
             }
         } catch (Exception $e) {
             // 兜底
             $jwtPayload = JwtHelper::getPayloadFromToken($token, GlobalConstants::ORG_TOKEN_TYPE);
             if (empty($jwtPayload)) {
-                return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN->getCode());
+                return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN);
             }
             $isOfflineAuth = true;
             $user = $jwtPayload;
@@ -116,7 +116,7 @@ class OrgMiddleware implements MiddlewareInterface
                     return $handler->handle($request);
                 }
 
-                return ApiResponseHelper::error(AuthCode::AUTH_ERROR->getMsg(), code: AuthCode::AUTH_ERROR->getCode());
+                return ApiResponseHelper::error(code: AuthCode::AUTH_ERROR);
             }
             throw new Exception('权限中间件异常');
         }   // 菜单权限注解不存在 则不校验权限直接放行
