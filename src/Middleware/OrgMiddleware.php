@@ -43,10 +43,11 @@ class OrgMiddleware implements MiddlewareInterface
         $isOfflineAuth = false; // 标记是否走了离线认证
 
         try {
-            $user = redis()->get($token);
-            if (! $user) {
+            $payload  = redis()->get(GlobalConstants::ORG_TOKEN_CACHE_KEY. $token);
+            if (! $payload) {
                 return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN);
             }
+            $user = json_decode($payload, true);
         } catch (Exception $e) {
             // 兜底
             $jwtPayload = JwtHelper::getPayloadFromToken($token, GlobalConstants::ORG_TOKEN_TYPE);

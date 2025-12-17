@@ -42,10 +42,11 @@ class SystemMiddleware implements MiddlewareInterface
         $isOfflineAuth = false; // 标记是否走了离线认证
 
         try {
-            $user = redis()->get($token);
+            $payload  = redis()->get(GlobalConstants::SYS_TOKEN_CACHE_KEY. $token);
             if (! $user) {
                 return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN);
             }
+            $user = json_decode($payload, true);
         } catch (Exception $e) {
             $jwtPayload = JwtHelper::getPayloadFromToken($token, GlobalConstants::SYS_TOKEN_TYPE);
             if (empty($jwtPayload)) {
