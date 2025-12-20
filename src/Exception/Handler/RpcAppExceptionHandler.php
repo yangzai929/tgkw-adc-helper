@@ -19,16 +19,20 @@ use Hyperf\JsonRpc\ResponseBuilder;
 use Hyperf\Validation\ValidationException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TgkwAdc\Exception\BusinessException;
 use Throwable;
 
 class RpcAppExceptionHandler extends ExceptionHandler
 {
     public function handle(Throwable $throwable, ResponseInterface $response)
     {
-        // 获取首条错误信息
+        $message=  'RPC SERVICE ERROR';
+        if($throwable instanceof BusinessException){
+            $message = $throwable->getMessage();
+        }
         $body = [
             'code' => ResponseBuilder::SERVER_ERROR,
-            'message' => 'RPC SERVICE ERRPR',
+            'message' => $message,
             'data' => [
                 'class' => $throwable->getFile(),
                 'code' => 500,
