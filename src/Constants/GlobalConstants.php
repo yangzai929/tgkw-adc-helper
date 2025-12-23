@@ -17,6 +17,7 @@ class GlobalConstants
     public const ORG_TOKEN_KEY = 'Org-Token'; // 客户端令牌标识
 
     public const ORG_TOKEN_REDIS_KEY_PREFIX = 'user_token:token:'; // 客户端令牌缓存标识
+
     public const ORG_TOKEN_REDIS_SET_KEY_PREFIX = 'user_token:token:key'; //  token 集合 标识
 
     public const ORG_REFRESH_TOKEN_REDIS_KEY = 'user_refresh_token:'; // 客户端刷新令牌缓存标识
@@ -26,6 +27,7 @@ class GlobalConstants
     public const SYS_TOKEN_KEY = 'System-Token'; // 系统总后台令牌标识
 
     public const SYS_TOKEN_REDIS_KEY_PREFIX = 'admin_token:'; // 系统总后台令牌缓存标识
+
     public const SYS_TOKEN_REDIS_SET_KEY_PREFIX = 'admin_token:'; // 系统总后台令牌缓存标识
 
     public const ORG_USER_CONTEXT = 'nowUser'; // 协程上下文中客户端当前用户

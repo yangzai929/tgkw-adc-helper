@@ -1,12 +1,23 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
+
 namespace TgkwAdc\Controller;
 
 use Hyperf\HttpServer\Annotation\GetMapping;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use TgkwAdc\Annotation\EnumCode;
 use TgkwAdc\Annotation\EnumCodeInterface;
 use TgkwAdc\Annotation\EnumCodePrefix;
 use TgkwAdc\Helper\ApiResponseHelper;
+use Throwable;
 
 class CodeQueryController
 {
@@ -20,7 +31,7 @@ class CodeQueryController
     }
 
     /**
-     * 扫描错误码文件
+     * 扫描错误码文件.
      */
     protected function scanCodeFiles(string $dir): array
     {
@@ -29,24 +40,24 @@ class CodeQueryController
 
         foreach ($files as $file) {
             $className = $this->getClassNameFromFile($file);
-            if (!$className) {
+            if (! $className) {
                 continue;
             }
 
             try {
-                if (!enum_exists($className)) {
+                if (! enum_exists($className)) {
                     continue;
                 }
 
                 $reflection = new ReflectionClass($className);
 
                 // 检查是否实现了 EnumCodeInterface
-                if (!$reflection->implementsInterface(EnumCodeInterface::class)) {
+                if (! $reflection->implementsInterface(EnumCodeInterface::class)) {
                     continue;
                 }
 
                 // 检查是否是枚举类型
-                if (!$reflection->isEnum()) {
+                if (! $reflection->isEnum()) {
                     continue;
                 }
 
@@ -57,7 +68,7 @@ class CodeQueryController
                 $prefixCode = null;
                 $prefixInfo = '';
 
-                if (!empty($prefixAttributes)) {
+                if (! empty($prefixAttributes)) {
                     $prefixAttr = $prefixAttributes[0]->newInstance();
                     $prefixCode = $prefixAttr->prefixCode ?? null;
                     $prefixInfo = $prefixAttr->info ?? '';
@@ -80,7 +91,7 @@ class CodeQueryController
                     $codeAttributes = $case->getAttributes(EnumCode::class);
                     $msg = '';
 
-                    if (!empty($codeAttributes)) {
+                    if (! empty($codeAttributes)) {
                         $codeAttr = $codeAttributes[0]->newInstance();
                         $msg = $codeAttr->msg ?? '';
                     }
@@ -95,7 +106,7 @@ class CodeQueryController
                 }
 
                 $result[] = $enumData;
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // 忽略无法解析的文件
                 continue;
             }
@@ -105,18 +116,18 @@ class CodeQueryController
     }
 
     /**
-     * 获取目录下所有 PHP 文件
+     * 获取目录下所有 PHP 文件.
      */
     protected function getPhpFiles(string $dir): array
     {
         $files = [];
 
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             return $files;
         }
 
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS)
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS)
         );
 
         foreach ($iterator as $file) {
@@ -129,12 +140,12 @@ class CodeQueryController
     }
 
     /**
-     * 从文件路径获取类名
+     * 从文件路径获取类名.
      */
     protected function getClassNameFromFile(string $filePath): ?string
     {
         $content = file_get_contents($filePath);
-        if (!$content) {
+        if (! $content) {
             return null;
         }
 
