@@ -42,8 +42,8 @@ class SystemMiddleware implements MiddlewareInterface
         $isOfflineAuth = false; // 标记是否走了离线认证
 
         try {
-            $payload  = redis()->get(GlobalConstants::SYS_TOKEN_CACHE_KEY. $token);
-            if (! $user) {
+            $payload = redis()->get(GlobalConstants::SYS_TOKEN_REDIS_KEY_PREFIX . $token);
+            if (! $payload) {
                 return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN);
             }
             $user = json_decode($payload, true);
@@ -64,7 +64,7 @@ class SystemMiddleware implements MiddlewareInterface
         }
         // 如果是离线认证考虑做降级处理
         if ($isOfflineAuth) {
-            // 例如：禁止敏感操作，提示用户稍后重试
+            // 例如：禁止敏感操作，提示用户稍后重试 TODO
         }
 
         Context::set(GlobalConstants::SYS_ADMIN_CONTEXT, $user);
@@ -100,8 +100,7 @@ class SystemMiddleware implements MiddlewareInterface
                     return $handler->handle($request);
                 }
 
-                // $hasAccess = Enforcer::enforce('user:1', 'tenant:1', 'App\Controller\V1\UserController@index');
-                $hasAccess = $this->hasAccess([$user['id'], $action, $action]); // TODO
+                $hasAccess = $this->hasAccess([$user['id'], $action, $action]);
                 LogHelper::info('SystemMiddleware', ['controller' => $controller, 'action' => $action, 'res' => $hasAccess, $annotations]);
                 if ($hasAccess) {
                     return $handler->handle($request);

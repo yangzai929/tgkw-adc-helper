@@ -83,8 +83,9 @@ class RpcConsumerServiceAspect extends AbstractAspect
             ];
             return [
                 'code' => ResponseBuilder::INVALID_REQUEST,
-                'message' => $e->getMessage(),
+                'message' => 'Server Error',
                 'data' => $data,
+                'error' => $e->getMessage(),
             ];
         }
     }

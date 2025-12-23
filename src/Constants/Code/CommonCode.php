@@ -125,6 +125,9 @@ enum CommonCode: int implements EnumCodeInterface
     #[EnumCode(msg: '导入部分出错', i18nMsg: ['en' => 'Import part failed', 'zh_hk' => '導入部分出錯'])]
     case IMPORT_PART_FAILED = 35;
 
-    #[EnumCode(msg: '文件格式不允许', i18nMsg: ['en' => 'File format not allowed', 'zh_hk' => '文件格式不允許'])] // 修正原英文/繁体中文翻译错误
+    #[EnumCode(msg: '文件格式不允许', i18nMsg: ['en' => 'File format not allowed', 'zh_hk' => '文件格式不允許'])]
     case FILE_EXTENSION_NOT_ALLOWED = 36;
+
+    #[EnumCode(msg: '服务器内部错误，请稍后再试', i18nMsg: ['en' => 'Server internal error, please try again later', 'zh_hk' => '服務器內部錯誤，請稍後再試'])]
+    case SERVER_ERROR = 37;
 }

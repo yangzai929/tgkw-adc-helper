@@ -26,8 +26,8 @@ class RpcAppExceptionHandler extends ExceptionHandler
 {
     public function handle(Throwable $throwable, ResponseInterface $response)
     {
-        $message=  'RPC SERVICE ERROR';
-        if($throwable instanceof BusinessException){
+        $message = 'RPC SERVICE ERROR';
+        if ($throwable instanceof BusinessException) {
             $message = $throwable->getMessage();
         }
         $body = [

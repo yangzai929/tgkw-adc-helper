@@ -36,15 +36,16 @@ class SystemPermission extends AbstractAnnotation
 
     // 菜单链接
     // 默认情况下此字段无需填写.
-    // 前端生成路由时：
-    // 如果 url 有值 → 直接用。
-    // 如果 url 为空 → 从前端的别名映射表中查找对应路径。
-    // 如果此字段有值， 且 urlType 为 path 时，即指定前端路由，例 /user/add，
     public string $url = '';
 
-    // path → Vue Router 正常跳转
-    // frame_url → 用内嵌 iframe 展示第三方页面
-    // target_url → window.open() 打开外部链接
+    /*
+     * path → Vue Router 正常跳转
+       frame_url → 用内嵌 iframe 展示第三方页面
+       target_url → window.open() 打开外部链接
+       当 本字段值 为 path 时， 如果 url 为空 → 从前端的别名映射表中查找对应路径。 如果 url 不为空，即指定前端路由，例 /user/add;
+       当 本字段值 为 frame_url 时，为内嵌iframe打开指定网页;
+       当 本字段值 为 target_url 时，为新建窗口打开指定链接;
+   */
     public string $urlType = 'path'; // 	URL类别(path, frame_url, target_url)
 
     public string $redirect = ''; // 子菜单此值为空，如果没有特殊情况，父级路由的 redirect 属性不需要指定，前端应默认指向第一个子路由。
@@ -68,7 +69,7 @@ class SystemPermission extends AbstractAnnotation
         string $accessCode = '',
         string $frontRouteAlias = '',
         string $url = '',
-        string $urlType = '',
+        string $urlType = 'path',
         string $redirect = '',
         int $keepAlive = 0,
         int $status = 1,

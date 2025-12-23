@@ -43,7 +43,7 @@ class OrgMiddleware implements MiddlewareInterface
         $isOfflineAuth = false; // 标记是否走了离线认证
 
         try {
-            $payload  = redis()->get(GlobalConstants::ORG_TOKEN_CACHE_KEY. $token);
+            $payload = redis()->get(GlobalConstants::ORG_REFRESH_TOKEN_REDIS_KEY . $token);
             if (! $payload) {
                 return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN);
             }
@@ -65,7 +65,7 @@ class OrgMiddleware implements MiddlewareInterface
         }
         // 如果是离线认证考虑做降级处理
         if ($isOfflineAuth) {
-            // 例如：禁止敏感操作，提示用户稍后重试
+            // 例如：禁止敏感操作，提示用户稍后重试 TODO
         }
 
         Context::set(GlobalConstants::ORG_USER_CONTEXT, $user);
