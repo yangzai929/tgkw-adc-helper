@@ -10,25 +10,30 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Controller;
 
-use Hyperf\HttpServer\Annotation\GetMapping;
+use BackedEnum;
+use Hyperf\Di\Annotation\Inject;
+use Hyperf\HttpServer\Contract\RequestInterface;
+use Hyperf\HttpServer\Contract\ResponseInterface;
+use Psr\Container\ContainerInterface;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use ReflectionClass;
+use ReflectionEnum;
 use TgkwAdc\Annotation\EnumCode;
 use TgkwAdc\Annotation\EnumCodeInterface;
 use TgkwAdc\Annotation\EnumCodePrefix;
-use TgkwAdc\Helper\ApiResponseHelper;
 use Throwable;
 
 class CodeQueryController
 {
-    #[GetMapping(path: 'error-codes')]
-    public function index()
-    {
-        $codeDir = BASE_PATH . '/app/Constants/Code';
-        $codes = $this->scanCodeFiles($codeDir);
+    #[Inject]
+    protected ContainerInterface $container;
 
-        return ApiResponseHelper::debug($codes);
-    }
+    #[Inject]
+    protected RequestInterface $request;
+
+    #[Inject]
+    protected ResponseInterface $response;
 
     /**
      * 扫描错误码文件.
@@ -85,7 +90,7 @@ class CodeQueryController
                 foreach ($cases as $case) {
                     // 获取枚举值（对于有 backing value 的枚举，如 enum X: int）
                     $caseInstance = $case->getValue();
-                    $caseValue = $caseInstance->value;
+                    $caseValue = $caseInstance instanceof BackedEnum ? $caseInstance->value : null;
 
                     // 获取 EnumCode 注解
                     $codeAttributes = $case->getAttributes(EnumCode::class);
@@ -111,6 +116,13 @@ class CodeQueryController
                 continue;
             }
         }
+
+        // 按照 prefix_code 排序
+        usort($result, function ($a, $b) {
+            $prefixCodeA = $a['prefix_code'] ?? 0;
+            $prefixCodeB = $b['prefix_code'] ?? 0;
+            return $prefixCodeA <=> $prefixCodeB;
+        });
 
         return $result;
     }

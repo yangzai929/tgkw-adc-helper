@@ -11,7 +11,6 @@ declare(strict_types=1);
 namespace TgkwAdc\Middleware;
 
 use Hyperf\Context\Context;
-use Hyperf\HttpMessage\Exception\BadRequestHttpException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -21,27 +20,27 @@ use Swoole\Http\Response;
 class CorsMiddleware implements MiddlewareInterface
 {
     /**
-     * 允许的跨域域名
+     * 允许的跨域域名.
      * @var array
      */
     protected $allowOrigins = [
-        "*"
+        '*',
     ];
 
     /**
-     * 允许的 HTTP 方法
+     * 允许的 HTTP 方法.
      * @var string
      */
     protected $allowMethods = 'GET,POST,PUT,DELETE,OPTIONS,PATCH';
 
     /**
-     * 允许的请求头
+     * 允许的请求头.
      * @var string
      */
     protected $allowHeaders = 'DNT,Keep-Alive,User-Agent,Cache-Control,Content-Type,Authorization,Language,Org-Token,Current-Tenant-Id,System-token';
 
     /**
-     * 预检请求的缓存时间（秒）
+     * 预检请求的缓存时间（秒）.
      * @var int
      */
     protected $maxAge = 86400;
@@ -61,7 +60,7 @@ class CorsMiddleware implements MiddlewareInterface
                 ->withHeader('Access-Control-Allow-Credentials', 'true')
                 ->withHeader('Access-Control-Allow-Methods', $this->allowMethods)
                 ->withHeader('Access-Control-Allow-Headers', $this->allowHeaders)
-                ->withHeader('Access-Control-Max-Age', (string)$this->maxAge);
+                ->withHeader('Access-Control-Max-Age', (string) $this->maxAge);
         }
 
         // 4. 将处理后的 Response 放回 Context
@@ -77,9 +76,7 @@ class CorsMiddleware implements MiddlewareInterface
     }
 
     /**
-     * 匹配允许的 Origin
-     * @param string $origin
-     * @return string|null
+     * 匹配允许的 Origin.
      */
     protected function getAllowOrigin(string $origin): ?string
     {
