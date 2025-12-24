@@ -12,7 +12,6 @@ namespace TgkwAdc\Middleware;
 
 use Hyperf\Context\Context;
 use Hyperf\HttpMessage\Exception\BadRequestHttpException;
-use Hyperf\HttpMessage\Response\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -21,13 +20,11 @@ use Psr\Http\Server\RequestHandlerInterface;
 class CorsMiddleware implements MiddlewareInterface
 {
     /**
-     * 允许的跨域域名（建议从配置文件读取）
+     * 允许的跨域域名
      * @var array
      */
     protected $allowOrigins = [
-        'http://localhost:3000',
-        'https://www.tgkw.com',
-        // 可根据环境配置不同的域名
+        "*"
     ];
 
     /**
@@ -40,7 +37,7 @@ class CorsMiddleware implements MiddlewareInterface
      * 允许的请求头
      * @var string
      */
-    protected $allowHeaders = 'DNT,Keep-Alive,User-Agent,Cache-Control,Content-Type,Authorization';
+    protected $allowHeaders = 'DNT,Keep-Alive,User-Agent,Cache-Control,Content-Type,Authorization,Language,Org-Token,Current-Tenant-Id,System-token';
 
     /**
      * 预检请求的缓存时间（秒）
