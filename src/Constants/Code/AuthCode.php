@@ -21,10 +21,10 @@ enum AuthCode: int implements EnumCodeInterface
     use EnumCodeGet;
 
     #[EnumCode(
-        msg: '登录状态已过期，请重新登录！',
+        msg: '请登录！',
         i18nMsg: [
-            'en' => 'Login status has expired, please log in again!',
-            'zh_hk' => '登入狀態已過期，請重新登入',
+            'en' => 'Please log in!',
+            'zh_hk' => '請登入',
         ]
     )]
     case NEED_LOGIN = 1;
@@ -70,4 +70,13 @@ enum AuthCode: int implements EnumCodeInterface
 
     #[EnumCode(msg: '无权访问（{action}）', i18nMsg: ['en' => 'No authority to access ({action})', 'zh_hk' => '無權訪問（{action}）'])]
     case AUTH_ERROR_ACTION = 7;
+
+    #[EnumCode(
+        msg: '权限不足，无法操作',
+        i18nMsg: [
+            'en' => 'Permission denied',
+            'zh_hk' => '權限不足，無法操作',
+        ]
+    )]
+    case PERMISSION_DENIED = 38;
 }

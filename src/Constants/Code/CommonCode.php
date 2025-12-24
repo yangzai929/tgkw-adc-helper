@@ -130,4 +130,5 @@ enum CommonCode: int implements EnumCodeInterface
 
     #[EnumCode(msg: '服务器内部错误，请稍后再试', i18nMsg: ['en' => 'Server internal error, please try again later', 'zh_hk' => '服務器內部錯誤，請稍後再試'])]
     case SERVER_ERROR = 37;
+
 }
