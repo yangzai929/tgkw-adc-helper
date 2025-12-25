@@ -10,11 +10,8 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Controller;
 
-use BackedEnum;
-use Hyperf\Di\Annotation\Inject;
-use Hyperf\HttpServer\Contract\RequestInterface;
-use Hyperf\HttpServer\Contract\ResponseInterface;
-use Psr\Container\ContainerInterface;
+use Hyperf\HttpServer\Annotation\Controller;
+use Hyperf\HttpServer\Annotation\GetMapping;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
@@ -22,18 +19,36 @@ use ReflectionEnum;
 use TgkwAdc\Annotation\EnumCode;
 use TgkwAdc\Annotation\EnumCodeInterface;
 use TgkwAdc\Annotation\EnumCodePrefix;
+use TgkwAdc\Helper\ApiResponseHelper;
 use Throwable;
 
-class CodeQueryController
+#[Controller]
+
+class CodeQueryController extends AbstractController
 {
-    #[Inject]
-    protected ContainerInterface $container;
 
-    #[Inject]
-    protected RequestInterface $request;
 
-    #[Inject]
-    protected ResponseInterface $response;
+    /**
+     * 获取错误码目录路径.
+     * 子类可以重写此方法来自定义路径.
+     */
+    protected function getCodeDir(): string
+    {
+        return BASE_PATH . '/app/Constants/Code';
+    }
+
+    /**
+     * 获取错误码列表.
+     */
+    #[GetMapping(path: '/error-codes')]
+    public function index()
+    {
+        $codeDir = $this->getCodeDir();
+        $codes = $this->scanCodeFiles($codeDir);
+
+        return ApiResponseHelper::debug($codes);
+    }
+
 
     /**
      * 扫描错误码文件.

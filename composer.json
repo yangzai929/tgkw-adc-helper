@@ -25,6 +25,7 @@
         "doctrine/dbal": "^3.0",
         "donjan-deng/hyperf-casbin": "^3.23",
         "firebase/php-jwt": "^6.11",
+        "friendsofhyperf/mail": "^3.1",
         "hyperf/amqp": "^3.1",
         "hyperf/cache": "~3.1.0",
         "hyperf/circuit-breaker": "~3.1.0",
