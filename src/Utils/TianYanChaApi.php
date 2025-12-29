@@ -207,22 +207,22 @@ class TianYanChaApi
     }
 }
 
-// ==================== 使用示例 ====================
-try {
-    // 初始化工具类（替换为你的真实token）
-    $tycApi = new TianYanChaApi('2ed59cfb-097b-4411-9e31-6d2b1fc3256c');
-
-    // 获取企业信息
-    $companyInfo = $tycApi->getCompanyBaseInfo('中航重机股份有限公司');
-
-    // 打印结果
-    echo "企业工商信息获取成功：\n";
-    print_r($companyInfo);
-    // {
-    //    "error_code": 300006,
-    //    "reason": "余额不足"
-    // }
-} catch (Exception $e) {
-    // 捕获并处理异常
-    echo '调用失败：' . $e->getMessage() . "\n";
-}
+//// ==================== 使用示例 ====================
+//try {
+//    // 初始化工具类（替换为你的真实token）
+//    $tycApi = new TianYanChaApi('2ed59cfb-097b-4411-9e31-6d2b1fc3256c');
+//
+//    // 获取企业信息
+//    $companyInfo = $tycApi->getCompanyBaseInfo('中航重机股份有限公司');
+//
+//    // 打印结果
+//    echo "企业工商信息获取成功：\n";
+//    print_r($companyInfo);
+//    // {
+//    //    "error_code": 300006,
+//    //    "reason": "余额不足"
+//    // }
+//} catch (Exception $e) {
+//    // 捕获并处理异常
+//    echo '调用失败：' . $e->getMessage() . "\n";
+//}
