@@ -23,20 +23,8 @@ use TgkwAdc\Helper\ApiResponseHelper;
 use Throwable;
 
 #[Controller]
-
 class CodeQueryController extends AbstractController
 {
-
-
-    /**
-     * 获取错误码目录路径.
-     * 子类可以重写此方法来自定义路径.
-     */
-    protected function getCodeDir(): string
-    {
-        return BASE_PATH . '/app/Constants/Code';
-    }
-
     /**
      * 获取错误码列表.
      */
@@ -49,6 +37,14 @@ class CodeQueryController extends AbstractController
         return ApiResponseHelper::debug($codes);
     }
 
+    /**
+     * 获取错误码目录路径.
+     * 子类可以重写此方法来自定义路径.
+     */
+    protected function getCodeDir(): string
+    {
+        return BASE_PATH . '/app/Constants/Code';
+    }
 
     /**
      * 扫描错误码文件.
