@@ -42,7 +42,7 @@ class FileSystemHelper
         return $this->adapterName;
     }
 
-    public function genFileTempUrl($object_key, string $expiresAt = '+10 seconds')
+    public function genFileTempUrl($object_key, string $expiresAt = '+1 days')
     {
         return $this->adapter->temporaryUrl($object_key, new DateTime($expiresAt));
     }
