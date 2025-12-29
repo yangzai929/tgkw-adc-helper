@@ -42,7 +42,9 @@ class FilesystemFactory extends BaseFilesystemFactory
             ],
         ];
 
-        $options = $this->config->get('file'); // 除public 服务外都从nacos配置中心获取文件系统配置
+        // 从nacos配置中心获取文件系统配置
+        $options = $this->config->get('systemFileConfig');
+
         if (! $options) {
             $options = $default;
         }
