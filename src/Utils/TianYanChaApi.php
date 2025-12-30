@@ -207,8 +207,8 @@ class TianYanChaApi
     }
 }
 
-//// ==================== 使用示例 ====================
-//try {
+// // ==================== 使用示例 ====================
+// try {
 //    // 初始化工具类（替换为你的真实token）
 //    $tycApi = new TianYanChaApi('2ed59cfb-097b-4411-9e31-6d2b1fc3256c');
 //
@@ -222,7 +222,7 @@ class TianYanChaApi
 //    //    "error_code": 300006,
 //    //    "reason": "余额不足"
 //    // }
-//} catch (Exception $e) {
+// } catch (Exception $e) {
 //    // 捕获并处理异常
 //    echo '调用失败：' . $e->getMessage() . "\n";
-//}
+// }

@@ -21,6 +21,7 @@ use Hyperf\Di\Annotation\AnnotationCollector;
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
 use Hyperf\Framework\Event\MainWorkerStart;
+use Swoole\Coroutine;
 use Swoole\Process;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -31,7 +32,7 @@ use TgkwAdc\Helper\XxlJobTaskHelper;
 use TgkwAdc\JsonRpc\Public\SystemServiceInterface;
 use TgkwAdc\JsonRpc\User\UserServiceInterface;
 
-#[Listener]
+#[Listener(priority: 0)]
 class MainWorkerStartListener implements ListenerInterface
 {
     public function listen(): array
@@ -120,8 +121,8 @@ class MainWorkerStartListener implements ListenerInterface
                     // Exchange必须包含服务名（目标服务名或当前服务名），避免无意义命名
                     if (! preg_match('/^[a-zA-Z0-9.-]+$/', $item->exchange) || substr_count($item->exchange, '.') < 1) {
                         $errorMsg = "❌ MQ Producer 校验失败：Exchange[{$item->exchange}] 命名不规范！" . PHP_EOL
-                                  . '允许字符：字母（a-z/A-Z）、数字（0-9）、点（.）、连字符（-）' . PHP_EOL
-                                  . '建议格式：[服务名].[功能模块].[操作]（如 orderService.order.createOrder）';
+                            . '允许字符：字母（a-z/A-Z）、数字（0-9）、点（.）、连字符（-）' . PHP_EOL
+                            . '建议格式：[服务名].[功能模块].[操作]（如 orderService.order.createOrder）';
                         LogHelper::error($errorMsg);
                         echo $errorMsg . PHP_EOL;
                         Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
@@ -177,9 +178,33 @@ class MainWorkerStartListener implements ListenerInterface
 
         LogHelper::info('开始同步菜单');
 
-        // 同步菜单
-        $systemConfig = cfg('systemConfig');
+        // 同步菜单 - 等待配置从 Nacos 同步完成
+        $systemConfig = null;
+        $maxRetries = 10; // 最多重试10次
+        $retryDelay = 0.5; // 每次重试间隔0.5秒
+
+        for ($i = 0; $i < $maxRetries; ++$i) {
+            $systemConfig = cfg('systemConfig');
+            if (! empty($systemConfig)) {
+                break;
+            }
+            if ($i < $maxRetries - 1) {
+                LogHelper::info('等待 systemConfig 配置同步... (尝试 ' . ($i + 1) . "/{$maxRetries})");
+                Coroutine::sleep($retryDelay);
+            }
+        }
+
+        if (empty($systemConfig)) {
+            LogHelper::error('无法获取 systemConfig 配置，跳过菜单同步');
+            return;
+        }
+
         $systemConfig = json_decode($systemConfig, true);
+        if (empty($systemConfig) || ! isset($systemConfig['needAddMenuSrv'])) {
+            LogHelper::error('systemConfig 配置格式错误，跳过菜单同步');
+            return;
+        }
+
         if (in_array(env('APP_NAME'), $systemConfig['needAddMenuSrv'])) {
             // 租户菜单
             $data = OrgPermissionHelper::build();
