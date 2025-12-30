@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Exception\Handler;
 
+use AWS\CRT\Log;
 use Hyperf\Context\ApplicationContext;
 use Hyperf\Context\Context;
 use Hyperf\ExceptionHandler\ExceptionHandler;
@@ -20,6 +21,7 @@ use Hyperf\Validation\ValidationException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TgkwAdc\Exception\BusinessException;
+use TgkwAdc\Helper\Log\LogHelper;
 use Throwable;
 
 class RpcAppExceptionHandler extends ExceptionHandler
@@ -41,6 +43,7 @@ class RpcAppExceptionHandler extends ExceptionHandler
             ],
         ];
 
+        LogHelper::error('OWN RPC SERVICE ERROR', $body);
         $container = ApplicationContext::getContainer();
 
         /** @var ResponseBuilder $responseBuilder */
