@@ -11,10 +11,14 @@ declare(strict_types=1);
 namespace TgkwAdc\Resource;
 
 use ArrayAccess;
+use AWS\CRT\Log;
+use Carbon\Carbon;
 use DateTime;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use JsonSerializable;
+use Mpdf\Tag\Th;
+use TgkwAdc\Helper\Log\LogHelper;
 use Throwable;
 
 /**
@@ -106,17 +110,39 @@ abstract class BaseResource extends JsonResource
      */
     protected function formatDate($date, string $format = 'Y-m-d H:i:s'): ?string
     {
-        if (empty($date)) {
+        // 1. 空值处理：空字符串/0/null 直接返回 null
+        if (empty($date) && $date !== 0) {
             return null;
         }
 
         try {
-            if (! $date instanceof DateTime) {
-                $date = new DateTime((string) $date);
+            // 2. 处理 DateTime/Carbon 对象（原生兼容）
+            if ($date instanceof DateTime || $date instanceof Carbon) {
+                return $date->format($format);
             }
 
-            return $date->format($format);
-        } catch (Throwable) {
+            // 3. 核心：处理数字类型的时间戳（秒级/毫秒级）
+            if (is_numeric($date)) {
+                $timestamp = (int) $date;
+
+                // 判断是毫秒级（bigint，长度≥13位）还是秒级（int，长度10位）
+                $isMillisecond = strlen((string) $timestamp) >= 13;
+
+                // 用 Carbon 解析时间戳（Laravel 内置，兼容性更好）
+                $carbon = $isMillisecond
+                    ? Carbon::createFromTimestampMs($timestamp)  // 毫秒级
+                    : Carbon::createFromTimestamp($timestamp);   // 秒级
+
+                return $carbon->format($format);
+            }
+
+            // 4. 处理时间字符串（如 "2025-01-01 08:00:00"）
+            $carbon = Carbon::parse($date);
+            return $carbon->format($format);
+
+        } catch (Throwable $exception) {
+            // 5. 所有解析失败的情况都返回 null，避免程序崩溃
+            LogHelper::info('ssssssssssssssssssss',[$exception->getMessage()]);
             return null;
         }
     }
