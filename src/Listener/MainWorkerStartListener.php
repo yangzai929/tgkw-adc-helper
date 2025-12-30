@@ -179,52 +179,103 @@ class MainWorkerStartListener implements ListenerInterface
         LogHelper::info('开始同步菜单');
 
         // 同步菜单 - 等待配置从 Nacos 同步完成
-        $systemConfig = null;
-        $maxRetries = 10; // 最多重试10次
-        $retryDelay = 0.5; // 每次重试间隔0.5秒
-
-        for ($i = 0; $i < $maxRetries; ++$i) {
-            $systemConfig = cfg('systemConfig');
-            if (! empty($systemConfig)) {
-                break;
-            }
-            if ($i < $maxRetries - 1) {
-                LogHelper::info('等待 systemConfig 配置同步... (尝试 ' . ($i + 1) . "/{$maxRetries})");
-                Coroutine::sleep($retryDelay);
-            }
-        }
-
-        if (empty($systemConfig)) {
+        $systemConfig = $this->waitForSystemConfig();
+        if ($systemConfig === null) {
             LogHelper::error('无法获取 systemConfig 配置，跳过菜单同步');
             return;
         }
 
-        $systemConfig = json_decode($systemConfig, true);
-        if (empty($systemConfig) || ! isset($systemConfig['needAddMenuSrv'])) {
-            LogHelper::error('systemConfig 配置格式错误，跳过菜单同步');
+        if (!isset($systemConfig['needAddMenuSrv']) || !is_array($systemConfig['needAddMenuSrv'])) {
+            LogHelper::error('systemConfig 配置格式错误：缺少 needAddMenuSrv 字段或格式不正确，跳过菜单同步');
             return;
         }
 
-        if (in_array(env('APP_NAME'), $systemConfig['needAddMenuSrv'])) {
-            // 租户菜单
-            $data = OrgPermissionHelper::build();
-            LogHelper::info('菜单数据', [$data], 'org_menu_data');
-            if (env('APP_NAME') == 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
-                $userServiceRes = make('\App\JsonRpc\Provider\UserService')->addMenu($data);
-            } else {
-                $userServiceRes = ApplicationContext::getContainer()->get(UserServiceInterface::class)->addMenu($data);
+        $appName = env('APP_NAME');
+        if (!in_array($appName, $systemConfig['needAddMenuSrv'], true)) {
+            LogHelper::info("当前服务 [{$appName}] 不在需要同步菜单的服务列表中，跳过菜单同步");
+            return;
+        }
+
+        $this->syncMenus($appName);
+
+        LogHelper::info('启动完成！（耗时：' . number_format(microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'], 2) . 's）');
+    }
+
+    /**
+     * 等待 systemConfig 配置从 Nacos 同步完成.
+     *
+     * @return array|null 配置数组，失败返回 null
+     */
+    private function waitForSystemConfig(): ?array
+    {
+        $maxRetries = (int) env('CONFIG_SYNC_MAX_RETRIES', 10); // 最多重试次数，可通过环境变量配置
+        $retryDelay = (float) env('CONFIG_SYNC_RETRY_DELAY', 0.5); // 重试间隔（秒），可通过环境变量配置
+
+        for ($i = 0; $i < $maxRetries; $i++) {
+            $configStr = cfg('systemConfig');
+
+            if (!empty($configStr)) {
+                $config = json_decode($configStr, true);
+
+                // 检查 JSON 解析是否成功
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    LogHelper::warning("systemConfig JSON 解析失败: " . json_last_error_msg() . " (尝试 " . ($i + 1) . "/{$maxRetries})");
+                    if ($i < $maxRetries - 1) {
+                        Coroutine::sleep($retryDelay);
+                    }
+                    continue;
+                }
+
+                if (is_array($config) && !empty($config)) {
+                    LogHelper::info("成功获取 systemConfig 配置 (尝试 " . ($i + 1) . "/{$maxRetries})");
+                    return $config;
+                }
             }
 
-            // 系统总后台菜单
-            $data = SystemPermissionHelper::build();
-            LogHelper::info('菜单数据', [$data], 'sys_menu_data');
-            if (env('APP_NAME') == 'public' && class_exists('\App\JsonRpc\Provider\SystemService')) {
-                $userServiceRes = make('\App\JsonRpc\Provider\SystemService')->addMenu($data);
-            } else {
-                $userServiceRes = ApplicationContext::getContainer()->get(SystemServiceInterface::class)->addMenu($data);
+            if ($i < $maxRetries - 1) {
+                LogHelper::info("等待 systemConfig 配置同步... (尝试 " . ($i + 1) . "/{$maxRetries})");
+                Coroutine::sleep($retryDelay);
             }
         }
 
-        LogHelper::info('启动完成！（耗时：' . number_format(microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'], 2) . 's）');
+        LogHelper::error("经过 {$maxRetries} 次重试后仍无法获取 systemConfig 配置");
+        return null;
+    }
+
+    /**
+     * 同步菜单到用户服务和系统服务.
+     */
+    private function syncMenus(string $appName): void
+    {
+        try {
+            // 同步租户菜单
+            $orgMenuData = OrgPermissionHelper::build();
+            LogHelper::info('租户菜单数据', [$orgMenuData], 'org_menu_data');
+
+            if ($appName === 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
+                $userService = make('\App\JsonRpc\Provider\UserService');
+            } else {
+                $userService = ApplicationContext::getContainer()->get(UserServiceInterface::class);
+            }
+            $userService->addMenu($orgMenuData);
+            LogHelper::info('租户菜单同步完成');
+
+            // 同步系统总后台菜单
+            $sysMenuData = SystemPermissionHelper::build();
+            LogHelper::info('系统菜单数据', [$sysMenuData], 'sys_menu_data');
+
+            if ($appName === 'public' && class_exists('\App\JsonRpc\Provider\SystemService')) {
+                $systemService = make('\App\JsonRpc\Provider\SystemService');
+            } else {
+                $systemService = ApplicationContext::getContainer()->get(SystemServiceInterface::class);
+            }
+            $systemService->addMenu($sysMenuData);
+            LogHelper::info('系统菜单同步完成');
+        } catch (Exception $e) {
+            LogHelper::error('菜单同步失败: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+            // 不抛出异常，避免影响服务启动
+        }
     }
 }
