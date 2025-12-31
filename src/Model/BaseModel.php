@@ -2,6 +2,7 @@
 
 namespace TgkwAdc\Model;
 
+use Hyperf\Database\Model\SoftDeletes;
 use Hyperf\ModelCache\Cacheable;
 use Hyperf\DbConnection\Model\Model ;
 use Hyperf\ModelCache\CacheableInterface;
@@ -22,9 +23,32 @@ class BaseModel extends Model implements CacheableInterface {
         return $this;
     }
 
-    public function setDeletedAt($value): static
+    public function delete()
     {
-        $this->attributes['deleted_at'] = time();
-        return $this;
+        // 第一步：判断是否启用软删除
+        if (in_array(SoftDeletes::class, class_uses_recursive($this))) {
+            // 场景1：启用软删除 → 更新 deleted_at
+            $deletedAtColumn = $this->getDeletedAtColumn(); // 安全调用
+            $this->{$deletedAtColumn} = time();
+            $this->save();
+            return true;
+        } else {
+            // 场景2：未启用软删除 → 执行原生物理删除逻辑
+            return parent::delete();
+        }
+    }
+
+    //  重写恢复软删除的逻辑（清空 deleted_at）
+    public function restore()
+    {
+        // 先判断是否启用软删除，避免无软删除时调用报错
+        if (!in_array(SoftDeletes::class, class_uses_recursive($this))) {
+            throw new \RuntimeException('该模型未启用软删除，无法恢复');
+        }
+
+        $deletedAtColumn = $this->getDeletedAtColumn();
+        $this->{$deletedAtColumn} = null;
+        $this->save();
+        return true;
     }
 }
