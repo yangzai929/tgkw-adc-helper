@@ -185,13 +185,13 @@ class MainWorkerStartListener implements ListenerInterface
             return;
         }
 
-        if (!isset($systemConfig['needAddMenuSrv']) || !is_array($systemConfig['needAddMenuSrv'])) {
+        if (! isset($systemConfig['needAddMenuSrv']) || ! is_array($systemConfig['needAddMenuSrv'])) {
             LogHelper::error('systemConfig 配置格式错误：缺少 needAddMenuSrv 字段或格式不正确，跳过菜单同步');
             return;
         }
 
         $appName = env('APP_NAME');
-        if (!in_array($appName, $systemConfig['needAddMenuSrv'], true)) {
+        if (! in_array($appName, $systemConfig['needAddMenuSrv'], true)) {
             LogHelper::info("当前服务 [{$appName}] 不在需要同步菜单的服务列表中，跳过菜单同步");
             return;
         }
@@ -204,36 +204,36 @@ class MainWorkerStartListener implements ListenerInterface
     /**
      * 等待 systemConfig 配置从 Nacos 同步完成.
      *
-     * @return array|null 配置数组，失败返回 null
+     * @return null|array 配置数组，失败返回 null
      */
     private function waitForSystemConfig(): ?array
     {
         $maxRetries = (int) env('CONFIG_SYNC_MAX_RETRIES', 10); // 最多重试次数，可通过环境变量配置
         $retryDelay = (float) env('CONFIG_SYNC_RETRY_DELAY', 0.5); // 重试间隔（秒），可通过环境变量配置
 
-        for ($i = 0; $i < $maxRetries; $i++) {
+        for ($i = 0; $i < $maxRetries; ++$i) {
             $configStr = cfg('systemConfig');
 
-            if (!empty($configStr)) {
+            if (! empty($configStr)) {
                 $config = json_decode($configStr, true);
 
                 // 检查 JSON 解析是否成功
                 if (json_last_error() !== JSON_ERROR_NONE) {
-                    LogHelper::warning("systemConfig JSON 解析失败: " . json_last_error_msg() . " (尝试 " . ($i + 1) . "/{$maxRetries})");
+                    LogHelper::warning('systemConfig JSON 解析失败: ' . json_last_error_msg() . ' (尝试 ' . ($i + 1) . "/{$maxRetries})");
                     if ($i < $maxRetries - 1) {
                         Coroutine::sleep($retryDelay);
                     }
                     continue;
                 }
 
-                if (is_array($config) && !empty($config)) {
-                    LogHelper::info("成功获取 systemConfig 配置 (尝试 " . ($i + 1) . "/{$maxRetries})");
+                if (is_array($config) && ! empty($config)) {
+                    LogHelper::info('成功获取 systemConfig 配置 (尝试 ' . ($i + 1) . "/{$maxRetries})");
                     return $config;
                 }
             }
 
             if ($i < $maxRetries - 1) {
-                LogHelper::info("等待 systemConfig 配置同步... (尝试 " . ($i + 1) . "/{$maxRetries})");
+                LogHelper::info('等待 systemConfig 配置同步... (尝试 ' . ($i + 1) . "/{$maxRetries})");
                 Coroutine::sleep($retryDelay);
             }
         }

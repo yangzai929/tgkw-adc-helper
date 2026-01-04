@@ -10,7 +10,6 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Helper;
 
-use Exception;
 use Hyperf\Context\ApplicationContext;
 use Hyperf\HttpServer\Contract\ResponseInterface;
 use Hyperf\Paginator\LengthAwarePaginator;
@@ -19,7 +18,6 @@ use Hyperf\Resource\Json\ResourceCollection;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface as Psr7ResponseInterface;
 use TgkwAdc\Annotation\EnumCodeInterface;
-use TgkwAdc\Helper\Log\LogHelper;
 
 class ApiResponseHelper
 {
@@ -83,7 +81,6 @@ class ApiResponseHelper
             'timestamp' => time(),
         ])->withStatus($httpStatusCode);
     }
-
 
     public static function debug($data = null)
     {

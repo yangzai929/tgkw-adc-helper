@@ -11,13 +11,11 @@ declare(strict_types=1);
 namespace TgkwAdc\Resource;
 
 use ArrayAccess;
-use AWS\CRT\Log;
 use Carbon\Carbon;
 use DateTime;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use JsonSerializable;
-use Mpdf\Tag\Th;
 use TgkwAdc\Helper\Log\LogHelper;
 use Throwable;
 
@@ -139,10 +137,9 @@ abstract class BaseResource extends JsonResource
             // 4. 处理时间字符串（如 "2025-01-01 08:00:00"）
             $carbon = Carbon::parse($date);
             return $carbon->format($format);
-
         } catch (Throwable $exception) {
             // 5. 所有解析失败的情况都返回 null，避免程序崩溃
-            LogHelper::info('ssssssssssssssssssss',[$exception->getMessage()]);
+            LogHelper::info('ssssssssssssssssssss', [$exception->getMessage()]);
             return null;
         }
     }

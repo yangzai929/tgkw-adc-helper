@@ -10,7 +10,6 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Exception\Handler;
 
-use AWS\CRT\Log;
 use Hyperf\Context\ApplicationContext;
 use Hyperf\Context\Context;
 use Hyperf\ExceptionHandler\ExceptionHandler;
