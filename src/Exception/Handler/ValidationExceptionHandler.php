@@ -38,6 +38,7 @@ class ValidationExceptionHandler extends BaseExceptionHandler
                 error: $error,
                 code: $throwable->status,
                 data: ['show_error' => true],
+                httpStatusCode: 422
             );
         }
 

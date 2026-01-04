@@ -37,7 +37,7 @@ class OrgMiddleware implements MiddlewareInterface
         // 1.获取token
         $token = JwtHelper::getTokenFromRequest($request, GlobalConstants::ORG_TOKEN_TYPE);
         if (empty($token)) {
-            return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN);
+            return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN,httpStatusCode: 401);
         }
 
         $isOfflineAuth = false; // 标记是否走了离线认证
@@ -45,14 +45,14 @@ class OrgMiddleware implements MiddlewareInterface
         try {
             $payload = redis()->get(GlobalConstants::ORG_REFRESH_TOKEN_REDIS_KEY . $token);
             if (! $payload) {
-                return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN);
+                return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN, httpStatusCode: 401);
             }
             $user = json_decode($payload, true);
         } catch (Exception $e) {
             // 兜底
             $jwtPayload = JwtHelper::getPayloadFromToken($token, GlobalConstants::ORG_TOKEN_TYPE);
             if (empty($jwtPayload)) {
-                return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN);
+                return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN,httpStatusCode: 401);
             }
             $isOfflineAuth = true;
             $user = $jwtPayload;
@@ -117,7 +117,7 @@ class OrgMiddleware implements MiddlewareInterface
                     return $handler->handle($request);
                 }
 
-                return ApiResponseHelper::error(code: AuthCode::AUTH_ERROR);
+                return ApiResponseHelper::error(code: AuthCode::AUTH_ERROR,httpStatusCode: 403);
             }
             throw new Exception('权限中间件异常');
         }   // 菜单权限注解不存在 则不校验权限直接放行

@@ -29,7 +29,7 @@ class TokenExceptionHandler extends BaseExceptionHandler
             $this->stopPropagation(); // 阻止继续向下传播异常
             LogHelper::error(message: $throwable->getMessage(), context: [$throwable], filename: 'invalidToken');
 
-            return ApiResponseHelper::error($throwable->getMessage(), code: 401);
+            return ApiResponseHelper::error($throwable->getMessage(), code: 401,httpStatusCode: 401);
         }
 
         // 交给下一个异常处理器
