@@ -66,7 +66,7 @@ class ApiResponseHelper
         ])->withStatus($httpStatusCode);
     }
 
-    public static function error($message = 'error', $error = null, $data = null, $code = 400, $httpStatusCode = 200): Psr7ResponseInterface
+    public static function error($message = 'error', $error = null, $data = null, $code = 400, $httpStatusCode = 400): Psr7ResponseInterface
     {
         $response = ApplicationContext::getContainer()->get(ResponseInterface::class);
 
@@ -84,48 +84,6 @@ class ApiResponseHelper
         ])->withStatus($httpStatusCode);
     }
 
-    // 远程服务调用成功 暂时无用 仅调用方和服务方开发语言不一样时需要包装
-    public static function genServiceSuccess($data = null, $messges = 'succcess', $code = 0)
-    {
-        return [
-            'code' => $code,
-            'message' => $messges,
-            'data' => $data,
-            'timestamp' => time(),
-        ];
-    }
-
-    // 远程服务执行失败 暂时无用 仅调用方和服务方开发语言不一样时需要包装
-    public static function genServiceError(Exception $exception, $error = null, $data = null, $messges = 'RPC Service Error', $code = 400)
-    {
-        LogHelper::error($exception->getMessage(), context: ['trace' => $exception->getTraceAsString()]);
-
-        return [
-            'code' => $code,
-            'message' => $messges,
-            'data' => $data,
-            'error' => $error,
-            'timestamp' => time(),
-        ];
-    }
-
-    public static function genRpcServiceRes($data = null)
-    {
-        if (isset($data['code'], $data['data']['class'])) {
-            if ($data['data']['class'] == 'TgkwAdc\Exception\BusinessException') {
-                return ApiResponseHelper::error(message: $data['message'], code: $data['data']['code']);
-            }
-            return ApiResponseHelper::error(message: 'service error', code: $data['code'], error: $data['message']);
-        }
-
-        return [
-            'code' => $code,
-            'message' => $messges,
-            'data' => $data,
-            'error' => $error,
-            'timestamp' => time(),
-        ];
-    }
 
     public static function debug($data = null)
     {
