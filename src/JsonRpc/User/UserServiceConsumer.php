@@ -24,10 +24,6 @@ class UserServiceConsumer extends AbstractServiceClient implements UserServiceIn
      */
     protected string $protocol = 'jsonrpc-http';
 
-    public function test(array $param, string $micro): array
-    {
-        return $this->__request(__FUNCTION__, compact('param', 'micro'));
-    }
 
     public function checkAccessPermission(array $param): array
     {

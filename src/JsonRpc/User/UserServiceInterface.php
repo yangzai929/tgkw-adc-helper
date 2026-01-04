@@ -12,8 +12,6 @@ namespace TgkwAdc\JsonRpc\User;
 
 interface UserServiceInterface
 {
-    public function test(array $param, string $micro): array;
-
     public function checkAccessPermission(array $param): array;
 
     public function addMenu(array $param): array;
