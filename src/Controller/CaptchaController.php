@@ -13,6 +13,7 @@ namespace TgkwAdc\Controller;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\GetMapping;
 use TgkwAdc\Helper\ApiResponseHelper;
+use TgkwAdc\Resource\Captcha\CaptchaResource;
 
 use function TgkwAdc\HyperfCaptcha\captcha_create;
 
@@ -39,6 +40,6 @@ class CaptchaController extends AbstractController
                 'aliyun_captcha_prefix_id' => $configs['aliyun_captcha_prefix_id'],
             ];
         }
-        return ApiResponseHelper::debug($data);
+        return ApiResponseHelper::success(CaptchaResource::make($data));
     }
 }
