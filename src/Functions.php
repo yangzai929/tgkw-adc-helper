@@ -94,18 +94,20 @@ if (! function_exists('system_admin')) {
  * @param mixed $array 要转换的对象或数组
  * @return array 转换后的数组
  */
-function object_array($array)
-{
-    if (is_object($array)) {
-        $array = (array) $array;
-    }
-    if (is_array($array)) {
-        foreach ($array as $key => $value) {
-            $array[$key] = object_array($value);
+if (!function_exists('object_array')) { // 关键：先检查函数是否已声明
+    function object_array($array)
+    {
+        if (is_object($array)) {
+            $array = (array) $array;
         }
-    }
+        if (is_array($array)) {
+            foreach ($array as $key => $value) {
+                $array[$key] = object_array($value); // 递归处理嵌套结构
+            }
+        }
 
-    return $array;
+        return $array;
+    }
 }
 
 if (! function_exists('mb_rtrim')) {
@@ -187,22 +189,24 @@ if (! function_exists('mb_trim')) {
     }
 }
 
-function i18nEnumArrConvert(array $data, array $value_map = [])
-{
-    $res = [];
-    foreach ($data as $key => $value) {
-        $item = [
-            'txt' => $value['txt'],
-            'field' => $value['value'],
-            'i18n_txt' => $value['i18nTxt'],
-            'i18n_key' => $value['i18nKey'],
-        ];
-        if (isset($value_map[$value['value']])) {
-            $item['value_map_key'] = $value_map[$value['value']];
+if (! function_exists('i18nEnumArrConvert')){
+    function i18nEnumArrConvert(array $data, array $value_map = [])
+    {
+        $res = [];
+        foreach ($data as $key => $value) {
+            $item = [
+                'txt' => $value['txt'],
+                'field' => $value['value'],
+                'i18n_txt' => $value['i18nTxt'],
+                'i18n_key' => $value['i18nKey'],
+            ];
+            if (isset($value_map[$value['value']])) {
+                $item['value_map_key'] = $value_map[$value['value']];
+            }
+            $res[] = $item;
         }
-        $res[] = $item;
+        return $res;
     }
-    return $res;
 }
 
 use TgkwAdc\Annotation\EnumI18nInterface;
@@ -248,72 +252,81 @@ use TgkwAdc\Annotation\EnumI18nInterface;
  *
  * @throws InvalidArgumentException 当 $listEnumClass 未实现 EnumI18nInterface 接口时抛出
  */
-function buildTableColumnsWithValueMaps(string $listEnumClass, array $valueMapConfig = []): array
-{
-    if (! is_subclass_of($listEnumClass, EnumI18nInterface::class)) {
-        throw new InvalidArgumentException("{$listEnumClass} must implement EnumI18nInterface");
-    }
 
-    // 构建 columns 数组
-    $columns = [];
-    $listEnums = call_user_func([$listEnumClass, 'getEnums']);
-
-    foreach ($listEnums as $enumName => $enumData) {
-        $column = [
-            'key' => $enumData['value'],
-            'i18n_txt' => $enumData['i18nTxt'] ?? [],
-            'i18n_key' => $enumData['i18nKey'] ?? '',
-        ];
-
-        // 检查该字段是否需要值映射
-        $fieldKey = $enumData['value'];
-        $column['value_map_key'] = $fieldKey;
-
-        $columns[] = $column;
-    }
-
-    // 构建 value_maps
-    $valueMaps = filedI18nMap($valueMapConfig);
-
-    return [
-        'columns' => $columns,
-        'value_maps' => $valueMaps,
-    ];
-}
-
-function filedI18nMap($valueMapConfig)
-{
-    $valueMaps = [];
-
-    foreach ($valueMapConfig as $fieldKey => $config) {
-        $enumClass = $valueMapConfig[$fieldKey];
-
-        if (! is_subclass_of($enumClass, EnumI18nInterface::class)) {
-            continue;
+if (! function_exists('buildTableColumnsWithValueMaps')){
+    function buildTableColumnsWithValueMaps(string $listEnumClass, array $valueMapConfig = []): array
+    {
+        if (! is_subclass_of($listEnumClass, EnumI18nInterface::class)) {
+            throw new InvalidArgumentException("{$listEnumClass} must implement EnumI18nInterface");
         }
 
-        $enumMap = [];
-        $enumDataList = call_user_func([$enumClass, 'getEnums']);
+        // 构建 columns 数组
+        $columns = [];
+        $listEnums = call_user_func([$listEnumClass, 'getEnums']);
 
-        foreach ($enumDataList as $enumName => $enumData) {
-            $i18nTxt = $enumData['i18nTxt'] ?? [];
-            // 确保包含 zh_cn（如果不存在，使用 txt 作为默认值）
-            if (! isset($i18nTxt['zh_cn'])) {
-                $i18nTxt['zh_cn'] = $enumData['txt'] ?? '';
-            }
-
-            $enumMap[] = [
-                'value' => $enumData['value'],
-                'i18n_txt' => $i18nTxt,
+        foreach ($listEnums as $enumName => $enumData) {
+            $column = [
+                'key' => $enumData['value'],
+                'i18n_txt' => $enumData['i18nTxt'] ?? [],
                 'i18n_key' => $enumData['i18nKey'] ?? '',
             ];
+
+            // 检查该字段是否需要值映射
+            $fieldKey = $enumData['value'];
+            $column['value_map_key'] = $fieldKey;
+
+            $columns[] = $column;
         }
 
-        $valueMaps[$fieldKey] = $enumMap;
+        // 构建 value_maps
+        $valueMaps = filedI18nMap($valueMapConfig);
+
+        return [
+            'columns' => $columns,
+            'value_maps' => $valueMaps,
+        ];
     }
 
-    return $valueMaps;
 }
+
+
+
+if (! function_exists('filedI18nMap')) {
+    function filedI18nMap($valueMapConfig)
+    {
+        $valueMaps = [];
+
+        foreach ($valueMapConfig as $fieldKey => $config) {
+            $enumClass = $valueMapConfig[$fieldKey];
+
+            if (! is_subclass_of($enumClass, EnumI18nInterface::class)) {
+                continue;
+            }
+
+            $enumMap = [];
+            $enumDataList = call_user_func([$enumClass, 'getEnums']);
+
+            foreach ($enumDataList as $enumName => $enumData) {
+                $i18nTxt = $enumData['i18nTxt'] ?? [];
+                // 确保包含 zh_cn（如果不存在，使用 txt 作为默认值）
+                if (! isset($i18nTxt['zh_cn'])) {
+                    $i18nTxt['zh_cn'] = $enumData['txt'] ?? '';
+                }
+
+                $enumMap[] = [
+                    'value' => $enumData['value'],
+                    'i18n_txt' => $i18nTxt,
+                    'i18n_key' => $enumData['i18nKey'] ?? '',
+                ];
+            }
+
+            $valueMaps[$fieldKey] = $enumMap;
+        }
+
+        return $valueMaps;
+    }
+}
+
 /**
  * 数字金额转换成中文大写金额
  * 将阿拉伯数字金额转换为中文大写金额，精确到分.
@@ -321,69 +334,73 @@ function filedI18nMap($valueMapConfig)
  * @param float|int|string $num 要转换的金额数字或字符串
  * @return string 转换后的中文大写金额，如：壹佰贰拾叁元肆角伍分
  */
-function toRmb(float|int|string $num): string
-{
-    $c1 = '零壹贰叁肆伍陆柒捌玖';
-    $c2 = '分角元拾佰仟万拾佰仟亿';
-    // 精确到分后面就不要了，所以只留两个小数位
-    $num = str_replace(',', '', (string) $num);
-    $num = round(floatval($num), 2);
-    // 将数字转化为整数
-    $num = strval($num * 100);
-    if (strlen($num) > 10) {
-        return '金额太大，请检查';
-    }
-    $i = 0;
-    $c = '';
-    while (1) {
-        if ($i == 0) {
-            // 获取最后一位数字
-            $n = substr($num, strlen($num) - 1, 1);
-        } else {
-            $n = $num % 10;
+
+if (! function_exists('toRmb')) {
+    function toRmb(float|int|string $num): string
+    {
+        $c1 = '零壹贰叁肆伍陆柒捌玖';
+        $c2 = '分角元拾佰仟万拾佰仟亿';
+        // 精确到分后面就不要了，所以只留两个小数位
+        $num = str_replace(',', '', (string) $num);
+        $num = round(floatval($num), 2);
+        // 将数字转化为整数
+        $num = strval($num * 100);
+        if (strlen($num) > 10) {
+            return '金额太大，请检查';
         }
-        // 每次将最后一位数字转化为中文
-        $p1 = substr($c1, 3 * $n, 3);
-        $p2 = substr($c2, 3 * $i, 3);
-        if ($n != '0' || ($n == '0' && ($p2 == '亿' || $p2 == '万' || $p2 == '元'))) {
-            $c = $p1 . $p2 . $c;
-        } else {
-            $c = $p1 . $c;
+        $i = 0;
+        $c = '';
+        while (1) {
+            if ($i == 0) {
+                // 获取最后一位数字
+                $n = substr($num, strlen($num) - 1, 1);
+            } else {
+                $n = $num % 10;
+            }
+            // 每次将最后一位数字转化为中文
+            $p1 = substr($c1, 3 * $n, 3);
+            $p2 = substr($c2, 3 * $i, 3);
+            if ($n != '0' || ($n == '0' && ($p2 == '亿' || $p2 == '万' || $p2 == '元'))) {
+                $c = $p1 . $p2 . $c;
+            } else {
+                $c = $p1 . $c;
+            }
+            $i = $i + 1;
+            // 去掉数字最后一位了
+            $num = $num / 10;
+            $num = (int) $num;
+            // 结束循环
+            if ($num == 0) {
+                break;
+            }
         }
-        $i = $i + 1;
-        // 去掉数字最后一位了
-        $num = $num / 10;
-        $num = (int) $num;
-        // 结束循环
-        if ($num == 0) {
-            break;
+        $j = 0;
+        $slen = strlen($c);
+        while ($j < $slen) {
+            // utf8一个汉字相当3个字符
+            $m = substr($c, $j, 6);
+            // 处理数字中很多0的情况,每次循环去掉一个汉字“零”
+            if ($m == '零元' || $m == '零万' || $m == '零亿' || $m == '零零') {
+                $left = substr($c, 0, $j);
+                $right = substr($c, $j + 3);
+                $c = $left . $right;
+                $j = $j - 3;
+                $slen = $slen - 3;
+            }
+            $j = $j + 3;
         }
-    }
-    $j = 0;
-    $slen = strlen($c);
-    while ($j < $slen) {
-        // utf8一个汉字相当3个字符
-        $m = substr($c, $j, 6);
-        // 处理数字中很多0的情况,每次循环去掉一个汉字“零”
-        if ($m == '零元' || $m == '零万' || $m == '零亿' || $m == '零零') {
-            $left = substr($c, 0, $j);
-            $right = substr($c, $j + 3);
-            $c = $left . $right;
-            $j = $j - 3;
-            $slen = $slen - 3;
+        // 这个是为了去掉类似23.0中最后一个“零”字
+        if (substr($c, strlen($c) - 3, 3) == '零') {
+            $c = substr($c, 0, strlen($c) - 3);
         }
-        $j = $j + 3;
-    }
-    // 这个是为了去掉类似23.0中最后一个“零”字
-    if (substr($c, strlen($c) - 3, 3) == '零') {
-        $c = substr($c, 0, strlen($c) - 3);
-    }
-    // 将处理的汉字加上“整”
-    if (empty($c)) {
-        return '零元整';
+        // 将处理的汉字加上“整”
+        if (empty($c)) {
+            return '零元整';
+        }
+
+        return $c . '整';
     }
 
-    return $c . '整';
 }
 
 /**
@@ -393,54 +410,58 @@ function toRmb(float|int|string $num): string
  * @param int|string $num 要转换的数字
  * @return string 转换后的中文数字，如：一百二十三
  */
-function numToCn(int|string $num): string
-{
-    if (! is_numeric($num)) {
-        return (string) $num;
-    }
-    $chiNum = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
-    $chiUni = ['', '十', '百', '千', '万', '十', '百', '千', '亿'];
 
-    $num_str = (string) $num;
-    $count = strlen($num_str);
-    $last_flag = true; // 上一个 是否为0
-    $zero_flag = true; // 是否第一个
-    $temp_num = null; // 临时数字
-    $chiStr = ''; // 拼接结果
-    if ($count == 2) {// 两位数
-        $temp_num = $num_str[0];
-        $chiStr = $temp_num == 1 ? $chiUni[1] : $chiNum[$temp_num] . $chiUni[1];
-        $temp_num = $num_str[1];
-        $chiStr .= $temp_num == 0 ? '' : $chiNum[$temp_num];
-    } elseif ($count > 2) {
-        $index = 0;
-        for ($i = $count - 1; $i >= 0; --$i) {
-            $temp_num = $num_str[$i];
-            if ($temp_num == 0) {
-                if (! $zero_flag && ! $last_flag) {
-                    $chiStr = $chiNum[$temp_num] . $chiStr;
-                    $last_flag = true;
-                }
-
-                if ($index == 4 && $temp_num == 0) {
-                    $chiStr = '万' . $chiStr;
-                }
-            } else {
-                if ($i == 0 && $temp_num == 1 && $index == 1 && $index == 5) {
-                    $chiStr = $chiUni[$index % 9] . $chiStr;
-                } else {
-                    $chiStr = $chiNum[$temp_num] . $chiUni[$index % 9] . $chiStr;
-                }
-                $zero_flag = false;
-                $last_flag = false;
-            }
-            ++$index;
+if (! function_exists('numToCn')) {
+    function numToCn(int|string $num): string
+    {
+        if (! is_numeric($num)) {
+            return (string) $num;
         }
-    } else {
-        $chiStr = $chiNum[$num_str[0]];
+        $chiNum = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+        $chiUni = ['', '十', '百', '千', '万', '十', '百', '千', '亿'];
+
+        $num_str = (string) $num;
+        $count = strlen($num_str);
+        $last_flag = true; // 上一个 是否为0
+        $zero_flag = true; // 是否第一个
+        $temp_num = null; // 临时数字
+        $chiStr = ''; // 拼接结果
+        if ($count == 2) {// 两位数
+            $temp_num = $num_str[0];
+            $chiStr = $temp_num == 1 ? $chiUni[1] : $chiNum[$temp_num] . $chiUni[1];
+            $temp_num = $num_str[1];
+            $chiStr .= $temp_num == 0 ? '' : $chiNum[$temp_num];
+        } elseif ($count > 2) {
+            $index = 0;
+            for ($i = $count - 1; $i >= 0; --$i) {
+                $temp_num = $num_str[$i];
+                if ($temp_num == 0) {
+                    if (! $zero_flag && ! $last_flag) {
+                        $chiStr = $chiNum[$temp_num] . $chiStr;
+                        $last_flag = true;
+                    }
+
+                    if ($index == 4 && $temp_num == 0) {
+                        $chiStr = '万' . $chiStr;
+                    }
+                } else {
+                    if ($i == 0 && $temp_num == 1 && $index == 1 && $index == 5) {
+                        $chiStr = $chiUni[$index % 9] . $chiStr;
+                    } else {
+                        $chiStr = $chiNum[$temp_num] . $chiUni[$index % 9] . $chiStr;
+                    }
+                    $zero_flag = false;
+                    $last_flag = false;
+                }
+                ++$index;
+            }
+        } else {
+            $chiStr = $chiNum[$num_str[0]];
+        }
+
+        return $chiStr;
     }
 
-    return $chiStr;
 }
 
 /**
@@ -450,15 +471,18 @@ function numToCn(int|string $num): string
  * @param string $string 要提取数字的字符串
  * @return float|string 提取到的数字，如果没有数字则返回空字符串
  */
-function findNum(string $string = ''): float|string
-{
-    $string = trim($string);
-    if (empty($string)) {
-        return '';
-    }
-    $num = preg_replace('/[^.0123456789]/s', '', $string);
+if (! function_exists('findNum')) {
+    function findNum(string $string = ''): float|string
+    {
+        $string = trim($string);
+        if (empty($string)) {
+            return '';
+        }
+        $num = preg_replace('/[^.0123456789]/s', '', $string);
 
-    return ! empty($num) ? floatval($num) : '';
+        return ! empty($num) ? floatval($num) : '';
+    }
+
 }
 
 /**
@@ -469,11 +493,14 @@ function findNum(string $string = ''): float|string
  * @param int $format 保留的小数位数，默认为2位
  * @return float|int 格式化后的价格
  */
-function priceFormat(float|int|string $price, int $format = 2): float|int
-{
-    $precision = $format; // 保留小数点后面的位数
+if (! function_exists('priceFormat')) {
+    function priceFormat(float|int|string $price, int $format = 2): float|int
+    {
+        $precision = $format; // 保留小数点后面的位数
 
-    return is_int($price) ? intval($price) : (float) sprintf('%.' . $precision . 'f', round(floatval($price), $precision));
+        return is_int($price) ? intval($price) : (float) sprintf('%.' . $precision . 'f', round(floatval($price), $precision));
+    }
+
 }
 
 /**
@@ -484,9 +511,12 @@ function priceFormat(float|int|string $price, int $format = 2): float|int
  * @param array $urlPatch URL参数数组
  * @return string 完整的URL字符串
  */
-function handelUrlAliasParam(string $alias, array $urlPatch): string
-{
-    return sprintf($alias . '%s' . str_replace('%', '%%', http_build_query($urlPatch)), '?');
+if (! function_exists('handelUrlAliasParam')) {
+    function handelUrlAliasParam(string $alias, array $urlPatch): string
+    {
+        return sprintf($alias . '%s' . str_replace('%', '%%', http_build_query($urlPatch)), '?');
+    }
+
 }
 
 /**
@@ -497,19 +527,22 @@ function handelUrlAliasParam(string $alias, array $urlPatch): string
  * @param string $key 用于去重的键名
  * @return array 去重后的数组
  */
-function second_array_unique_bykey(array $arr, string $key): array
-{
-    $tmp_arr = [];
-    foreach ($arr as $k => $v) {
-        if (in_array($v[$key], $tmp_arr)) {   // 搜索$v[$key]是否在$tmp_arr数组中存在，若存在返回true
-            unset($arr[$k]); // 销毁一个变量  如果$tmp_arr中已存在相同的值就删除该值
-        } else {
-            $tmp_arr[$k] = $v[$key];  // 将不同的值放在该数组中保存
+if (! function_exists('second_array_unique_bykey')) {
+    function second_array_unique_bykey(array $arr, string $key): array
+    {
+        $tmp_arr = [];
+        foreach ($arr as $k => $v) {
+            if (in_array($v[$key], $tmp_arr)) {   // 搜索$v[$key]是否在$tmp_arr数组中存在，若存在返回true
+                unset($arr[$k]); // 销毁一个变量  如果$tmp_arr中已存在相同的值就删除该值
+            } else {
+                $tmp_arr[$k] = $v[$key];  // 将不同的值放在该数组中保存
+            }
         }
+
+        // ksort($arr); //ksort函数对数组进行排序(保留原键值key)  sort为不保留key值
+        return $arr;
     }
 
-    // ksort($arr); //ksort函数对数组进行排序(保留原键值key)  sort为不保留key值
-    return $arr;
 }
 
 /**
@@ -521,9 +554,12 @@ function second_array_unique_bykey(array $arr, string $key): array
  * @param int $scale 小数点后保留的位数，默认为2位
  * @return string 计算结果
  */
-function math_add(float|int|string $a, float|int|string $b, int $scale = 2): string
-{
-    return bcadd((string) $a, (string) $b, $scale);
+if (! function_exists('math_add')) {
+    function math_add(float|int|string $a, float|int|string $b, int $scale = 2): string
+    {
+        return bcadd((string) $a, (string) $b, $scale);
+    }
+
 }
 
 /**
@@ -535,9 +571,12 @@ function math_add(float|int|string $a, float|int|string $b, int $scale = 2): str
  * @param int $scale 小数点后保留的位数，默认为2位
  * @return string 计算结果
  */
-function math_sub(float|int|string $a, float|int|string $b, int $scale = 2): string
-{
-    return bcsub((string) $a, (string) $b, $scale);
+if (! function_exists('math_sub')) {
+    function math_sub(float|int|string $a, float|int|string $b, int $scale = 2): string
+    {
+        return bcsub((string) $a, (string) $b, $scale);
+    }
+
 }
 
 /**
@@ -549,9 +588,12 @@ function math_sub(float|int|string $a, float|int|string $b, int $scale = 2): str
  * @param int $scale 小数点后保留的位数，默认为2位
  * @return string 计算结果
  */
-function math_mul(float|int|string $a, float|int|string $b, int $scale = 2): string
-{
-    return bcmul((string) $a, (string) $b, $scale);
+if (! function_exists('math_mul')) {
+    function math_mul(float|int|string $a, float|int|string $b, int $scale = 2): string
+    {
+        return bcmul((string) $a, (string) $b, $scale);
+    }
+
 }
 
 /**
@@ -563,9 +605,12 @@ function math_mul(float|int|string $a, float|int|string $b, int $scale = 2): str
  * @param int $scale 小数点后保留的位数，默认为2位
  * @return string 计算结果
  */
-function math_div(float|int|string $a, float|int|string $b, int $scale = 2): string
-{
-    return bcdiv((string) $a, (string) $b, $scale);
+if (! function_exists('math_div')) {
+    function math_div(float|int|string $a, float|int|string $b, int $scale = 2): string
+    {
+        return bcdiv((string) $a, (string) $b, $scale);
+    }
+
 }
 
 /**
@@ -576,9 +621,12 @@ function math_div(float|int|string $a, float|int|string $b, int $scale = 2): str
  * @param float|int|string $b 除数
  * @return string 余数
  */
-function math_mod(float|int|string $a, float|int|string $b): string
-{
-    return bcmod((string) $a, (string) $b);
+if (! function_exists('math_mod')) {
+    function math_mod(float|int|string $a, float|int|string $b): string
+    {
+        return bcmod((string) $a, (string) $b);
+    }
+
 }
 
 /**
@@ -590,9 +638,12 @@ function math_mod(float|int|string $a, float|int|string $b): string
  * @param int $scale 比较的小数位数，默认为5位
  * @return int 返回1表示a>b，返回0表示a=b，返回-1表示a<b
  */
-function math_comp(float|int|string $a, float|int|string $b, int $scale = 5): int
-{
-    return bccomp((string) $a, (string) $b, $scale);
+if (! function_exists('math_comp')) {
+    function math_comp(float|int|string $a, float|int|string $b, int $scale = 5): int
+    {
+        return bccomp((string) $a, (string) $b, $scale);
+    }
+
 }
 
 /**
@@ -602,10 +653,13 @@ function math_comp(float|int|string $a, float|int|string $b, int $scale = 5): in
  * @param float|int|string $num 要转换的比例数值
  * @return float 转换后的百分比数值，保留2位小数
  */
-function getRate(float|int|string $num): float
-{
-    return round(floatval($num) * 100, 2);
+if (! function_exists('getRate')) {
+    function getRate(float|int|string $num): float
+    {
+        return round(floatval($num) * 100, 2);
+    }
 }
+
 
 /**
  * 检查是否为JSON字符串
@@ -614,16 +668,19 @@ function getRate(float|int|string $num): float
  * @param mixed $content 要检查的内容
  * @return bool true表示是JSON字符串，false表示不是
  */
-function isJson(mixed $content): bool
-{
-    if (is_string($content)) {
-        $jObject = json_decode($content);
+if (! function_exists('isJson')) {
+    function isJson(mixed $content): bool
+    {
+        if (is_string($content)) {
+            $jObject = json_decode($content);
 
-        return (is_object($jObject) || is_array($jObject)) ? true : false;
+            return (is_object($jObject) || is_array($jObject)) ? true : false;
+        }
+
+        return false;
     }
-
-    return false;
 }
+
 
 /**
  * 数组百分比转换
@@ -632,24 +689,27 @@ function isJson(mixed $content): bool
  * @param array|mixed $array 要转换的数组
  * @return array|false 转换后的百分比数组，如果参数不是数组则返回false
  */
-function percentArray(mixed $array): array|false
-{
-    if (! is_array($array)) {
-        return false;
-    }
-    $total = array_sum($array);
-    if ($total > 0) {
-        array_walk($array, function (&$item, $key, $prefix) {
-            $item = round($item * 100 / $prefix, 2);
-        }, $total);
-        if ($d = (100 - array_sum($array))) {
-            $max_key = array_search(max($array), $array);
-            $array[$max_key] = round($array[$max_key] + round($d, 2), 2);
+if (! function_exists('percentArray')) {
+    function percentArray(mixed $array): array|false
+    {
+        if (! is_array($array)) {
+            return false;
         }
-    }
+        $total = array_sum($array);
+        if ($total > 0) {
+            array_walk($array, function (&$item, $key, $prefix) {
+                $item = round($item * 100 / $prefix, 2);
+            }, $total);
+            if ($d = (100 - array_sum($array))) {
+                $max_key = array_search(max($array), $array);
+                $array[$max_key] = round($array[$max_key] + round($d, 2), 2);
+            }
+        }
 
-    return $array;
+        return $array;
+    }
 }
+
 
 /**
  * 查询指定时间范围内的所有日期、月份、季度或年份
@@ -660,69 +720,72 @@ function percentArray(mixed $array): array|false
  * @param string $type 类型：day(天)、month(月份)、quarter(季度)、year(年份)
  * @return array|string 成功返回时间数组，失败返回错误信息字符串
  */
-function getDateYMD(string $startDate, string $endDate, string $type): array|string
-{
-    // 验证日期格式
-    if (date('Y-m-d', strtotime($startDate)) != $startDate || date('Y-m-d', strtotime($endDate)) != $endDate) {
-        return '日期格式不正确';
+if (! function_exists('getDateYMD')) {
+    function getDateYMD(string $startDate, string $endDate, string $type): array|string
+    {
+        // 验证日期格式
+        if (date('Y-m-d', strtotime($startDate)) != $startDate || date('Y-m-d', strtotime($endDate)) != $endDate) {
+            return '日期格式不正确';
+        }
+
+        $returnData = [];
+        $startTimestamp = strtotime($startDate);
+        $endTimestamp = strtotime($endDate);
+        $i = 0;
+
+        // 处理日期类型
+        if ($type == 'day') {
+            do {
+                $currentDate = date('Y-m-d', strtotime('+' . $i . ' day', $startTimestamp));
+                $returnData[] = $currentDate;
+                ++$i;
+            } while (strtotime($currentDate) < $endTimestamp);
+        } elseif ($type == 'month') {
+            $tempDate = $startDate;
+            do {
+                $month = strtotime('first day of +' . $i . ' month', $startTimestamp);
+                $temp = [
+                    'name' => ltrim(date('m', $month), '0'),
+                    'startDate' => date('Y-m-01', $month),
+                    'endDate' => date('Y-m-t', $month),
+                ];
+                $tempDate = $temp['endDate'];
+                $returnData[] = $temp;
+                ++$i;
+            } while (strtotime($tempDate) < $endTimestamp);
+        } elseif ($type == 'quarter') {
+            $tempDate = $startDate;
+            do {
+                $quarter = strtotime('first day of +' . $i . ' month', $startTimestamp);
+                $q = ceil(date('n', $quarter) / 3);
+                $year = (int) date('Y', $quarter);
+                $temp = [
+                    'name' => $year . '第' . $q . '季度',
+                    'startDate' => date('Y-m-01', mktime(0, 0, 0, $q * 3 - 3 + 1, 1, $year)),
+                    'endDate' => date('Y-m-t', mktime(23, 59, 59, $q * 3, 1, $year)),
+                ];
+                $tempDate = $temp['endDate'];
+                $returnData[] = $temp;
+                $i += 3;
+            } while (strtotime($tempDate) < $endTimestamp);
+        } elseif ($type == 'year') {
+            $tempDate = $startDate;
+            do {
+                $year = strtotime('+' . $i . ' year', $startTimestamp);
+                $temp = [
+                    'name' => date('Y', $year),
+                    'startDate' => date('Y-01-01', $year),
+                    'endDate' => date('Y-12-31', $year),
+                ];
+                $tempDate = $temp['endDate'];
+                $returnData[] = $temp;
+                ++$i;
+            } while (strtotime($tempDate) < $endTimestamp);
+        }
+
+        return $returnData;
     }
 
-    $returnData = [];
-    $startTimestamp = strtotime($startDate);
-    $endTimestamp = strtotime($endDate);
-    $i = 0;
-
-    // 处理日期类型
-    if ($type == 'day') {
-        do {
-            $currentDate = date('Y-m-d', strtotime('+' . $i . ' day', $startTimestamp));
-            $returnData[] = $currentDate;
-            ++$i;
-        } while (strtotime($currentDate) < $endTimestamp);
-    } elseif ($type == 'month') {
-        $tempDate = $startDate;
-        do {
-            $month = strtotime('first day of +' . $i . ' month', $startTimestamp);
-            $temp = [
-                'name' => ltrim(date('m', $month), '0'),
-                'startDate' => date('Y-m-01', $month),
-                'endDate' => date('Y-m-t', $month),
-            ];
-            $tempDate = $temp['endDate'];
-            $returnData[] = $temp;
-            ++$i;
-        } while (strtotime($tempDate) < $endTimestamp);
-    } elseif ($type == 'quarter') {
-        $tempDate = $startDate;
-        do {
-            $quarter = strtotime('first day of +' . $i . ' month', $startTimestamp);
-            $q = ceil(date('n', $quarter) / 3);
-            $year = (int) date('Y', $quarter);
-            $temp = [
-                'name' => $year . '第' . $q . '季度',
-                'startDate' => date('Y-m-01', mktime(0, 0, 0, $q * 3 - 3 + 1, 1, $year)),
-                'endDate' => date('Y-m-t', mktime(23, 59, 59, $q * 3, 1, $year)),
-            ];
-            $tempDate = $temp['endDate'];
-            $returnData[] = $temp;
-            $i += 3;
-        } while (strtotime($tempDate) < $endTimestamp);
-    } elseif ($type == 'year') {
-        $tempDate = $startDate;
-        do {
-            $year = strtotime('+' . $i . ' year', $startTimestamp);
-            $temp = [
-                'name' => date('Y', $year),
-                'startDate' => date('Y-01-01', $year),
-                'endDate' => date('Y-12-31', $year),
-            ];
-            $tempDate = $temp['endDate'];
-            $returnData[] = $temp;
-            ++$i;
-        } while (strtotime($tempDate) < $endTimestamp);
-    }
-
-    return $returnData;
 }
 
 /**
@@ -733,17 +796,20 @@ function getDateYMD(string $startDate, string $endDate, string $type): array|str
  * @param int $val2 全部账单数
  * @return float 收缴率百分比，保留2位小数
  */
-function getCollectionRate(int $val1, int $val2): float
-{
-    // 如果已缴账单数或全部账单数为0，则返回0
-    if ($val1 <= 0 || $val2 <= 0) {
-        return 0.0;
+if (! function_exists('getCollectionRate')) {
+    function getCollectionRate(int $val1, int $val2): float
+    {
+        // 如果已缴账单数或全部账单数为0，则返回0
+        if ($val1 <= 0 || $val2 <= 0) {
+            return 0.0;
+        }
+
+        $ratio = ($val1 / $val2) * 100;
+
+        return round($ratio, 2);
     }
-
-    $ratio = ($val1 / $val2) * 100;
-
-    return round($ratio, 2);
 }
+
 
 if (! function_exists('isDateValid')) {
     /**
