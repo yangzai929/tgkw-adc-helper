@@ -88,28 +88,26 @@ class OrgMiddleware implements MiddlewareInterface
             }
         }
 
+        $tenantId = trim($request->getHeaderLine('Current-Tenant-Id'));
+        // 租户关联校验（确保用户有权访问当前租户）
+        $userAuthorizedTenants = $user['tenantsArr'] ?? [];
+        if (! empty($tenantId) && ! in_array($tenantId, $userAuthorizedTenants, true)) {
+            throw new BusinessException(AuthCode::ERROR_TENANT_ID);
+        }
+        // 存储关键信息到协程上下文（供后续控制器/服务使用）
+        Context::set('tenant_id', $tenantId);
+        foreach ($user['tenants'] as $tenant) {
+            if ($tenant['admin_uid'] == $user['id']) {
+                // 当前租户的超级管理员 默认具备所有权限直接放行
+                return $handler->handle($request);
+            }
+        }
         // 获取当前请求的控制器方法菜单权限注解
         $annotations = AnnotationCollector::getClassMethodAnnotation($controller, $action);
         $annotationsArr = (array) $annotations;
         if (isset($annotationsArr['TgkwAdc\Annotation\OrgPermission'])) {  // 判断当前请求的菜单权限注解是否存在
             if ($controller && $action) {
                 $action = $controller . '@' . $action;
-
-                // 租户关联校验（确保用户有权访问当前租户）
-                $userAuthorizedTenants = $user['tenantsArr'] ?? [];
-                if (! empty($tenantId) && ! in_array($tenantId, $userAuthorizedTenants, true)) {
-                    throw new BusinessException(AuthCode::ERROR_TENANT_ID);
-                }
-
-                // 存储关键信息到协程上下文（供后续控制器/服务使用）
-                Context::set('tenant_id', $tenantId);
-                foreach ($user['tenants'] as $tenant) {
-                    if ($tenant['admin_uid'] == $user['id']) {
-                        // 当前租户的超级管理员 默认具备所有权限直接放行
-                        return $handler->handle($request);
-                    }
-                }
-
                 // $hasAccess = Enforcer::enforce('user:1', 'tenant:1', 'App\Controller\V1\UserController@index');
                 $hasAccess = $this->hasAccess(['user:' . $user['id'], 'tenant:' . $tenantId, $action]);
                 LogHelper::info('OrgPermissionMiddleware', ['controller' => $controller, 'action' => $action, 'res' => $hasAccess, $annotations]);
