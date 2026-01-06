@@ -94,7 +94,7 @@ if (! function_exists('system_admin')) {
  * @param mixed $array 要转换的对象或数组
  * @return array 转换后的数组
  */
-if (! function_exists('object_array')) { // 关键：先检查函数是否已声明
+if (!function_exists('object_array')) { // 关键：先检查函数是否已声明
     function object_array($array)
     {
         if (is_object($array)) {
@@ -189,7 +189,7 @@ if (! function_exists('mb_trim')) {
     }
 }
 
-if (! function_exists('i18nEnumArrConvert')) {
+if (! function_exists('i18nEnumArrConvert')){
     function i18nEnumArrConvert(array $data, array $value_map = [])
     {
         $res = [];
@@ -252,7 +252,8 @@ use TgkwAdc\Annotation\EnumI18nInterface;
  *
  * @throws InvalidArgumentException 当 $listEnumClass 未实现 EnumI18nInterface 接口时抛出
  */
-if (! function_exists('buildTableColumnsWithValueMaps')) {
+
+if (! function_exists('buildTableColumnsWithValueMaps')){
     function buildTableColumnsWithValueMaps(string $listEnumClass, array $valueMapConfig = []): array
     {
         if (! is_subclass_of($listEnumClass, EnumI18nInterface::class)) {
@@ -285,7 +286,10 @@ if (! function_exists('buildTableColumnsWithValueMaps')) {
             'value_maps' => $valueMaps,
         ];
     }
+
 }
+
+
 
 if (! function_exists('filedI18nMap')) {
     function filedI18nMap($valueMapConfig)
@@ -330,6 +334,7 @@ if (! function_exists('filedI18nMap')) {
  * @param float|int|string $num 要转换的金额数字或字符串
  * @return string 转换后的中文大写金额，如：壹佰贰拾叁元肆角伍分
  */
+
 if (! function_exists('toRmb')) {
     function toRmb(float|int|string $num): string
     {
@@ -395,6 +400,7 @@ if (! function_exists('toRmb')) {
 
         return $c . '整';
     }
+
 }
 
 /**
@@ -404,6 +410,7 @@ if (! function_exists('toRmb')) {
  * @param int|string $num 要转换的数字
  * @return string 转换后的中文数字，如：一百二十三
  */
+
 if (! function_exists('numToCn')) {
     function numToCn(int|string $num): string
     {
@@ -454,6 +461,7 @@ if (! function_exists('numToCn')) {
 
         return $chiStr;
     }
+
 }
 
 /**
@@ -474,6 +482,7 @@ if (! function_exists('findNum')) {
 
         return ! empty($num) ? floatval($num) : '';
     }
+
 }
 
 /**
@@ -491,6 +500,7 @@ if (! function_exists('priceFormat')) {
 
         return is_int($price) ? intval($price) : (float) sprintf('%.' . $precision . 'f', round(floatval($price), $precision));
     }
+
 }
 
 /**
@@ -506,6 +516,7 @@ if (! function_exists('handelUrlAliasParam')) {
     {
         return sprintf($alias . '%s' . str_replace('%', '%%', http_build_query($urlPatch)), '?');
     }
+
 }
 
 /**
@@ -531,6 +542,7 @@ if (! function_exists('second_array_unique_bykey')) {
         // ksort($arr); //ksort函数对数组进行排序(保留原键值key)  sort为不保留key值
         return $arr;
     }
+
 }
 
 /**
@@ -547,6 +559,7 @@ if (! function_exists('math_add')) {
     {
         return bcadd((string) $a, (string) $b, $scale);
     }
+
 }
 
 /**
@@ -563,6 +576,7 @@ if (! function_exists('math_sub')) {
     {
         return bcsub((string) $a, (string) $b, $scale);
     }
+
 }
 
 /**
@@ -579,6 +593,7 @@ if (! function_exists('math_mul')) {
     {
         return bcmul((string) $a, (string) $b, $scale);
     }
+
 }
 
 /**
@@ -595,6 +610,7 @@ if (! function_exists('math_div')) {
     {
         return bcdiv((string) $a, (string) $b, $scale);
     }
+
 }
 
 /**
@@ -610,6 +626,7 @@ if (! function_exists('math_mod')) {
     {
         return bcmod((string) $a, (string) $b);
     }
+
 }
 
 /**
@@ -626,6 +643,7 @@ if (! function_exists('math_comp')) {
     {
         return bccomp((string) $a, (string) $b, $scale);
     }
+
 }
 
 /**
@@ -641,6 +659,7 @@ if (! function_exists('getRate')) {
         return round(floatval($num) * 100, 2);
     }
 }
+
 
 /**
  * 检查是否为JSON字符串
@@ -661,6 +680,7 @@ if (! function_exists('isJson')) {
         return false;
     }
 }
+
 
 /**
  * 数组百分比转换
@@ -689,6 +709,7 @@ if (! function_exists('percentArray')) {
         return $array;
     }
 }
+
 
 /**
  * 查询指定时间范围内的所有日期、月份、季度或年份
@@ -764,6 +785,7 @@ if (! function_exists('getDateYMD')) {
 
         return $returnData;
     }
+
 }
 
 /**
@@ -787,6 +809,7 @@ if (! function_exists('getCollectionRate')) {
         return round($ratio, 2);
     }
 }
+
 
 if (! function_exists('isDateValid')) {
     /**
