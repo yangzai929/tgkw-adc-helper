@@ -80,12 +80,21 @@ if (! function_exists('auth_user')) {
     }
 }
 
+if (! function_exists('current_tenant_id')) {
+    function current_tenant_id($default = null)
+    {
+        return Context::get('tenant_id', $default);
+    }
+}
+
 if (! function_exists('system_admin')) {
     function system_admin($default = null)
     {
         return Context::get(GlobalConstants::SYS_ADMIN_CONTEXT, $default);
     }
 }
+
+
 
 /**
  * 将对象或嵌套对象转换为数组
