@@ -19,9 +19,23 @@ use TgkwAdc\Helper\Log\LogHelper;
 
 class FileSystemHelper
 {
+    /**
+     * 文件系统适配器实例.
+     * @var mixed
+     */
     protected $adapter;
 
+    /**
+     * 适配器名称.
+     * @var null|string
+     */
     protected $adapterName;
+
+    /**
+     * 文件系统工厂实例.
+     * @var FilesystemFactory
+     */
+    protected $factory;
 
     public function __construct($adapterName = null)
     {
@@ -29,7 +43,6 @@ class FileSystemHelper
         $factory = make(FilesystemFactory::class);
         $this->adapter = $factory->get($adapterName);
         $this->adapterName = $factory->adapterName;
-        return $this;
     }
 
     public function getAdapter()
@@ -40,6 +53,19 @@ class FileSystemHelper
     public function getAdapterName()
     {
         return $this->adapterName;
+    }
+
+    /**
+     * 重新设置适配器（显式修改状态）.
+     *
+     * @return $this
+     */
+    public function setAdapter(?string $adapterName = null)
+    {
+        $this->adapter = $this->factory->get($adapterName);
+        $this->adapterName = $this->factory->adapterName;
+
+        return $this;
     }
 
     public function genFileTempUrl($object_key, string $expiresAt = '+1 days')

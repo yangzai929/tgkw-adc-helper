@@ -91,7 +91,7 @@ class OrgMiddleware implements MiddlewareInterface
         $tenantId = trim($request->getHeaderLine('Current-Tenant-Id'));
         // 租户关联校验（确保用户有权访问当前租户）
         $userAuthorizedTenants = $user['tenantsArr'] ?? [];
-        if (! empty($tenantId) && ! in_array($tenantId, $userAuthorizedTenants, true)) {
+        if (! empty($tenantId) && ! in_array($tenantId, $userAuthorizedTenants)) {
             throw new BusinessException(AuthCode::ERROR_TENANT_ID);
         }
         // 存储关键信息到协程上下文（供后续控制器/服务使用）

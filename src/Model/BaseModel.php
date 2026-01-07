@@ -20,6 +20,8 @@ class BaseModel extends Model implements CacheableInterface
 {
     use Cacheable;
 
+    protected ?string $dateFormat = 'U';
+
     public function setCreatedAt($value): static
     {
         $this->attributes['created_at'] = time();
