@@ -65,6 +65,11 @@ trait EnumI18nGet
         ];
     }
 
+    public static function values(): array
+    {
+        return array_map(fn ($case) => $case->value, self::cases());
+    }
+
     /**
      * 获取当前枚举项的 i18n 文本。
      */
