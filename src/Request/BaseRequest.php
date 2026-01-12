@@ -107,4 +107,18 @@ abstract class BaseRequest extends FormRequest
 
         return $attributes;
     }
+
+
+    protected function validationData(): array
+    {
+        $data = parent::validationData();
+        // 将路由参数 id 合入请求数据，供场景规则验证
+        $routeParam = 'id';
+        $routeId = $this->route($routeParam) ?? null;
+        if ($routeId !== null && $routeId !== '') {
+            $data[$routeParam] = $routeId;
+        }
+
+        return $data;
+    }
 }
