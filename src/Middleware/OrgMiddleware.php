@@ -87,17 +87,11 @@ class OrgMiddleware implements MiddlewareInterface
                 }
             }
         }
-
-        $tenantId = trim($request->getHeaderLine('Current-Tenant-Id'));
-        // 租户关联校验（确保用户有权访问当前租户）
-        $userAuthorizedTenants = $user['tenantsArr'] ?? [];
-        if (! empty($tenantId) && ! in_array($tenantId, $userAuthorizedTenants)) {
-            throw new BusinessException(AuthCode::ERROR_TENANT_ID);
-        }
+        $tenantId = $user['current_tenant_id'];
         // 存储关键信息到协程上下文（供后续控制器/服务使用）
         Context::set('tenant_id', $tenantId);
         foreach ($user['tenants'] as $tenant) {
-            if ($tenant['admin_uid'] == $user['id']) {
+            if ($tenant['id']  ==  $tenantId && $tenant['admin_uid'] == $user['id']) {
                 // 当前租户的超级管理员 默认具备所有权限直接放行
                 return $handler->handle($request);
             }
