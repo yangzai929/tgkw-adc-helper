@@ -14,7 +14,14 @@ use TgkwAdc\Helper\ApiResponseHelper;
 
 trait JsonRpcCall
 {
-    public function checkResponse($response, $resourceClas, $method = 'make')
+    /**
+     * 控制器中调用RPC 用于处理RPC返回数据
+     * @param $response
+     * @param string|null $resourceClass
+     * @param $method
+     * @return array|null[]|\Psr\Http\Message\ResponseInterface
+     */
+    public function handleRpcResponse($response, ?string $resourceClass = null, $method = 'make')
     {
         $resData = []; // 提前初始化变量，避免未定义警告
         if (isset($response['code']) && $response['code'] < 0) {
@@ -36,13 +43,29 @@ trait JsonRpcCall
             return ApiResponseHelper::error(...$re);
         }
 
-        // 校验资源类和方法是否存在，避免调用不存在的方法导致报错
-        if (class_exists($resourceClas) && method_exists($resourceClas, $method)) {
-            $formattedData = $resourceClas::$method($response);
-            return ApiResponseHelper::success($formattedData);
+        if($resourceClass){
+            // 校验资源类和方法是否存在，避免调用不存在的方法导致报错
+            if (class_exists($resourceClass) && method_exists($resourceClass, $method)) {
+                $formattedData = $resourceClass::$method($response);
+                return ApiResponseHelper::success($formattedData);
+            }
+            // 兜底：如果资源类/方法不存在，直接debug返回原始数据
+            $formattedData = $response;
+            return ApiResponseHelper::debug($formattedData);
         }
-        // 兜底：如果资源类/方法不存在，直接debug返回原始数据
-        $formattedData = $response;
-        return ApiResponseHelper::debug($formattedData);
+       return ApiResponseHelper::success();
+    }
+
+    /**
+     * 服务中调用RPC 检查是否有错误
+     * @param $response
+     * @return bool
+     */
+    public function hasError($response)
+    {
+        if (isset($response['code']) && $response['code'] < 0) {
+           return  true;  //有异常，可以查看response
+        }
+        return  false; //无异常response 即为data
     }
 }
