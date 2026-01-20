@@ -24,6 +24,7 @@
         "php": ">=8.1",
         "doctrine/dbal": "^3.0",
         "donjan-deng/hyperf-casbin": "^3.23",
+        "dtm/dtm-client": "^0.3.5",
         "firebase/php-jwt": "^6.11",
         "friendsofhyperf/mail": "^3.1",
         "hyperf/amqp": "^3.1",

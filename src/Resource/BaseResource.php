@@ -47,10 +47,7 @@ abstract class BaseResource extends JsonResource
 
             return $this->hideSensitiveFieldsRecursive($data);
         } catch (Throwable $e) {
-            return [
-                'error' => 'Resource serialization failed',
-                'message' => config('app.debug') ? $e->getMessage() : 'Internal Error',
-            ];
+            return $data;
         }
     }
 

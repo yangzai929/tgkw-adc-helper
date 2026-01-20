@@ -108,7 +108,6 @@ abstract class BaseRequest extends FormRequest
         return $attributes;
     }
 
-
     protected function validationData(): array
     {
         $data = parent::validationData();

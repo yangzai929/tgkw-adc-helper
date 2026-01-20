@@ -65,10 +65,23 @@ enum AuthCode: int implements EnumCodeInterface
     )]
     case ERROR_TENANT_ID = 5;
 
-    #[EnumCode(msg: '无权访问', i18nMsg: ['en' => 'No authority to access', 'zh_hk' => '無權訪問'])]
+    #[EnumCode(
+        msg: '无权访问',
+        i18nMsg: [
+            'en' => 'No authority to access',
+            'zh_hk' => '無權訪問',
+        ]
+    )]
     case AUTH_ERROR = 6;
 
-    #[EnumCode(msg: '无权访问（{action}）', i18nMsg: ['en' => 'No authority to access ({action})', 'zh_hk' => '無權訪問（{action}）'])]
+    #[EnumCode(
+        msg: '无权访问（{action}）',
+        i18nMsg: [
+            'en' => 'No authority to access ({action})',
+            'zh_hk' => '無權訪問（{action}）',
+        ]
+    )
+    ]
     case AUTH_ERROR_ACTION = 7;
 
     #[EnumCode(
@@ -78,5 +91,23 @@ enum AuthCode: int implements EnumCodeInterface
             'zh_hk' => '權限不足，無法操作',
         ]
     )]
-    case PERMISSION_DENIED = 38;
+    case PERMISSION_DENIED = 8;
+
+    #[EnumCode(
+        msg: '请先创建或加入租户',
+        i18nMsg: [
+            'en' => 'Please create or join a tenant first',
+            'zh_hk' => '請先建立或加入租戶',
+        ]
+    )]
+    case NEED_JOIN_TENANT = 9;
+
+    #[EnumCode(
+        msg: '请先选择租户',
+        i18nMsg: [
+            'en' => 'Please select a tenant first',
+            'zh_hk' => '請先选择租戶',
+        ]
+    )]
+    case NEED_SELECT_TENANT = 10;
 }

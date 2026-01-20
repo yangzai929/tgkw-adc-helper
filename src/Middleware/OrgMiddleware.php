@@ -21,7 +21,6 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TgkwAdc\Constants\Code\AuthCode;
 use TgkwAdc\Constants\GlobalConstants;
-use TgkwAdc\Exception\BusinessException;
 use TgkwAdc\Helper\ApiResponseHelper;
 use TgkwAdc\Helper\JwtHelper;
 use TgkwAdc\Helper\Log\LogHelper;
@@ -87,14 +86,34 @@ class OrgMiddleware implements MiddlewareInterface
                 }
             }
         }
-        $tenantId = $user['current_tenant_id'];
+
+        // 判断action 是否在 无需校验租户及权限的列中
+        $whiteList = [
+            'App\Controller\V1\AuthController@logout',
+            'App\Controller\V1\AuthController@refreshToken',
+            'App\Controller\V1\AuthController@switchTenant',
+            'App\Controller\V1\AuthController@getDevices',
+            'App\Controller\V1\AuthController@kickoutDevice',
+        ];
+        if (in_array($controller . '@' . $action, $whiteList)) {
+            return $handler->handle($request);
+        }
+
+        // 必须属于至少一个租户
+        if (! $user['current_tenant_id'] && empty($user['tenants'])) {
+            return ApiResponseHelper::error(code: AuthCode::NEED_JOIN_TENANT, httpStatusCode: 403);
+        }
+
+        if (! $user['current_tenant_id']) {
+            return ApiResponseHelper::error(code: AuthCode::NEED_SELECT_TENANT, httpStatusCode: 403);
+        }
+
         // 存储关键信息到协程上下文（供后续控制器/服务使用）
-        Context::set('tenant_id', $tenantId);
-        foreach ($user['tenants'] as $tenant) {
-            if ($tenant['id']  ==  $tenantId && $tenant['admin_uid'] == $user['id']) {
-                // 当前租户的超级管理员 默认具备所有权限直接放行
-                return $handler->handle($request);
-            }
+        Context::set(GlobalConstants::CURRENT_TENANT_ID, $user['current_tenant_id']);
+        if ($user['is_current_tenant_main_admin']) {
+            // 当前租户的超级管理员 默认具备所有权限直接放行
+            Context::set(GlobalConstants::IS_CURRENT_TENANT_MAIN_ADMIN, true);
+            return $handler->handle($request);
         }
         // 获取当前请求的控制器方法菜单权限注解
         $annotations = AnnotationCollector::getClassMethodAnnotation($controller, $action);
@@ -103,7 +122,7 @@ class OrgMiddleware implements MiddlewareInterface
             if ($controller && $action) {
                 $action = $controller . '@' . $action;
                 // $hasAccess = Enforcer::enforce('user:1', 'tenant:1', 'App\Controller\V1\UserController@index');
-                $hasAccess = $this->hasAccess(['user:' . $user['id'], 'tenant:' . $tenantId, $action]);
+                $hasAccess = $this->hasAccess(['user:' . $user['id'], 'tenant:' . $user['current_tenant_id'], $action]);
                 LogHelper::info('OrgPermissionMiddleware', ['controller' => $controller, 'action' => $action, 'res' => $hasAccess, $annotations]);
                 if ($hasAccess) {
                     return $handler->handle($request);
