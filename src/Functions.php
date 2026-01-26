@@ -94,6 +94,32 @@ if (! function_exists('system_admin')) {
     }
 }
 
+if (! function_exists('client_ip')) {
+    function client_ip($default = null)
+    {
+        return Context::get('client_ip', $default);
+    }
+}
+if (! function_exists('user_agent')) {
+    function user_agent($default = null)
+    {
+        return Context::get('user_agent', $default);
+    }
+}
+
+if (! function_exists('trace_id')) {
+    function trace_id($default = null)
+    {
+        return Context::get('trace_id', $default);
+    }
+}
+if (! function_exists('app_id')) {
+    function app_id($default = null)
+    {
+        return Context::get('app_id', $default);
+    }
+}
+
 /**
  * 将对象或嵌套对象转换为数组
  * 递归处理对象和数组，将所有对象转换为关联数组.

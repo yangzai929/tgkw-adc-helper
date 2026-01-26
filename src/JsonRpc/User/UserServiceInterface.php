@@ -32,4 +32,6 @@ interface UserServiceInterface
      * @param array $userIds 用户id数组
      */
     public function getUsers(array $userIds): array;
+
+    public function getAppid(array $param): int;
 }

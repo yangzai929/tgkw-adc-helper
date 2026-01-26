@@ -51,7 +51,7 @@ class RpcConsumerServiceAspect extends AbstractAspect
                 'coroutine_id' => Coroutine::id(),
             ];
 
-            $this->injectLangParams($proceedingJoinPoint, $lang);
+            $this->injectParams($proceedingJoinPoint, ['_lang' => $lang, 'X-RPC-LANG' => $lang, 'trace_id' => $traceId]);
 
             $response = $proceedingJoinPoint->process();
 
@@ -91,23 +91,28 @@ class RpcConsumerServiceAspect extends AbstractAspect
     }
 
     /**
-     * 注入语言参数（兼容非数组参数）.
+     * 通用参数注入方法.
+     * @param ProceedingJoinPoint $pjp 连接点对象
+     * @param array $params 要注入的参数键值对（如 ['_lang' => $lang, 'X-RPC-LANG' => $lang] 或 ['trace_id' => $traceId]）
      */
-    private function injectLangParams(ProceedingJoinPoint $pjp, string $lang): void
+    private function injectParams(ProceedingJoinPoint $pjp, array $params): void
     {
+        // 如果参数列表为空，直接初始化并赋值
         if (empty($pjp->arguments['keys'])) {
-            $pjp->arguments['keys'] = ['_lang' => $lang, 'X-RPC-LANG' => $lang];
+            $pjp->arguments['keys'] = $params;
             return;
         }
 
+        // 遍历参数列表，注入指定参数
         foreach ($pjp->arguments['keys'] as &$value) {
             if (is_array($value)) {
-                $value['_lang'] = $lang;
-                $value['X-RPC-LANG'] = $lang;
+                // 数组类型：批量赋值
+                $value = array_merge($value, $params);
             } elseif (is_object($value) && method_exists($value, 'setAttribute')) {
-                // 兼容对象参数（比如DTO）
-                $value->setAttribute('_lang', $lang);
-                $value->setAttribute('X-RPC-LANG', $lang);
+                // 对象类型（如DTO）：逐个调用 setAttribute
+                foreach ($params as $key => $val) {
+                    $value->setAttribute($key, $val);
+                }
             }
         }
     }

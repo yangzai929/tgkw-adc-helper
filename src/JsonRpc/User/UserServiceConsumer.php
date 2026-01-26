@@ -48,4 +48,9 @@ class UserServiceConsumer extends AbstractServiceClient implements UserServiceIn
     {
         return $this->__request(__FUNCTION__, compact('userIds', 'micro'));
     }
+
+    public function getAppid(array $param): int
+    {
+        return $this->__request(__FUNCTION__, compact('param'));
+    }
 }

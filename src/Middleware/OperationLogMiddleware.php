@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace TgkwAdc\Middleware;
 
 use Hyperf\Amqp\Producer;
+use Hyperf\Context\Context;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface as HttpResponse;
 use Psr\Container\ContainerExceptionInterface;
@@ -22,7 +23,6 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TgkwAdc\Amqp\Producer\OperationLogProducer;
 use TgkwAdc\Constants\GlobalConstants;
-use TgkwAdc\Helper\JwtHelper;
 use TgkwAdc\Helper\Log\LogHelper;
 use TgkwAdc\Utils\IpTool;
 
@@ -62,6 +62,7 @@ class OperationLogMiddleware implements MiddlewareInterface
             'router' => $request->getServerParams()['path_info'],
             'protocol' => $request->getServerParams()['server_protocol'],
             'ip' => $ip,
+            'app_id' => app_id(),
             'service_name' => env('APP_NAME'),
             'request_data' => $this->request->all(),
             'response_code' => $result->getStatusCode(),
@@ -77,6 +78,7 @@ class OperationLogMiddleware implements MiddlewareInterface
 
         // 获取用户登录信息.
         $user_data = $this->getUserData($request, $type);
+
         if ($user_data) {
             $operationLog['user_data'] = $user_data;
             if ($type == GlobalConstants::ORG_TOKEN_TYPE) {
@@ -86,9 +88,9 @@ class OperationLogMiddleware implements MiddlewareInterface
             return $result;
         }
 
-        // GET请求的不存
+        // GET请求的不存响应数据
         if ($operationLog['method'] == 'GET') {
-            return $result;
+            $operationLog['response_data'] = [];  // GET请求的响应数据 不存
         }
 
         // 将日志存储到amqp中
@@ -105,21 +107,15 @@ class OperationLogMiddleware implements MiddlewareInterface
      * @param mixed $type
      * @param mixed $request
      */
-    public function getUserData($request, $type): array
+    public function getUserData($request, $type): ?array
     {
         $userData = [];
         if (! empty($type)) {
-            $jwtData = JwtHelper::getPayloadFromRequest($request, $type);
-            if ($jwtData) {
-                $userData = [
-                    'id' => $jwtData->id,
-                    'account' => $jwtData->account ?? '',
-                    'real_name' => $jwtData->real_name ?? '',
-                    'mobile' => $jwtData->mobile ?? '',
-                    'email' => $jwtData->email ?? '',
-                    'tenant_id' => $jwtData->tenant_id ?? 0,
-                    'origin' => strtolower($type),
-                ];
+            $userData = Context::get(GlobalConstants::ORG_USER_CONTEXT);
+
+            if ($userData) {
+                $userData['origin'] = strtolower($type);
+                $userData['tenant_id'] = $userData['current_tenant_id'];
             }
         }
 

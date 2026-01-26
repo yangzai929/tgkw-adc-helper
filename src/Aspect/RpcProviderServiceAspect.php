@@ -52,15 +52,32 @@ class RpcProviderServiceAspect extends AbstractAspect
 
             // 获取语言变量
             $lang = $params['_lang'] ?? $params['X-RPC-LANG'] ?? 'zh-CN';
+            $trace_id = $params['trace_id'] ?? '';
 
             Context::set('locale', $lang);
+            Context::set('trace_id', $trace_id);
 
-            LogHelper::info('RPC PROVIDER PROCESS INFO', ['class' => $proceedingJoinPoint->className, 'method' => $proceedingJoinPoint->methodName, 'params' => $params]);
+            LogHelper::info(
+                'RPC PROVIDER PROCESS INFO',
+                [
+                    'class' => $proceedingJoinPoint->className,
+                    'method' => $proceedingJoinPoint->methodName,
+                    'params' => $params,
+                ]
+            );
             // 执行原方法
             return $proceedingJoinPoint->process();
         } catch (Throwable $e) {
             //            // 统一记录日志
-            LogHelper::error('RPC PROVIDER PROCESS ERROR', ['file' => $e->getFile(), 'line' => $e->getLine(), 'error_msg' => $e->getMessage()]);
+            LogHelper::error(
+                'RPC PROVIDER PROCESS ERROR',
+                [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'error_msg' => $e->getMessage(),
+                    'params' => $params,
+                ]
+            );
             throw $e; // 继续抛出
         }
     }

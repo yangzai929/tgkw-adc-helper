@@ -31,6 +31,23 @@ use TgkwAdc\JsonRpc\User\UserServiceInterface;
  */
 class OrgMiddleware implements MiddlewareInterface
 {
+    /**
+     * 注解元数据缓存（避免每次请求反射）.
+     * key: "Controller@method".
+     */
+    protected static array $annotationCache = [];
+
+    protected static array $appidCache = [];
+
+    // 无需校验租户及权限的列
+    protected static array $whiteList = [
+        'App\Controller\V1\AuthController@logout',
+        'App\Controller\V1\AuthController@refreshToken',
+        'App\Controller\V1\AuthController@switchTenant',
+        'App\Controller\V1\AuthController@getDevices',
+        'App\Controller\V1\AuthController@kickoutDevice',
+    ];
+
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         // 1.获取token
@@ -88,14 +105,7 @@ class OrgMiddleware implements MiddlewareInterface
         }
 
         // 判断action 是否在 无需校验租户及权限的列中
-        $whiteList = [
-            'App\Controller\V1\AuthController@logout',
-            'App\Controller\V1\AuthController@refreshToken',
-            'App\Controller\V1\AuthController@switchTenant',
-            'App\Controller\V1\AuthController@getDevices',
-            'App\Controller\V1\AuthController@kickoutDevice',
-        ];
-        if (in_array($controller . '@' . $action, $whiteList)) {
+        if (in_array($controller . '@' . $action, self::$whiteList)) {
             return $handler->handle($request);
         }
 
@@ -108,6 +118,16 @@ class OrgMiddleware implements MiddlewareInterface
             return ApiResponseHelper::error(code: AuthCode::NEED_SELECT_TENANT, httpStatusCode: 403);
         }
 
+        $cacheKey = $controller . '@' . $action;
+
+        // 获取当前请求的的控制器和方法所属的应用id （使用静态缓存）
+        if (! array_key_exists($cacheKey, self::$appidCache)) {
+            $appId = $this->getAppid(['micro' => env('APP_NAME'), 'action' => $cacheKey]);
+            self::$appidCache[$cacheKey] = $appId ?? 0;
+        }
+        $appId = self::$appidCache[$cacheKey];
+        Context::set('app_id', $appId);
+
         // 存储关键信息到协程上下文（供后续控制器/服务使用）
         Context::set(GlobalConstants::CURRENT_TENANT_ID, $user['current_tenant_id']);
         if ($user['is_current_tenant_main_admin']) {
@@ -115,15 +135,21 @@ class OrgMiddleware implements MiddlewareInterface
             Context::set(GlobalConstants::IS_CURRENT_TENANT_MAIN_ADMIN, true);
             return $handler->handle($request);
         }
-        // 获取当前请求的控制器方法菜单权限注解
-        $annotations = AnnotationCollector::getClassMethodAnnotation($controller, $action);
-        $annotationsArr = (array) $annotations;
-        if (isset($annotationsArr['TgkwAdc\Annotation\OrgPermission'])) {  // 判断当前请求的菜单权限注解是否存在
+
+        // 获取当前请求的控制器方法菜单权限注解（使用静态缓存）
+
+        if (! array_key_exists($cacheKey, self::$annotationCache)) {
+            $annotations = AnnotationCollector::getClassMethodAnnotation($controller, $action);
+            self::$annotationCache[$cacheKey] = $annotations ? (array) $annotations : [];
+        }
+        $annotationsArr = self::$annotationCache[$cacheKey];
+
+        if (! empty($annotationsArr) && isset($annotationsArr['TgkwAdc\Annotation\OrgPermission'])) {  // 判断当前请求的菜单权限注解是否存在
             if ($controller && $action) {
                 $action = $controller . '@' . $action;
                 // $hasAccess = Enforcer::enforce('user:1', 'tenant:1', 'App\Controller\V1\UserController@index');
                 $hasAccess = $this->hasAccess(['user:' . $user['id'], 'tenant:' . $user['current_tenant_id'], $action]);
-                LogHelper::info('OrgPermissionMiddleware', ['controller' => $controller, 'action' => $action, 'res' => $hasAccess, $annotations]);
+                LogHelper::info('OrgPermissionMiddleware', ['controller' => $controller, 'action' => $action, 'res' => $hasAccess, 'annotations' => $annotationsArr]);
                 if ($hasAccess) {
                     return $handler->handle($request);
                 }
@@ -148,5 +174,13 @@ class OrgMiddleware implements MiddlewareInterface
             return $userServiceRes['data']['hasAccess'];
         }
         return false;
+    }
+
+    private function getAppid($params)
+    {
+        if (env('APP_NAME') == 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
+            return make('\App\JsonRpc\Provider\UserService')->getAppid($params);
+        }
+        return ApplicationContext::getContainer()->get(UserServiceInterface::class)->getAppid($params);
     }
 }
