@@ -251,8 +251,9 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
         // 设置列格式
         for ($i = 0; $i < count($columnField); ++$i) {
             $currentProperty = $properties[$i] ?? [];
+            $columnIndex = $this->getColumnIndex($i);
             $fileObject->setColumn(
-                sprintf('%s1:%s1', $this->getColumnIndex($i), $this->getColumnIndex($i)),
+                sprintf('%s:%s', $columnIndex, $columnIndex),
                 $currentProperty['width'] ?? mb_strlen($columnName[$i]) * 5,
                 $columnFormat->align($currentProperty['align'] ? $aligns[$currentProperty['align']] : $aligns['left'])
                     ->background($currentProperty['bgColor'] ?? Format::COLOR_WHITE)
@@ -288,13 +289,20 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
             );
         }
 
-        // 表内容加样式
+        // 表内容加样式 - 为每列数据行设置对齐
         $dataLength = max(count($data), 50);
-        $fileObject->setRow(
-            sprintf('A2:A%s', $dataLength + 2),
-            $properties[0]['height'] ?? 24,
-            (new Format($fileObject->getHandle()))->align(Format::FORMAT_ALIGN_VERTICAL_CENTER)->toResource()
-        );
+        for ($i = 0; $i < count($columnField); ++$i) {
+            $currentProperty = $properties[$i] ?? [];
+            $columnIndex = $this->getColumnIndex($i);
+            $dataAlign = $currentProperty['align'] ? $aligns[$currentProperty['align']] : $aligns['left'];
+            $fileObject->setRow(
+                sprintf('%s2:%s%s', $columnIndex, $columnIndex, $dataLength + 2),
+                $properties[0]['height'] ?? 24,
+                (new Format($fileObject->getHandle()))
+                    ->align($dataAlign, Format::FORMAT_ALIGN_VERTICAL_CENTER)
+                    ->toResource()
+            );
+        }
 
         //        // 设置表头样式
         if (empty($infos['is_export'])) {

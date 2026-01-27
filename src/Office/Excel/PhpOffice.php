@@ -301,6 +301,12 @@ class PhpOffice extends Excel implements ExcelPropertyInterface
                             ->getStartColor()->setARGB(str_replace('#', '', (string) $annotation['bgColor']));
                     }
 
+                    // 设置数据行对齐方式
+                    if (! empty($annotation['align'])) {
+                        $sheet->getStyle($columnRow)->getAlignment()->setHorizontal($annotation['align']);
+                    }
+
+
                     ++$column;
                 }
 
