@@ -35,7 +35,7 @@ abstract class BaseRpcRequest
         $sceneRules = $this->sceneRules[$scene] ?? [];
 
         // 如果子类定义了 rules() 方法，合并规则
-        $baseRules = method_exists($this, 'rules') ? $this->rules() : [];
+        $baseRules = method_exists($this, 'rules') ? $this->rules($scene) : [];
 
         // 过滤 sceneRules：移除只有字段名没有规则的项
         $filteredSceneRules = [];
