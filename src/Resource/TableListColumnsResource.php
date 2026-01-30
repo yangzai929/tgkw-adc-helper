@@ -1,9 +1,17 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
+
 namespace TgkwAdc\Resource;
 
 /**
- * 服务内数据源格式化 ，RPC服务返回的数据不通过此基类格式化
+ * 服务内数据源格式化 ，RPC服务返回的数据不通过此基类格式化.
  */
 class TableListColumnsResource extends BaseResource
 {

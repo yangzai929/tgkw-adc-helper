@@ -13,6 +13,8 @@ namespace TgkwAdc;
 use TgkwAdc\Aspect\RpcConsumerServiceAspect;
 use TgkwAdc\Aspect\RpcProviderServiceAspect;
 use TgkwAdc\FileSystem\S3AdapterFactory;
+use TgkwAdc\JsonRpc\User\UserServiceConsumer;
+use TgkwAdc\JsonRpc\User\UserServiceInterface;
 use TgkwAdc\Listener\MainWorkerStartListener;
 
 class ConfigProvider
@@ -22,6 +24,7 @@ class ConfigProvider
         return [
             'dependencies' => [
                 S3AdapterFactory::class => S3AdapterFactory::class, // 修复S3AdapterFactory运行时报错
+                UserServiceInterface::class => UserServiceConsumer::class,
             ],
             'commands' => [
             ],

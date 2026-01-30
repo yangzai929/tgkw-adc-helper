@@ -45,7 +45,10 @@ abstract class BaseRequest extends FormRequest
             $ruleArray = is_string($rule) ? explode('|', $rule) : $rule;
 
             foreach ($ruleArray as $singleRule) {
-                $ruleName = explode(':', $singleRule)[0];
+                $ruleName = is_string($singleRule) ? explode(':', $singleRule)[0] : null;
+                if ($ruleName === null) {
+                    continue;
+                }
 
                 // 1. 优先尝试获取类特定的自定义消息
                 $classKey = "validation.custom.{$className}.{$field}.{$ruleName}";

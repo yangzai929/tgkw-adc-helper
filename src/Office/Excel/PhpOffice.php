@@ -306,7 +306,6 @@ class PhpOffice extends Excel implements ExcelPropertyInterface
                         $sheet->getStyle($columnRow)->getAlignment()->setHorizontal($annotation['align']);
                     }
 
-
                     ++$column;
                 }
 
