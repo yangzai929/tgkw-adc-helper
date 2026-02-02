@@ -10,17 +10,18 @@ declare(strict_types=1);
 
 namespace TgkwAdc\JsonRpc;
 
-use Psr\Http\Message\ResponseInterface;
 
 interface BaseCurdServiceInterface
 {
-    public function index(array $params): ResponseInterface;
+    public function columns(): array;
 
-    public function store(array $params): ResponseInterface;
+    public function index(array $params): array;
 
-    public function show(string $id): ResponseInterface;
+    public function store(array $params): array;
 
-    public function update(string $id, array $params): ResponseInterface;
+    public function show(array $params): array;
 
-    public function destroy(string $id): ResponseInterface;
+    public function update(array $params): array;
+
+    public function destroy(array $params): array;
 }
