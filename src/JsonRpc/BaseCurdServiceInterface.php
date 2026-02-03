@@ -10,7 +10,6 @@ declare(strict_types=1);
 
 namespace TgkwAdc\JsonRpc;
 
-
 interface BaseCurdServiceInterface
 {
     public function columns(): array;

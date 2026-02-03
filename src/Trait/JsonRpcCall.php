@@ -10,7 +10,6 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Trait;
 
-use AWS\CRT\Log;
 use Psr\Http\Message\ResponseInterface;
 use TgkwAdc\Helper\ApiResponseHelper;
 use TgkwAdc\Helper\Log\LogHelper;
@@ -27,7 +26,7 @@ trait JsonRpcCall
     {
         LogHelper::debug('RPC Response:', [$response]);
         $resData = []; // 提前初始化变量，避免未定义警告
-        if (isset($response['code']) && isset($response['data'])  && isset($response['message']) && $response['code'] < 0) {
+        if (isset($response['code'], $response['data'], $response['message']) && $response['code'] < 0) {
             $error = $response['data']['error'] ?? null;
             $code = $response['code'];
             // 处理验证异常
