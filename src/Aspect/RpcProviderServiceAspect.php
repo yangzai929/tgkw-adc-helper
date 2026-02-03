@@ -72,8 +72,11 @@ class RpcProviderServiceAspect extends AbstractAspect
             LogHelper::error(
                 'RPC PROVIDER PROCESS ERROR',
                 [
+                    'message' => $e->getMessage(),
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
+                    'trace' => $e->getTrace(), // 详细堆栈（数组）
+                    'trace_string' => $e->getTraceAsString(), // 字符串格式的堆栈（可选）
                     'error_msg' => $e->getMessage(),
                     'params' => $params,
                 ]

@@ -60,7 +60,7 @@ class RpcConsumerServiceAspect extends AbstractAspect
                 LogHelper::error('RPC CONSUMER SERVICE response with error', $response);
             } else {
                 LogHelper::info('RPC CONSUMER SERVICE call', $logContext);
-                LogHelper::info('RPC CONSUMER SERVICE response', $response);
+                LogHelper::info('RPC CONSUMER SERVICE response', [$response]);
             }
             return $response;
         } catch (Throwable $e) {
@@ -69,7 +69,8 @@ class RpcConsumerServiceAspect extends AbstractAspect
                 'msg' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
+                'trace' => $e->getTrace(), // 详细堆栈（数组）
+                'trace_string' => $e->getTraceAsString(), // 字符串格式的堆栈（可选）
                 'exception_class' => get_class($e),
             ];
             LogHelper::error('RPC CONSUMER PROCESS ERROR', $logContext);
@@ -78,6 +79,8 @@ class RpcConsumerServiceAspect extends AbstractAspect
                 'error' => [
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
+                    'trace' => $e->getTrace(), // 详细堆栈（数组）
+                    'trace_string' => $e->getTraceAsString(), // 字符串格式的堆栈（可选）
                     'error_msg' => $e->getMessage(),
                 ],
             ];
