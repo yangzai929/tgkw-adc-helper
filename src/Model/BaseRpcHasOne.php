@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
+
 namespace TgkwAdc\Model;
 
 use Hyperf\Database\Model\Builder;
@@ -7,8 +15,9 @@ use Hyperf\Database\Model\Collection;
 use Hyperf\Database\Model\Model;
 use Hyperf\Database\Model\Relations\HasOne;
 use TgkwAdc\Helper\Log\LogHelper;
+use Throwable;
 
-class BaseRpcHasOne  extends HasOne
+class BaseRpcHasOne extends HasOne
 {
     /**
      * @var array [ServiceClass, method, ...extraArgs]
@@ -41,6 +50,7 @@ class BaseRpcHasOne  extends HasOne
 
     /**
      * 预加载匹配：批量获取 RPC 数据并挂到每个父模型上.
+     * @param mixed $relation
      */
     public function match(array $models, Collection $results, $relation)
     {
@@ -68,7 +78,7 @@ class BaseRpcHasOne  extends HasOne
     /**
      * 调用 RPC 服务获取数据.
      * rpcConfig 格式: [ServiceClass, method, ...extraArgs]
-     * 最终调用: ServiceClass->method($ids, ...extraArgs)
+     * 最终调用: ServiceClass->method($ids, ...extraArgs).
      */
     protected function getRpcData(array $ids): array
     {
@@ -76,7 +86,7 @@ class BaseRpcHasOne  extends HasOne
             [$serviceClass, $method] = $this->rpcConfig;
             $extraArgs = array_slice($this->rpcConfig, 2);
             return call_user_func([make($serviceClass), $method], $ids, ...$extraArgs);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             LogHelper::error('RpcHasOne调用异常: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);

@@ -50,7 +50,6 @@ class BaseModel extends Model implements CacheableInterface
         return true;
     }
 
-
     private function setShanghaiDateTime(string $field, $value): void
     {
         if (empty($value)) {
@@ -62,7 +61,6 @@ class BaseModel extends Model implements CacheableInterface
         $dt->setTimezone('Asia/Shanghai');
         $this->attributes[$field] = $dt->format('Y-m-d H:i:s');
     }
-
 
     private function formatShanghaiDateTimeToUtcIso($value): ?string
     {
@@ -81,6 +79,4 @@ class BaseModel extends Model implements CacheableInterface
 
         return $dt->format('Y-m-d\TH:i:s.u\Z');
     }
-
-
 }
