@@ -305,7 +305,11 @@ if (! function_exists('buildTableColumnsWithValueMaps')) {
 
             // 检查该字段是否需要值映射
             $fieldKey = $enumData['value'];
-            $column['value_map_key'] = $fieldKey;
+            if(isset($valueMapConfig[$fieldKey])){
+                $column['value_map_key'] = $fieldKey;
+            }else{
+                $column['value_map_key'] = '';
+            }
 
             $columns[] = $column;
         }

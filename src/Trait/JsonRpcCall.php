@@ -63,7 +63,7 @@ trait JsonRpcCall
      * @param mixed $response
      * @return bool
      */
-    public function hasError($response)
+    public function hasRpcError($response)
     {
         if (isset($response['code']) && $response['code'] < 0) {
             return true;  // 有异常，可以查看response

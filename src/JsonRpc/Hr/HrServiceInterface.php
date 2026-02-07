@@ -25,12 +25,12 @@ interface HrServiceInterface
     /**
      * 根据组织id 和 租户id 获取组织信息及该组织下的员工信息.
      */
-    public function getOrganizationWithEmployeesByOrgUid(string $orgUid, int $tenantId): array;
+    public function getOrganizationWithEmployeesByOrgId(int $orgId, int $tenantId): array;
 
     /**
      * 根据批量组织id 和 租户id 获取组织信息.
      */
-    public function getOrganizationsByOrgUids(string $orgUids, int $tenantId): array;
+    public function getOrganizationsByOrgIds(array $orgIds, int $tenantId): array;
 
     /**
      * 获取所有组织信息.

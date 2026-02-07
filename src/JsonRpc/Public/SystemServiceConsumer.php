@@ -15,7 +15,7 @@ use Hyperf\RpcClient\AbstractServiceClient;
 class SystemServiceConsumer extends AbstractServiceClient implements SystemServiceInterface
 {
     /**
-     * 定义对应服务提供者的服务名称.
+     * 处理系统总后的菜单收集和总后台菜单权限控制
      */
     protected string $serviceName = 'SystemService';
 

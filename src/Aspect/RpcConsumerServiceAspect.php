@@ -57,7 +57,7 @@ class RpcConsumerServiceAspect extends AbstractAspect
 
             if (isset($response['code']) && $response['code'] < 0) {
                 LogHelper::error('RPC CONSUMER SERVICE call', $logContext);
-                LogHelper::error('RPC CONSUMER SERVICE response with error', $response);
+                LogHelper::error('RPC CONSUMER SERVICE response with error', [$response]);
             } else {
                 LogHelper::info('RPC CONSUMER SERVICE call', $logContext);
                 LogHelper::info('RPC CONSUMER SERVICE response', [$response]);

@@ -15,7 +15,7 @@ use Hyperf\RpcClient\AbstractServiceClient;
 class UserServiceConsumer extends AbstractServiceClient implements UserServiceInterface
 {
     /**
-     * 定义对应服务提供者的服务名称.
+     * 处理租户端的菜单收集和菜单按钮权限控制
      */
     protected string $serviceName = 'UserService';
 
