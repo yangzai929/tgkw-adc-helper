@@ -22,7 +22,7 @@ trait JsonRpcCall
      * @param mixed $method
      * @return array|null[]|ResponseInterface
      */
-    public function handleRpcResponse($response, ?string $resourceClass = null, $method = 'make')
+    public function handleRpcResponse($response, ?string $resourceClass = null, $method = 'make',$customMsg='')
     {
         LogHelper::debug('RPC Response:', [$response]);
         $resData = []; // 提前初始化变量，避免未定义警告
@@ -55,7 +55,7 @@ trait JsonRpcCall
             $formattedData = $response;
             return ApiResponseHelper::debug($formattedData);
         }
-        return ApiResponseHelper::success();
+        return ApiResponseHelper::success(message: $customMsg);
     }
 
     /**
