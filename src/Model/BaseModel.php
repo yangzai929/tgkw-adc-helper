@@ -21,7 +21,7 @@ class BaseModel extends Model implements CacheableInterface
 {
     use Cacheable;
 
-    protected ?string $dateFormat = 'U';
+    protected ?string $dateFormat = 'Y-m-d H:i:s.u';
 
     public function delete()
     {
