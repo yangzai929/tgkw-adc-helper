@@ -16,6 +16,7 @@ use Hyperf\DbConnection\Model\Model;
 use Hyperf\ModelCache\Cacheable;
 use Hyperf\ModelCache\CacheableInterface;
 use RuntimeException;
+use TgkwAdc\JsonRpc\Hr\HrServiceInterface;
 
 class BaseModel extends Model implements CacheableInterface
 {
@@ -78,5 +79,27 @@ class BaseModel extends Model implements CacheableInterface
         $dt->setTimezone('UTC');
 
         return $dt->format('Y-m-d\TH:i:s.u\Z');
+    }
+
+    public function creator(): BaseRpcHasOne
+    {
+        return new BaseRpcHasOne(
+            self::query(),
+            $this,
+            'created_by',
+            'user_id',
+            [HrServiceInterface::class, 'getEmployeesByUserIds', (int) current_tenant_id()]
+        );
+    }
+
+    public function updater(): BaseRpcHasOne
+    {
+        return new BaseRpcHasOne(
+            self::query(),
+            $this,
+            'updated_by',
+            'user_id',
+            [HrServiceInterface::class, 'getEmployeesByUserIds', (int) current_tenant_id()]
+        );
     }
 }
