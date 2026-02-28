@@ -69,4 +69,9 @@ class HrServiceConsumer extends AbstractServiceClient implements HrServiceInterf
     {
         return $this->__request(__FUNCTION__, compact('tenantId'));
     }
+
+    public function getAllPositions(int $tenantId): array
+    {
+        return $this->__request(__FUNCTION__, compact('tenantId'));
+    }
 }
