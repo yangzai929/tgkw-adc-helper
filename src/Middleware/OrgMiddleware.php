@@ -170,8 +170,8 @@ class OrgMiddleware implements MiddlewareInterface
             $userServiceRes = ApplicationContext::getContainer()->get(UserServiceInterface::class)->checkAccessPermission($params);
         }
 
-        if (isset($userServiceRes['data']['hasAccess'])) {
-            return $userServiceRes['data']['hasAccess'];
+        if (isset($userServiceRes['hasAccess'])) {
+            return $userServiceRes['hasAccess'];
         }
         return false;
     }

@@ -191,7 +191,7 @@ class MainWorkerStartListener implements ListenerInterface
         }
 
         $appName = env('APP_NAME');
-        if (! in_array($appName, $systemConfig['needAddMenuSrv'], true)) {
+        if ($systemConfig['needAddMenuSrv'] &&! in_array($appName, $systemConfig['needAddMenuSrv'], true)) {
             LogHelper::info("当前服务 [{$appName}] 不在需要同步菜单的服务列表中，跳过菜单同步");
             return;
         }
