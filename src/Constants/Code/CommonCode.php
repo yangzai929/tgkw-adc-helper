@@ -130,4 +130,10 @@ enum CommonCode: int implements EnumCodeInterface
 
     #[EnumCode(msg: '服务器内部错误，请稍后再试', i18nMsg: ['en' => 'Server internal error, please try again later', 'zh_hk' => '服務器內部錯誤，請稍後再試'])]
     case SERVER_ERROR = 37;
+
+    #[EnumCode(msg: '验证码错误或已过期', i18nMsg: [
+        'en' => 'Verification code is invalid or expired',
+        'zh_hk' => '驗證碼錯誤或已過期',
+    ])]
+    case SMS_CODE_INVALID_OR_EXPIRED = 38;
 }
