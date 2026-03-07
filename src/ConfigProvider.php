@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace TgkwAdc;
 
+use PhpAmqpLib\Package;
 use TgkwAdc\Aspect\RpcConsumerServiceAspect;
 use TgkwAdc\Aspect\RpcProviderServiceAspect;
 use TgkwAdc\FileSystem\S3AdapterFactory;
@@ -18,6 +19,7 @@ use TgkwAdc\JsonRpc\Public\SystemServiceInterface;
 use TgkwAdc\JsonRpc\User\UserServiceConsumer;
 use TgkwAdc\JsonRpc\User\UserServiceInterface;
 use TgkwAdc\Listener\MainWorkerStartListener;
+use TgkwAdc\Listener\PackageVersionCheckListener;
 
 class ConfigProvider
 {
@@ -37,6 +39,7 @@ class ConfigProvider
             ],
             'listeners' => [
                 MainWorkerStartListener::class,
+                PackageVersionCheckListener::class,
             ],
             'annotations' => [
                 'scan' => [
