@@ -71,6 +71,14 @@ if (! function_exists('container_get')) {
     }
 }
 
+if (! function_exists('container')) {
+    function container(): \Psr\Container\ContainerInterface
+    {
+        return ApplicationContext::getContainer();
+    }
+}
+
+
 use TgkwAdc\Constants\GlobalConstants;
 
 if (! function_exists('auth_user')) {
