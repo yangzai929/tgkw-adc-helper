@@ -28,7 +28,7 @@ class OrgPermission extends AbstractAnnotation
 
     public array $i18nName = []; // 国际化菜单名
 
-    public string $type = ''; // 菜单类型
+    public string $type = 'MENU'; // 菜单类型  BUTTON 按钮  MENU 菜单或页面
 
     public int $sort = 0; // 排序
 
@@ -66,11 +66,16 @@ class OrgPermission extends AbstractAnnotation
 
     public int $appId = 0; // 应用ID (预留字段)
 
+    public bool $syncToMenu = true; // 是否同步到 menus 表
+
+    /** @var string[] 拥有以下任一 accessCode 对应权限时自动具备本接口权限，支持跨控制器/跨微服务 */
+    public array $grantedByAccessCode = [];
+
     public function __construct(
         string $parentAccessCode = '',
         string $module = '',
         array $i18nName = [],
-        string $type = '',
+        string $type = 'MENU',
         int $sort = 0,
         string $accessCode = '',
         string $frontRouteAlias = '',
@@ -85,6 +90,8 @@ class OrgPermission extends AbstractAnnotation
         string $app = '',
         string $micro = '',
         int $appId = 0,
+        bool $syncToMenu = true,
+        array $grantedByAccessCode = [],
     ) {
         $this->parentAccessCode = $parentAccessCode;
         $this->module = $module;
@@ -104,5 +111,7 @@ class OrgPermission extends AbstractAnnotation
         $this->app = $app;
         $this->micro = $micro;
         $this->appId = $appId;
+        $this->syncToMenu = $syncToMenu;
+        $this->grantedByAccessCode = $grantedByAccessCode;
     }
 }

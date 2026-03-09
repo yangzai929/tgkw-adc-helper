@@ -32,7 +32,7 @@ class TimeHelper
     }
 
 
-    /** 解析日期字符串或秒/毫秒时间戳为 Y-m-d  或指定格式*/
+    /** 解析日期字符串或秒/毫秒时间戳为 Y-m-d 或Y-m-d H:i:s 或指定格式 */
     protected function parseDateOrTimestampTo(mixed $value,$format = 'Y-m-d'): ?string
     {
         if ($value === null || $value === '') {

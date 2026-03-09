@@ -146,10 +146,18 @@ class OrgMiddleware implements MiddlewareInterface
 
         if (! empty($annotationsArr) && isset($annotationsArr['TgkwAdc\Annotation\OrgPermission'])) {  // 判断当前请求的菜单权限注解是否存在
             if ($controller && $action) {
-                $action = $controller . '@' . $action;
-                // $hasAccess = Enforcer::enforce('user:1', 'tenant:1', 'App\Controller\V1\UserController@index');
-                $hasAccess = $this->hasAccess(['user:' . $user['id'], 'tenant:' . $user['current_tenant_id'], $action]);
-                LogHelper::info('OrgPermissionMiddleware', ['controller' => $controller, 'action' => $action, 'res' => $hasAccess, 'annotations' => $annotationsArr]);
+                $rawAction = $controller . '@' . $action;
+                // act 统一为 micro:Controller@method
+                $act = env('APP_NAME') . ':' . $rawAction;
+                $params = ['user:' . $user['id'], 'tenant:' . $user['current_tenant_id'], $act];
+                $orgPermission = $annotationsArr['TgkwAdc\Annotation\OrgPermission'];
+                $extra = ['micro' => env('APP_NAME')];
+                if (! empty($orgPermission->grantedByAccessCode)) {
+                    $extra['grantedByAccessCodes'] = $orgPermission->grantedByAccessCode;
+                }
+                $params[] = $extra;
+                $hasAccess = $this->hasAccess($params);
+                LogHelper::info('OrgPermissionMiddleware', ['controller' => $controller, 'action' => $act, 'res' => $hasAccess, 'annotations' => $annotationsArr]);
                 if ($hasAccess) {
                     return $handler->handle($request);
                 }
