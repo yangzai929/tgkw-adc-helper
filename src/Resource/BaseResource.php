@@ -105,8 +105,11 @@ abstract class BaseResource extends JsonResource
      */
     protected function formatDate($date, string $format = 'Y-m-d H:i:s'): ?string
     {
-
-        return $date; //2026-02-18 后端不再格式化时间，统一由前端处理
+        // 2026-02-18 后端不再格式化时间，统一由前端处理；返回类型需为 ?string
+        if ($date === null) {
+            return null;
+        }
+        return (string) $date;
         // 1. 空值处理：空字符串/0/null 直接返回 null
         if (empty($date) && $date !== 0) {
             return null;
