@@ -35,11 +35,11 @@ class SmsHelper
     /**
      * 验证短信验证码，失败时抛出异常.
      *
-     * @param string                                          $phone     手机号
-     * @param string                                          $code      验证码
-     * @param string                                          $token     发送时返回的 token
-     * @param string                                          $scene     场景，默认 default
-     * @param \TgkwAdc\Annotation\EnumCodeInterface|int|null  $errorCode 失败时的错误码
+     * @param string $phone 手机号
+     * @param string $code 验证码
+     * @param string $token 发送时返回的 token
+     * @param string $scene 场景，默认 default
+     * @param null|EnumCodeInterface|int $errorCode 失败时的错误码
      */
     public static function verifyCodeOrThrow(
         string $phone,
@@ -57,7 +57,7 @@ class SmsHelper
      * 验证短信验证码.
      *
      * @param string $phone 手机号
-     * @param string $code  验证码
+     * @param string $code 验证码
      * @param string $token 发送时返回的 token
      * @param string $scene 场景，默认 default
      */

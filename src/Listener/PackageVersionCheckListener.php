@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
 
 namespace TgkwAdc\Listener;
 
@@ -33,7 +39,7 @@ class PackageVersionCheckListener implements ListenerInterface
             if ($installed === null) {
                 throw new RuntimeException("包 [{$package}] 未安装");
             }
-            if (!$this->satisfies($installed, $constraint)) {
+            if (! $this->satisfies($installed, $constraint)) {
                 throw new RuntimeException(
                     "包 [{$package}] 版本不满足当前服务最新代码要求: 已安装 {$installed}, 需要 {$constraint}，请先更新tgkw-adc/helper到最新版本"
                 );

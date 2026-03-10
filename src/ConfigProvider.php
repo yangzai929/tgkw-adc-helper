@@ -10,7 +10,6 @@ declare(strict_types=1);
 
 namespace TgkwAdc;
 
-use PhpAmqpLib\Package;
 use TgkwAdc\Aspect\RpcConsumerServiceAspect;
 use TgkwAdc\Aspect\RpcProviderServiceAspect;
 use TgkwAdc\FileSystem\S3AdapterFactory;

@@ -42,12 +42,8 @@ interface HrServiceInterface
      */
     public function getAllOrganizationsWithEmployees(int $tenantId): array;
 
-
     /**
-     * 获取租户下所有岗位信息
+     * 获取租户下所有岗位信息.
      */
-
     public function getAllPositions(int $tenantId): array;
-
-
 }

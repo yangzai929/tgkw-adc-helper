@@ -51,6 +51,28 @@ class BaseModel extends Model implements CacheableInterface
         return true;
     }
 
+    public function creator(): BaseRpcHasOne
+    {
+        return new BaseRpcHasOne(
+            self::query(),
+            $this,
+            'created_by',
+            'user_id',
+            [HrServiceInterface::class, 'getEmployeesByUserIds', (int) current_tenant_id()]
+        );
+    }
+
+    public function updater(): BaseRpcHasOne
+    {
+        return new BaseRpcHasOne(
+            self::query(),
+            $this,
+            'updated_by',
+            'user_id',
+            [HrServiceInterface::class, 'getEmployeesByUserIds', (int) current_tenant_id()]
+        );
+    }
+
     private function setShanghaiDateTime(string $field, $value): void
     {
         if (empty($value)) {
@@ -79,27 +101,5 @@ class BaseModel extends Model implements CacheableInterface
         $dt->setTimezone('UTC');
 
         return $dt->format('Y-m-d\TH:i:s.u\Z');
-    }
-
-    public function creator(): BaseRpcHasOne
-    {
-        return new BaseRpcHasOne(
-            self::query(),
-            $this,
-            'created_by',
-            'user_id',
-            [HrServiceInterface::class, 'getEmployeesByUserIds', (int) current_tenant_id()]
-        );
-    }
-
-    public function updater(): BaseRpcHasOne
-    {
-        return new BaseRpcHasOne(
-            self::query(),
-            $this,
-            'updated_by',
-            'user_id',
-            [HrServiceInterface::class, 'getEmployeesByUserIds', (int) current_tenant_id()]
-        );
     }
 }

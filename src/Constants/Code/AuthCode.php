@@ -80,8 +80,7 @@ enum AuthCode: int implements EnumCodeInterface
             'en' => 'No authority to access ({action})',
             'zh_hk' => '無權訪問（{action}）',
         ]
-    )
-    ]
+    )]
     case AUTH_ERROR_ACTION = 7;
 
     #[EnumCode(

@@ -72,12 +72,11 @@ if (! function_exists('container_get')) {
 }
 
 if (! function_exists('container')) {
-    function container(): \Psr\Container\ContainerInterface
+    function container(): ContainerInterface
     {
         return ApplicationContext::getContainer();
     }
 }
-
 
 use TgkwAdc\Constants\GlobalConstants;
 
@@ -250,6 +249,7 @@ if (! function_exists('i18nEnumArrConvert')) {
     }
 }
 
+use Psr\Container\ContainerInterface;
 use TgkwAdc\Annotation\EnumI18nInterface;
 
 /**

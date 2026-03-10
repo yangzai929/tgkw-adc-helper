@@ -20,9 +20,10 @@ trait JsonRpcCall
      * 控制器中调用RPC 用于处理RPC返回数据,同时组装api 响应.
      * @param mixed $response
      * @param mixed $method
+     * @param mixed $customMsg
      * @return array|null[]|ResponseInterface
      */
-    public function handleRpcResponse($response, ?string $resourceClass = null, $method = 'make',$customMsg='')
+    public function handleRpcResponse($response, ?string $resourceClass = null, $method = 'make', $customMsg = '')
     {
         LogHelper::debug('RPC Response:', [$response]);
         $resData = []; // 提前初始化变量，避免未定义警告
