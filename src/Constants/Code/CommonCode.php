@@ -136,4 +136,22 @@ enum CommonCode: int implements EnumCodeInterface
         'zh_hk' => '驗證碼錯誤或已過期',
     ])]
     case SMS_CODE_INVALID_OR_EXPIRED = 38;
+
+    #[EnumCode(
+        msg: '验证码错误',
+        i18nMsg: [
+            'en' => 'Verification code error',
+            'zh_hk' => '驗證碼錯誤',
+        ]
+    )]
+    case CAPTCHA_ERROR = 39;
+
+    #[EnumCode(
+        msg: '验证失败请重试',
+        i18nMsg: [
+            'en' => 'Verification failed, please try again',
+            'zh_hk' => '驗證失敗，請重試',
+        ]
+    )]
+    case VERIFICATION_FAILED = 40;
 }
