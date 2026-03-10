@@ -19,10 +19,32 @@ use AlibabaCloud\Tea\Exception\TeaError;
 use Darabonba\OpenApi\Models\Config as CaptchaConfig;
 use Exception;
 use RuntimeException;
+use TgkwAdc\Constants\Code\CommonCode;
+use TgkwAdc\Exception\BusinessException;
 use TgkwAdc\Helper\Log\LogHelper;
+use function TgkwAdc\HyperfCaptcha\captcha_verify;
 
 class CaptchaVerifyService
 {
+
+    public static function captchaVerify($params)
+    {
+        $systemConfig = $systemConfig ?? self::getSystemConfig();
+        $type = $systemConfig['captcha_type'];
+        if ($type == 'local_captcha') {
+            $res = captcha_verify($params['captcha_code'] ?? '', $params['captcha_verify_param'] ?? '');
+            if (! $res) {
+                throw new BusinessException(code: CommonCode::CAPTCHA_ERROR);
+            }
+        }
+        if ($type == 'aliyun_captcha') {
+            $res = self::main($params['captcha_verify_param'] ?? '');
+            if (! $res) {
+                throw new BusinessException(code: CommonCode::VERIFICATION_FAILED);
+            }
+        }
+    }
+
     /**
      * 使用凭据初始化账号 Client.
      */
@@ -139,3 +161,4 @@ class CaptchaVerifyService
         return [];
     }
 }
+
