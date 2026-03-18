@@ -10,12 +10,15 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Model;
 
+use App\Model\Employee;
 use Carbon\Carbon;
+use Hyperf\Database\Model\Relations\HasOne;
 use Hyperf\Database\Model\SoftDeletes;
 use Hyperf\DbConnection\Model\Model;
 use Hyperf\ModelCache\Cacheable;
 use Hyperf\ModelCache\CacheableInterface;
 use RuntimeException;
+use TgkwAdc\Helper\Log\LogHelper;
 use TgkwAdc\JsonRpc\Hr\HrServiceInterface;
 
 class BaseModel extends Model implements CacheableInterface
@@ -51,8 +54,11 @@ class BaseModel extends Model implements CacheableInterface
         return true;
     }
 
-    public function creator(): BaseRpcHasOne
+    public function creator(): BaseRpcHasOne|HasOne
     {
+        if (env('APP_NAME') == 'hr' ) {
+          return  $this->belongsTo(Employee::class, 'created_by', 'user_id');
+        }
         return new BaseRpcHasOne(
             self::query(),
             $this,
@@ -62,8 +68,11 @@ class BaseModel extends Model implements CacheableInterface
         );
     }
 
-    public function updater(): BaseRpcHasOne
+    public function updater(): BaseRpcHasOne|HasOne
     {
+        if (env('APP_NAME') == 'hr' ) {
+            return  $this->belongsTo(Employee::class, 'updated_by', 'user_id');
+        }
         return new BaseRpcHasOne(
             self::query(),
             $this,

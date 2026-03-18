@@ -29,7 +29,7 @@ class TimeHelper
     }
 
     /** 解析日期字符串或秒/毫秒时间戳为 Carbon */
-    protected function parseDateOrTimestamp(mixed $value): Carbon
+    public static function parseDateOrTimestamp(mixed $value): Carbon
     {
         $val = (string) $value;
         if (is_numeric($val)) {
@@ -41,12 +41,12 @@ class TimeHelper
     }
 
     /** 解析日期字符串或秒/毫秒时间戳为 Y-m-d 或Y-m-d H:i:s 或指定格式 */
-    protected function parseDateOrTimestampTo(mixed $value, $format = 'Y-m-d'): ?string
+    public static function parseDateOrTimestampTo(mixed $value, $format = 'Y-m-d'): ?string
     {
         if ($value === null || $value === '') {
             return null;
         }
 
-        return $this->parseDateOrTimestamp($value)->format($format);
+        return self::parseDateOrTimestamp($value)->format($format);
     }
 }

@@ -23,7 +23,7 @@ trait JsonRpcCall
      * @param mixed $customMsg
      * @return array|null[]|ResponseInterface
      */
-    public function handleRpcResponse($response, ?string $resourceClass = null, $method = 'make', $customMsg = '')
+    public function handleRpcResponse($response, ?string $resourceClass = null, $method = 'make', $customMsg = 'success')
     {
         LogHelper::debug('RPC Response:', [$response]);
         $resData = []; // 提前初始化变量，避免未定义警告

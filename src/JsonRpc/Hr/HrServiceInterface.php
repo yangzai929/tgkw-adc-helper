@@ -46,4 +46,9 @@ interface HrServiceInterface
      * 获取租户下所有岗位信息.
      */
     public function getAllPositions(int $tenantId): array;
+
+    /**
+     * 获取租户组织统计数据（员工数、公司数、部门数、未加入人数）.
+     */
+    public function getOrganizationStats(int $tenantId): array;
 }
