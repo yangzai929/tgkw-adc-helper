@@ -54,7 +54,7 @@ class BaseModel extends Model implements CacheableInterface
         return true;
     }
 
-    public function creator(): BaseRpcHasOne|HasOne
+    public function creator()
     {
         if (env('APP_NAME') == 'hr' ) {
           return  $this->belongsTo(Employee::class, 'created_by', 'user_id');
@@ -68,7 +68,7 @@ class BaseModel extends Model implements CacheableInterface
         );
     }
 
-    public function updater(): BaseRpcHasOne|HasOne
+    public function updater()
     {
         if (env('APP_NAME') == 'hr' ) {
             return  $this->belongsTo(Employee::class, 'updated_by', 'user_id');
