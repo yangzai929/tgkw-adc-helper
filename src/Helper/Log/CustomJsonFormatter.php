@@ -19,7 +19,7 @@ class CustomJsonFormatter extends JsonFormatter
     {
         // 重新排列字段顺序，将 datetime 放在第一位
         $formatted = [
-            'datetime' => $record->datetime->format('Y-m-d H:i:s.u') . ' ',
+            'datetime' => $record->datetime->format('Y-m-d H:i:s.u'),
             'channel' => $record->channel,
             'level' => $record->level->getName(),
             'message' => $record->message,

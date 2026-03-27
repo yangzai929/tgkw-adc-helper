@@ -149,8 +149,13 @@ class OrgMiddleware implements MiddlewareInterface
                 $rawAction = $controller . '@' . $action;
                 // act 统一为 micro:Controller@method
                 $act = env('APP_NAME') . ':' . $rawAction;
-                $params = ['user:' . $user['id'], 'tenant:' . $user['current_tenant_id'], $act];
                 $orgPermission = $annotationsArr['TgkwAdc\Annotation\OrgPermission'];
+                $needAuth = (int) ($orgPermission->needAuth ?? 1);
+                if ($needAuth === 0) {
+                    return $handler->handle($request);
+                }
+
+                $params = ['user:' . $user['id'], 'tenant:' . $user['current_tenant_id'], $act];
                 $extra = ['micro' => env('APP_NAME')];
                 if (! empty($orgPermission->grantedByAccessCode)) {
                     $extra['grantedByAccessCodes'] = $orgPermission->grantedByAccessCode;
