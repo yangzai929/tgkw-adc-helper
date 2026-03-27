@@ -178,23 +178,23 @@ class MainWorkerStartListener implements ListenerInterface
 
         LogHelper::info('开始同步菜单');
 
-        // 同步菜单 - 等待配置从 Nacos 同步完成
-        $systemConfig = $this->waitForSystemConfig();
-        if ($systemConfig === null) {
-            LogHelper::error('无法获取 systemConfig 配置，跳过菜单同步');
-            return;
-        }
-
-        if (! isset($systemConfig['needAddMenuSrv']) || ! is_array($systemConfig['needAddMenuSrv'])) {
-            LogHelper::error('systemConfig 配置格式错误：缺少 needAddMenuSrv 字段或格式不正确，跳过菜单同步');
-            return;
-        }
+//        // 同步菜单 - 等待配置从 Nacos 同步完成
+//        $systemConfig = $this->waitForSystemConfig();
+//        if ($systemConfig === null) {
+//            LogHelper::error('无法获取 systemConfig 配置，跳过菜单同步');
+//            return;
+//        }
+//
+//        if (! isset($systemConfig['needAddMenuSrv']) || ! is_array($systemConfig['needAddMenuSrv'])) {
+//            LogHelper::error('systemConfig 配置格式错误：缺少 needAddMenuSrv 字段或格式不正确，跳过菜单同步');
+//            return;
+//        }
 
         $appName = env('APP_NAME');
-        if ($systemConfig['needAddMenuSrv'] && ! in_array($appName, $systemConfig['needAddMenuSrv'], true)) {
-            LogHelper::info("当前服务 [{$appName}] 不在需要同步菜单的服务列表中，跳过菜单同步");
-            return;
-        }
+//        if ($systemConfig['needAddMenuSrv'] && ! in_array($appName, $systemConfig['needAddMenuSrv'], true)) {
+//            LogHelper::info("当前服务 [{$appName}] 不在需要同步菜单的服务列表中，跳过菜单同步");
+//            return;
+//        }
 
         $this->syncMenus($appName);
 
@@ -257,8 +257,12 @@ class MainWorkerStartListener implements ListenerInterface
             } else {
                 $userService = ApplicationContext::getContainer()->get(UserServiceInterface::class);
             }
-            $userService->addMenu($orgMenuData);
-            LogHelper::info('租户菜单同步完成');
+            if (! empty($orgMenuData)) {
+                $userService->addMenu($orgMenuData);
+                LogHelper::info('租户菜单同步完成');
+            } else {
+                LogHelper::info('租户菜单为空，跳过同步');
+            }
 
             // 同步系统总后台菜单
             $sysMenuData = SystemPermissionHelper::build();
@@ -269,8 +273,12 @@ class MainWorkerStartListener implements ListenerInterface
             } else {
                 $systemService = ApplicationContext::getContainer()->get(SystemServiceInterface::class);
             }
-            $systemService->addMenu($sysMenuData);
-            LogHelper::info('系统菜单同步完成');
+            if (! empty($sysMenuData)) {
+                $systemService->addMenu($sysMenuData);
+                LogHelper::info('系统菜单同步完成');
+            } else {
+                LogHelper::info('系统菜单为空，跳过同步');
+            }
         } catch (Exception $e) {
             LogHelper::error('菜单同步失败: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
