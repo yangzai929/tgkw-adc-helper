@@ -53,8 +53,11 @@ class OrgPermission extends AbstractAnnotation
     public int $keepAlive = 0; // 前端是否缓存: 0=否, 1=是
 
     public int $status = 1; // 显示状态: 1显示，0隐藏   隐藏时  不在菜单显示 但会在配置权限时在权限树中显示
+
     public int $isEnable = 1; // 是否启用: 0=否, 1=是  不启用时 不在菜单显示 也在权限树中不显示
+
     public int $needAuth = 1; // 是否需要权限: 0=否, 1=是  默认1 ,某些公共菜单不需要权限校验时 设为0
+
     public string $method = ''; // 请求方法, 目录时填 #
 
     public int $showMobile = 1; // 移动端是否显示: 0=否, 1=是  隐藏时  菜单在移动端不显示 但会在PC端配置权限时在权限树中显示

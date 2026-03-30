@@ -53,4 +53,14 @@ class UserServiceConsumer extends AbstractServiceClient implements UserServiceIn
     {
         return $this->__request(__FUNCTION__, compact('param'));
     }
+
+    public function getOrCreateUserByContact(string $contact): array
+    {
+        return $this->__request(__FUNCTION__, compact('contact'));
+    }
+
+    public function bindUserTenant(int $userId, int $tenantId): array
+    {
+        return $this->__request(__FUNCTION__, compact('userId', 'tenantId'));
+    }
 }

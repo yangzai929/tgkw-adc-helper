@@ -13,6 +13,10 @@ namespace TgkwAdc;
 use TgkwAdc\Aspect\RpcConsumerServiceAspect;
 use TgkwAdc\Aspect\RpcProviderServiceAspect;
 use TgkwAdc\FileSystem\S3AdapterFactory;
+use TgkwAdc\JsonRpc\Hr\HrServiceConsumer;
+use TgkwAdc\JsonRpc\Hr\HrServiceInterface;
+use TgkwAdc\JsonRpc\Public\PublicServiceConsumer;
+use TgkwAdc\JsonRpc\Public\PublicServiceInterface;
 use TgkwAdc\JsonRpc\Public\SystemServiceConsumer;
 use TgkwAdc\JsonRpc\Public\SystemServiceInterface;
 use TgkwAdc\JsonRpc\User\UserServiceConsumer;
@@ -26,9 +30,10 @@ class ConfigProvider
     {
         return [
             'dependencies' => [
-                S3AdapterFactory::class => S3AdapterFactory::class, // 修复S3AdapterFactory运行时报错
-                UserServiceInterface::class => UserServiceConsumer::class,
-                SystemServiceInterface::class => SystemServiceConsumer::class,
+                S3AdapterFactory::class => S3AdapterFactory::class,            // 修复S3AdapterFactory运行时报错
+                UserServiceInterface::class => UserServiceConsumer::class,     // 租户端用户服务
+                PublicServiceInterface::class => PublicServiceConsumer::class, // 公共服务，附件处理等
+                HrServiceInterface::class => HrServiceConsumer::class,         // 租户端人事服务
             ],
             'commands' => [
             ],

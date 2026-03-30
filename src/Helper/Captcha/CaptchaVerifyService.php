@@ -22,11 +22,11 @@ use RuntimeException;
 use TgkwAdc\Constants\Code\CommonCode;
 use TgkwAdc\Exception\BusinessException;
 use TgkwAdc\Helper\Log\LogHelper;
+
 use function TgkwAdc\HyperfCaptcha\captcha_verify;
 
 class CaptchaVerifyService
 {
-
     public static function captchaVerify($params)
     {
         $systemConfig = $systemConfig ?? self::getSystemConfig();
@@ -161,4 +161,3 @@ class CaptchaVerifyService
         return [];
     }
 }
-

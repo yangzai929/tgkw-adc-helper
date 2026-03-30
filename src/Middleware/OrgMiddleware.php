@@ -177,8 +177,8 @@ class OrgMiddleware implements MiddlewareInterface
 
     private function hasAccess($params): bool
     {
-        if (env('APP_NAME') == 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
-            $userServiceRes = make('\App\JsonRpc\Provider\UserService')->checkAccessPermission($params);
+        if (env('APP_NAME') == 'user' && class_exists('\App\JsonRpc\Provider\UserServiceProvider')) {
+            $userServiceRes = make('\App\JsonRpc\Provider\UserServiceProvider')->checkAccessPermission($params);
         } else {
             $userServiceRes = ApplicationContext::getContainer()->get(UserServiceInterface::class)->checkAccessPermission($params);
         }
@@ -191,8 +191,8 @@ class OrgMiddleware implements MiddlewareInterface
 
     private function getAppid($params)
     {
-        if (env('APP_NAME') == 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
-            return make('\App\JsonRpc\Provider\UserService')->getAppid($params);
+        if (env('APP_NAME') == 'user' && class_exists('\App\JsonRpc\Provider\UserServiceProvider')) {
+            return make('\App\JsonRpc\Provider\UserServiceProvider')->getAppid($params);
         }
         return ApplicationContext::getContainer()->get(UserServiceInterface::class)->getAppid($params);
     }
