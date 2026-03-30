@@ -31,9 +31,6 @@ class ConfigProvider
         return [
             'dependencies' => [
                 S3AdapterFactory::class => S3AdapterFactory::class,            // 修复S3AdapterFactory运行时报错
-                UserServiceInterface::class => UserServiceConsumer::class,     // 租户端用户服务
-                PublicServiceInterface::class => PublicServiceConsumer::class, // 公共服务，附件处理等
-                HrServiceInterface::class => HrServiceConsumer::class,         // 租户端人事服务
             ],
             'commands' => [
             ],
