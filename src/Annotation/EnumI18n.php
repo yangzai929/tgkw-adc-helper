@@ -63,6 +63,6 @@ class EnumI18n extends AbstractAnnotation
     ) {
         $this->txt = $txt;
         $this->i18nTxt = $i18nTxt;
-        $this->width = $width;
+        $this->width = $width?? '200px';
     }
 }
