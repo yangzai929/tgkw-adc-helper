@@ -46,6 +46,11 @@ class EnumI18n extends AbstractAnnotation
     public ?array $i18nTxt = null;
 
     /**
+     * 列宽配置（用于表格列）。
+     */
+    public ?string $width = null;
+
+    /**
      * 构造函数.
      *
      * @param string $txt 中文内容，不能为空
@@ -54,8 +59,10 @@ class EnumI18n extends AbstractAnnotation
     public function __construct(
         string $txt,
         ?array $i18nTxt = null,
+        ?string $width = null,
     ) {
         $this->txt = $txt;
         $this->i18nTxt = $i18nTxt;
+        $this->width = $width;
     }
 }

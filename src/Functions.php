@@ -310,6 +310,9 @@ if (! function_exists('buildTableColumnsWithValueMaps')) {
                 'i18n_txt' => $enumData['i18nTxt'] ?? [],
                 'i18n_key' => $enumData['i18nKey'] ?? '',
             ];
+            if (! empty($enumData['width'])) {
+                $column['width'] = (string) $enumData['width'];
+            }
 
             // 检查该字段是否需要值映射
             $fieldKey = $enumData['value'];

@@ -28,6 +28,9 @@ class TableListColumnsResource extends BaseResource
             if (isset($column['value_map_key'])) {
                 $formattedColumn['value_map_key'] = $column['value_map_key'];
             }
+            if (isset($column['width'])) {
+                $formattedColumn['width'] = $column['width'];
+            }
 
             $columns[] = $formattedColumn;
         }
