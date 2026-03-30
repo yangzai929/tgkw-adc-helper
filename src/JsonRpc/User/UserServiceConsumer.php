@@ -63,4 +63,24 @@ class UserServiceConsumer extends AbstractServiceClient implements UserServiceIn
     {
         return $this->__request(__FUNCTION__, compact('userId', 'tenantId'));
     }
+
+    public function getCurrentTenantRoles(int $tenantId): array
+    {
+        return $this->__request(__FUNCTION__, compact('tenantId'));
+    }
+
+    public function getUsersByRoles(array $roleIds, int $tenantId): array
+    {
+        return $this->__request(__FUNCTION__, compact('roleIds', 'tenantId'));
+    }
+
+    public function getRolesByIds(array $roleIds, int $tenantId): array
+    {
+        return $this->__request(__FUNCTION__, compact('roleIds', 'tenantId'));
+    }
+
+    public function getUserPermiScope(int $userId, int $tenantId): array
+    {
+        return $this->__request(__FUNCTION__, compact('userId', 'tenantId'));
+    }
 }
