@@ -31,6 +31,9 @@ class ConfigProvider
         return [
             'dependencies' => [
                 S3AdapterFactory::class => S3AdapterFactory::class,            // 修复S3AdapterFactory运行时报错
+                UserServiceInterface::class => UserServiceConsumer::class,
+                SystemServiceInterface::class => SystemServiceConsumer::class,
+                PublicServiceInterface::class => PublicServiceConsumer::class,
             ],
             'commands' => [
             ],
