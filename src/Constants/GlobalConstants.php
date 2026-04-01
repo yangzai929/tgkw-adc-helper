@@ -38,5 +38,5 @@ class GlobalConstants
 
     public const CURRENT_TENANT_ID = 'current_tenant_id'; // 协程上下文中标识当前用户的当前租户ID
 
-    public const OBJECK_KEY_PREFIX = 'tgkwfile';
+    public const OBJECT_KEY_PREFIX = 'tgkwfile';
 }

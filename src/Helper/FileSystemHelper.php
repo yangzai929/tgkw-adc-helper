@@ -112,6 +112,6 @@ class FileSystemHelper
     public function genFileName($extension)
     {
         $filename = str_replace('-', '', (string) Uuid::uuid1());
-        return GlobalConstants::OBJECK_KEY_PREFIX . '/' . env('APP_ENV') . '/' . $filename . '.' . $extension;
+        return GlobalConstants::OBJECT_KEY_PREFIX . '/' . env('APP_ENV') . '/' . $filename . '.' . $extension;
     }
 }

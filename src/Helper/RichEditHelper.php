@@ -15,7 +15,7 @@ use TgkwAdc\Constants\GlobalConstants;
 
 class RichEditHelper
 {
-    private const OBJECK_KEY_PATTERN = '#(' . GlobalConstants::OBJECK_KEY_PREFIX . '/[^?"\'&]+)#';
+    private const OBJECT_KEY_PATTERN = '#(' . GlobalConstants::OBJECT_KEY_PREFIX . '/[^?"\'&]+)#';
 
     #[Inject]
     protected FileSystemHelper $fileSystemHelper;
@@ -77,7 +77,7 @@ class RichEditHelper
      */
     protected function extractObjectKey(string $url): ?string
     {
-        if (preg_match(self::OBJECK_KEY_PATTERN, $url, $matches)) {
+        if (preg_match(self::OBJECT_KEY_PATTERN, $url, $matches)) {
             return $matches[1];
         }
         return null;
