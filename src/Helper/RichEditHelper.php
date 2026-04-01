@@ -27,7 +27,8 @@ class RichEditHelper
     {
         $content = $this->refreshImgSrc($content);
         $content = $this->refreshVideoSrc($content);
-        return $this->refreshDataHref($content);
+        $content = $this->refreshDataHref($content);
+        return $this->refreshAttachmentHref($content);
     }
 
     /**
@@ -52,6 +53,32 @@ class RichEditHelper
     protected function refreshDataHref(string $content): string
     {
         return $this->replaceAttrUrl($content, 'img', 'data-href');
+    }
+
+    /**
+     * 刷新 <a> 附件标签的 href.
+     */
+    protected function refreshAHref(string $content): string
+    {
+        return $this->replaceAttrUrl($content, 'a', 'href');
+    }
+
+     /**
+     * 刷新含 data-w-e-type="attachment" 的 <a> 标签的 href. 此为WangEditor 附件标签的 href.
+     */
+    protected function refreshAttachmentHref(string $content): string
+    {
+        $pattern = '#(<a\b[^>]*data-w-e-type="attachment"[^>]*\bhref=")([^"]*)(")#i';
+
+        return preg_replace_callback($pattern, function (array $matches) {
+            $url = $matches[2];
+            $objectKey = $this->extractObjectKey($url);
+            if ($objectKey === null) {
+                return $matches[0];
+            }
+            $newUrl = $this->fileSystemHelper->genFileTempUrl($objectKey);
+            return $matches[1] . $newUrl . $matches[3];
+        }, $content) ?? $content;
     }
 
     /**
