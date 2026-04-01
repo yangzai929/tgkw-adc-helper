@@ -11,11 +11,13 @@ declare(strict_types=1);
 namespace TgkwAdc\Controller;
 
 use Exception;
+use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\PostMapping;
 use TgkwAdc\Helper\AesHelper;
 use TgkwAdc\Helper\ApiResponseHelper;
 use TgkwAdc\Helper\Log\LogHelper;
 
+#[Controller]
 class ApprovalController extends AbstractController
 {
     /*
@@ -39,6 +41,6 @@ class ApprovalController extends AbstractController
             return container()->get($config[$data['third_label']])->approveCallBack($data);
         }
         LogHelper::info('config没有配置审批回调文件');
-        return ApiResponseHelper::success([]);
+        return ApiResponseHelper::success();
     }
 }

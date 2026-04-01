@@ -250,8 +250,8 @@ class MainWorkerStartListener implements ListenerInterface
         try {
             // 同步租户菜单
             $orgMenuData = OrgPermissionHelper::build();
-            LogHelper::info('租户菜单数据:'.(count($orgMenuData)).'条', []);
-            LogHelper::info('租户菜单数据:'.(count($orgMenuData)).'条', [$orgMenuData], 'org_menu_data');
+            LogHelper::info('租户菜单数据:'.(count($orgMenuData['annotations'])).'条', []);
+            LogHelper::info('租户菜单数据:'.(count($orgMenuData['annotations'])).'条', [$orgMenuData], 'org_menu_data');
 
             if ($appName === 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
                 $userService = make('\App\JsonRpc\Provider\UserService');
