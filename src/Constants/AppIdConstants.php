@@ -23,7 +23,10 @@ class AppIdConstants
     public const TOOLS_LETTER = 1006; // 函件管理
 
     public const APPROVAL = 1007; // 审批中心
+
     public const WORK_HOUR = 1008; // 工时中心
+
     public const WORK_ORDER = 1009; // 工单中心
+
     public const WORK_TASK = 1010; // 工单中心
 }

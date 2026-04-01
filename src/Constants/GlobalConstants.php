@@ -37,4 +37,6 @@ class GlobalConstants
     public const IS_CURRENT_TENANT_MAIN_ADMIN = 'is_current_tenant_main_admin'; // 协程上下文中标识当前用户是否是当前租户的主管理员
 
     public const CURRENT_TENANT_ID = 'current_tenant_id'; // 协程上下文中标识当前用户的当前租户ID
+
+    public const OBJECK_KEY_PREFIX = 'tgkwfile';
 }

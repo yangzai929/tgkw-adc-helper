@@ -104,7 +104,6 @@ interface UserServiceInterface
      */
     public function getRolesByIds(array $roleIds, int $tenantId): array;
 
-
     /*
     * 获取指定用户的人员管理范围
     */

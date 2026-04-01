@@ -14,6 +14,7 @@ use DateTime;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\UnableToWriteFile;
 use Ramsey\Uuid\Uuid;
+use TgkwAdc\Constants\GlobalConstants;
 use TgkwAdc\FileSystem\FilesystemFactory;
 use TgkwAdc\Helper\Log\LogHelper;
 
@@ -110,7 +111,7 @@ class FileSystemHelper
 
     public function genFileName($extension)
     {
-        $ilename = str_replace('-', '', (string) Uuid::uuid1());
-        return env('APP_ENV') . '/' . $ilename . '.' . $extension;
+        $filename = str_replace('-', '', (string) Uuid::uuid1());
+        return GlobalConstants::OBJECK_KEY_PREFIX . '/' . env('APP_ENV') . '/' . $filename . '.' . $extension;
     }
 }

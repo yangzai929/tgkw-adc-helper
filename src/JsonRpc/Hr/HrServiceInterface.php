@@ -133,7 +133,6 @@ interface HrServiceInterface
      */
     public function getOrganizationStats(int $tenantId): array;
 
-
     /**
      * 根据用户ID和租户ID获取员工信息管理范围下的人员信息.
      *
@@ -142,5 +141,5 @@ interface HrServiceInterface
      * @param array $scopeData permission scope数据
      * @return array 员工信息
      */
-    public function getEmployeeByUsersPeriScope(int $userId,int $tenantId,array $scopeData): array;
+    public function getEmployeeByUsersPeriScope(int $userId, int $tenantId, array $scopeData): array;
 }

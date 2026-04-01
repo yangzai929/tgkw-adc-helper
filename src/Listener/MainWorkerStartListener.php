@@ -250,8 +250,8 @@ class MainWorkerStartListener implements ListenerInterface
         try {
             // 同步租户菜单
             $orgMenuData = OrgPermissionHelper::build();
-            LogHelper::info('租户菜单数据:'.(count($orgMenuData['annotations'])).'条', []);
-            LogHelper::info('租户菜单数据:'.(count($orgMenuData['annotations'])).'条', [$orgMenuData], 'org_menu_data');
+            LogHelper::info('租户菜单数据:' . count($orgMenuData['annotations']) . '条', []);
+            LogHelper::info('租户菜单数据:' . count($orgMenuData['annotations']) . '条', [$orgMenuData], 'org_menu_data');
 
             if ($appName === 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
                 $userService = make('\App\JsonRpc\Provider\UserService');
@@ -268,8 +268,8 @@ class MainWorkerStartListener implements ListenerInterface
 
             // 同步系统总后台菜单
             $sysMenuData = SystemPermissionHelper::build();
-            LogHelper::info('系统菜单数据:'.(count($sysMenuData)).'条', []);
-            LogHelper::info('系统菜单数据:'.(count($sysMenuData)).'条', [$sysMenuData], 'sys_menu_data');
+            LogHelper::info('系统菜单数据:' . count($sysMenuData) . '条', []);
+            LogHelper::info('系统菜单数据:' . count($sysMenuData) . '条', [$sysMenuData], 'sys_menu_data');
 
             if ($appName === 'public' && class_exists('\App\JsonRpc\Provider\SystemService')) {
                 $systemService = make('\App\JsonRpc\Provider\SystemService');

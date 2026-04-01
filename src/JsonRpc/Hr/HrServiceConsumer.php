@@ -135,7 +135,7 @@ class HrServiceConsumer extends AbstractServiceClient implements HrServiceInterf
         return $this->__request(__FUNCTION__, compact('tenantId'));
     }
 
-    public function getEmployeeByUsersPeriScope(int $userId,int $tenantId,array $scopeData): array
+    public function getEmployeeByUsersPeriScope(int $userId, int $tenantId, array $scopeData): array
     {
         return $this->__request(__FUNCTION__, compact('userId', 'tenantId', 'scopeData'));
     }

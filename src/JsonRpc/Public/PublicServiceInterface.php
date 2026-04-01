@@ -13,6 +13,8 @@ namespace TgkwAdc\JsonRpc\Public;
 interface PublicServiceInterface
 {
     public function handleFileUsed(string $object_key, int $is_used);
+
     public function getFileInfo(string $object_key);
+
     public function getRegion(array $params);
 }
