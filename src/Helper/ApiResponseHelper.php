@@ -32,6 +32,7 @@ class ApiResponseHelper
      */
     public static function success($data = null, $message = 'success', $code = 0, $httpStatusCode = 200): Psr7ResponseInterface
     {
+
         $response = ApplicationContext::getContainer()->get(ResponseInterface::class);
 
         // 1. 数据非空时，强制校验必须是资源类/资源集合
@@ -64,8 +65,20 @@ class ApiResponseHelper
         ])->withStatus($httpStatusCode);
     }
 
-    public static function error($message = 'error', $error = null, $data = null, $code = 400, $httpStatusCode = 400): Psr7ResponseInterface
+    /**
+     *
+     * @param JsonResource|ResourceCollection $data 资源类实例或资源集合
+     * @param string $message 响应信息
+     * @param int $code HTTP 状态码
+     * @param array $i18nParam 国际化翻译中的变量参数
+     * @param mixed $httpStatusCode
+     * @throws InvalidArgumentException 若数据不是资源类
+     */
+    public static function error($message = 'error', $error = null, $data = null, $code = 400, $i18nParam = [],$httpStatusCode = 400): Psr7ResponseInterface
     {
+        if ($code instanceof EnumCodeInterface) {
+            $message = $i18nParam ? $code->genI18nMsg($i18nParam) : $code->getI18nMsg();
+        }
         $response = ApplicationContext::getContainer()->get(ResponseInterface::class);
 
         if ($code instanceof EnumCodeInterface) {
