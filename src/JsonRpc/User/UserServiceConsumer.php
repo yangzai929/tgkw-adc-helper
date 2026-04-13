@@ -44,6 +44,11 @@ class UserServiceConsumer extends AbstractServiceClient implements UserServiceIn
         return $this->__request(__FUNCTION__, compact('userId', 'micro'));
     }
 
+    public function getTenantInfo(int $tenant_id): array
+    {
+        return $this->__request(__FUNCTION__, compact('tenant_id'));
+    }
+
     public function getUsers(array $userIds, string $micro = ''): array
     {
         return $this->__request(__FUNCTION__, compact('userIds', 'micro'));

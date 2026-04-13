@@ -125,9 +125,9 @@ class HrServiceConsumer extends AbstractServiceClient implements HrServiceInterf
     /**
      * 根据成员姓名关键字和租户ID模糊查询成员及其所在部门.
      */
-    public function searchEmployeesByName(string $keyword, int $tenantId): array
+    public function searchEmployeesByName(string $keyword, int $tenantId, array $includeUserIds = [], array $excludeUserIds = []): array
     {
-        return $this->__request(__FUNCTION__, compact('keyword', 'tenantId'));
+        return $this->__request(__FUNCTION__, compact('keyword', 'tenantId', 'includeUserIds', 'excludeUserIds'));
     }
 
     public function getOrganizationStats(int $tenantId): array

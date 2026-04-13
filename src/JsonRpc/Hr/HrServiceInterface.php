@@ -121,9 +121,11 @@ interface HrServiceInterface
      *
      * @param string $keyword 姓名关键字
      * @param int $tenantId 租户ID
+     * @param array $includeUserIds 在列表中的成员，默认为空
+     * @param array $excludeUserIds 不在列表中的成员，默认为空
      * @return array 成员及部门信息列表
      */
-    public function searchEmployeesByName(string $keyword, int $tenantId): array;
+    public function searchEmployeesByName(string $keyword, int $tenantId, array $includeUserIds = [], array $excludeUserIds = []): array;
 
     /**
      * 获取租户组织统计数据（员工数、公司数、部门数、未加入人数）.

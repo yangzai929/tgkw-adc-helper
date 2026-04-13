@@ -45,6 +45,8 @@ interface UserServiceInterface
      */
     public function getUserInfo(int $userId): array;
 
+    public function getTenantInfo(int $tenant_id): array;
+
     /**
      * 批量获取用户信息.
      *

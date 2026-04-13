@@ -24,9 +24,19 @@ class PublicServiceConsumer extends AbstractServiceClient implements PublicServi
         return $this->__request(__FUNCTION__, compact('object_key', 'is_used'));
     }
 
+    public function handleFilesUsed(array $object_keys, int $is_used)
+    {
+        return $this->__request(__FUNCTION__, compact('object_keys', 'is_used'));
+    }
+
     public function getFileInfo(string $object_key)
     {
         return $this->__request(__FUNCTION__, compact('object_key'));
+    }
+
+    public function getFilesInfo(array $object_keys)
+    {
+        return $this->__request(__FUNCTION__, compact('object_keys'));
     }
 
     public function getRegion(array $params)

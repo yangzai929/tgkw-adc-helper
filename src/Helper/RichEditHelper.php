@@ -63,7 +63,7 @@ class RichEditHelper
         return $this->replaceAttrUrl($content, 'a', 'href');
     }
 
-     /**
+    /**
      * 刷新含 data-w-e-type="attachment" 的 <a> 标签的 href. 此为WangEditor 附件标签的 href.
      */
     protected function refreshAttachmentHref(string $content): string
