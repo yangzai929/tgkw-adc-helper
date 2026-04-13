@@ -110,4 +110,8 @@ interface UserServiceInterface
     * 获取指定用户的人员管理范围
     */
     public function getUserPermiScope(int $userId, int $tenantId): array;
+    public function getUsersByRoleName(string $roleName, int $tenantId): array;
+
+
+
 }

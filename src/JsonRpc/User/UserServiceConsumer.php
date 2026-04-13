@@ -88,4 +88,9 @@ class UserServiceConsumer extends AbstractServiceClient implements UserServiceIn
     {
         return $this->__request(__FUNCTION__, compact('userId', 'tenantId'));
     }
+
+    public function getUsersByRoleName(string $roleName, int $tenantId): array
+    {
+        return $this->__request(__FUNCTION__, compact('roleName', 'tenantId'));
+    }
 }
