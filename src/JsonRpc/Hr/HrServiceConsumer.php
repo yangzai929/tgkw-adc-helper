@@ -28,14 +28,14 @@ class HrServiceConsumer extends AbstractServiceClient implements HrServiceInterf
         return $this->__request(__FUNCTION__, compact('method', 'param'));
     }
 
-    public function getEmployeeByUserId(int $userId, int $tenantId, bool $withRelations = true): array
+    public function getEmployeeByUserId(int $userId, int $tenantId, array $select =[],bool $withRelations = true): array
     {
-        return $this->__request(__FUNCTION__, compact('userId', 'tenantId', 'withRelations'));
+        return $this->__request(__FUNCTION__, compact('userId', 'tenantId', 'select','withRelations'));
     }
 
-    public function getEmployeesByUserIds(array $userIds, int $tenantId): array
+    public function getEmployeesByUserIds(array $userIds, int $tenantId,array $select =[],bool $withRelations = true): array
     {
-        return $this->__request(__FUNCTION__, compact('userIds', 'tenantId'));
+        return $this->__request(__FUNCTION__, compact('userIds', 'tenantId','select','withRelations'));
     }
 
     /**

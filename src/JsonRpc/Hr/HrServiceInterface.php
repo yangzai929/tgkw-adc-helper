@@ -17,19 +17,22 @@ interface HrServiceInterface
      *
      * @param int $userId 用户ID
      * @param int $tenantId 租户ID
+     * @param array $select 要查询的员工表字段
      * @param bool $withRelations 是否包含关联数据（组织、岗位等）
      * @return array 员工信息
      */
-    public function getEmployeeByUserId(int $userId, int $tenantId, bool $withRelations = true): array;
+    public function getEmployeeByUserId(int $userId, int $tenantId,array $select=[],bool $withRelations = true): array;
 
     /**
      * 根据批量用户ID与租户ID获取员工信息.
      *
      * @param int[]|string[] $userIds 用户ID列表
      * @param int $tenantId 租户ID
+     * @param array $select 要查询的员工表字段
+     * @param bool $withRelations 是否包含关联数据（组织、岗位等）
      * @return array 员工信息列表
      */
-    public function getEmployeesByUserIds(array $userIds, int $tenantId): array;
+    public function getEmployeesByUserIds(array $userIds, int $tenantId,array $select=[],bool $withRelations = true): array;
 
     /**
      * 根据组织ID与租户ID获取组织信息及该组织下员工信息.
