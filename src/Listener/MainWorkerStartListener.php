@@ -214,7 +214,7 @@ class MainWorkerStartListener implements ListenerInterface
         for ($i = 0; $i < $maxRetries; ++$i) {
             $configStr = cfg('systemConfig');
 
-            if (! empty($configStr)) {
+            if (! empty($configStr) && is_string($configStr)) {
                 $config = json_decode($configStr, true);
 
                 // 检查 JSON 解析是否成功

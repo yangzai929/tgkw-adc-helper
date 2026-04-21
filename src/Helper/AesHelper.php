@@ -51,9 +51,10 @@ class AesHelper
      */
     protected static function getConfig(): array
     {
-        $sysCfgJson = cfg('systemConfig');
-        $systemCfg = json_decode($sysCfgJson, true);
-
+        $systemCfg = cfg('systemConfig');
+        if (is_string($systemCfg)) {
+            $systemCfg = json_decode($systemCfg, true);
+        }
         return [
             'method' => 'AES-256-CBC',
             'key' => $systemCfg['AES_128_KEY'],

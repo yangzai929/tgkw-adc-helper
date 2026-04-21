@@ -30,14 +30,19 @@ class JwtHelper
     public static function init(): void
     {
         if (self::$sys_key == null) {
-            $sysCfgJson = cfg('systemConfig');
-            $systemCfg = json_decode($sysCfgJson, true);
+            $systemCfg = cfg('systemConfig');
+            if (is_string($systemCfg)) {
+                $systemCfg = json_decode($systemCfg, true);
+            }
             self::$sys_key = $systemCfg['JWT_SYSTEM_KEY'];
         }
 
         if (self::$org_key == null) {
-            $sysCfgJson = cfg('systemConfig');
-            $systemCfg = json_decode($sysCfgJson, true);
+            $systemCfg = cfg('systemConfig');
+            if (is_string($systemCfg)) {
+                $systemCfg = json_decode($systemCfg, true);
+            }
+
             self::$org_key = $systemCfg['JWT_ORG_KEY'];
         }
     }

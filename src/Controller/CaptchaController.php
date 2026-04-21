@@ -25,7 +25,9 @@ class CaptchaController extends AbstractController
     {
         //      $type = $this->configService->getByName('captcha_type');
         $configs = cfg('systemConfig');
-        $configs = json_decode($configs, true);
+        if (is_string($configs)) {
+            $configs = json_decode($configs, true);
+        }
 
         $data['captcha_type'] = $configs['captcha_type'];
         $data['local_captcha'] = [];
