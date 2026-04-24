@@ -33,6 +33,15 @@ class HrServiceConsumer extends AbstractServiceClient implements HrServiceInterf
         return $this->__request(__FUNCTION__, compact('userId', 'tenantId', 'select','withRelations'));
     }
 
+    /**
+     * 根据批量用户ID与租户ID获取员工信息.
+     *
+     * @param int[]|string[] $userIds 用户ID列表
+     * @param int $tenantId 租户ID
+     * @param array $select 要查询的员工表字段
+     * @param bool $withRelations 是否包含关联数据（组织、岗位等）
+     * @return array 员工信息列表
+     */
     public function getEmployeesByUserIds(array $userIds, int $tenantId,array $select =[],bool $withRelations = true): array
     {
         return $this->__request(__FUNCTION__, compact('userIds', 'tenantId','select','withRelations'));
@@ -56,8 +65,12 @@ class HrServiceConsumer extends AbstractServiceClient implements HrServiceInterf
 
     /**
      * 获取所有组织信息.
+     *
+     * @param int $tenantId 租户ID
+     * $param string $type 获取组织类型，all为所有组织，company 为公司类型的组装（公司和子公司）
+     * @return array 组织信息列表
      */
-    public function getAllOrganizations(int $tenantId): array
+    public function getAllOrganizations(int $tenantId,string $type= 'all'): array
     {
         return $this->__request(__FUNCTION__, compact('tenantId'));
     }

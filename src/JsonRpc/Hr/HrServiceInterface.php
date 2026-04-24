@@ -56,9 +56,10 @@ interface HrServiceInterface
      * 获取所有组织信息.
      *
      * @param int $tenantId 租户ID
+     * $param string $type 获取组织类型，all为所有组织，company 为公司类型的组装（公司和子公司）
      * @return array 组织信息列表
      */
-    public function getAllOrganizations(int $tenantId): array;
+    public function getAllOrganizations(int $tenantId,string $type= 'all'): array;
 
     /**
      * 获取所有组织信息及组织下的员工信息.

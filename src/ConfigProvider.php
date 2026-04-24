@@ -13,6 +13,8 @@ namespace TgkwAdc;
 use TgkwAdc\Aspect\RpcConsumerServiceAspect;
 use TgkwAdc\Aspect\RpcProviderServiceAspect;
 use TgkwAdc\FileSystem\S3AdapterFactory;
+use TgkwAdc\JsonRpc\Hr\HrServiceConsumer;
+use TgkwAdc\JsonRpc\Hr\HrServiceInterface;
 use TgkwAdc\JsonRpc\Public\PublicServiceConsumer;
 use TgkwAdc\JsonRpc\Public\PublicServiceInterface;
 use TgkwAdc\JsonRpc\Public\SystemServiceConsumer;
@@ -32,6 +34,7 @@ class ConfigProvider
                 UserServiceInterface::class => UserServiceConsumer::class,
                 SystemServiceInterface::class => SystemServiceConsumer::class,
                 PublicServiceInterface::class => PublicServiceConsumer::class,
+                HrServiceInterface::class => HrServiceConsumer::class,
             ],
             'commands' => [
             ],
