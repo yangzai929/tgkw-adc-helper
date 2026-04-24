@@ -72,32 +72,31 @@ if (! function_exists('container_get')) {
 }
 
 if (! function_exists('container')) {
-    function container(): ContainerInterface
+    function container()
     {
         return ApplicationContext::getContainer();
     }
 }
 
-use TgkwAdc\Constants\GlobalConstants;
 
 if (! function_exists('auth_user')) {
     function auth_user($default = null)
     {
-        return Context::get(GlobalConstants::ORG_USER_CONTEXT, $default);
+        return Context::get(\TgkwAdc\Constants\GlobalConstants::ORG_USER_CONTEXT, $default);
     }
 }
 
 if (! function_exists('current_tenant_id')) {
     function current_tenant_id($default = null)
     {
-        return Context::get(GlobalConstants::CURRENT_TENANT_ID, $default);
+        return Context::get(\TgkwAdc\Constants\GlobalConstants::CURRENT_TENANT_ID, $default);
     }
 }
 
 if (! function_exists('system_admin')) {
     function system_admin($default = null)
     {
-        return Context::get(GlobalConstants::SYS_ADMIN_CONTEXT, $default);
+        return Context::get(\TgkwAdc\Constants\GlobalConstants::SYS_ADMIN_CONTEXT, $default);
     }
 }
 
@@ -249,14 +248,12 @@ if (! function_exists('i18nEnumArrConvert')) {
     }
 }
 
-use Psr\Container\ContainerInterface;
-use TgkwAdc\Annotation\EnumI18nInterface;
 
 /**
  * 构建表格列配置和值映射的通用方法.
  *
  * 功能说明：根据枚举类生成表格列配置（columns），并根据值映射配置生成对应的值映射表（value_maps）
- * 枚举类需实现 EnumI18nInterface 接口，以提供统一的枚举数据获取方式
+ * 枚举类需实现 \TgkwAdc\Annotation\EnumI18nInterface 接口，以提供统一的枚举数据获取方式
  *
  * @param string $listEnumClass 列表枚举类（如 RoleListI18n::class）
  *                              该类需实现 EnumI18nInterface 接口，用于定义表格列的基础信息（键名、国际化文本等）
@@ -296,7 +293,7 @@ use TgkwAdc\Annotation\EnumI18nInterface;
 if (! function_exists('buildTableColumnsWithValueMaps')) {
     function buildTableColumnsWithValueMaps(string $listEnumClass, array $valueMapConfig = []): array
     {
-        if (! is_subclass_of($listEnumClass, EnumI18nInterface::class)) {
+        if (! is_subclass_of($listEnumClass, \TgkwAdc\Annotation\EnumI18nInterface::class)) {
             throw new InvalidArgumentException("{$listEnumClass} must implement EnumI18nInterface");
         }
 
@@ -343,7 +340,7 @@ if (! function_exists('filedI18nMap')) {
         foreach ($valueMapConfig as $fieldKey => $config) {
             $enumClass = $valueMapConfig[$fieldKey];
 
-            if (! is_subclass_of($enumClass, EnumI18nInterface::class)) {
+            if (! is_subclass_of($enumClass, \TgkwAdc\Annotation\EnumI18nInterface::class)) {
                 continue;
             }
 
