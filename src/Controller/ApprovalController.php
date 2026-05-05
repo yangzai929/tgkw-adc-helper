@@ -30,6 +30,7 @@ class ApprovalController extends AbstractController
 
         try {
             $data = AesHelper::decrypt($dataEncrypt);
+            LogHelper::info('收到的审批回调数据：',[$data],filename: 'approvalCallback');
             $data = json_decode($data, true);
         } catch (Exception $e) {
             LogHelper::error('error', [$e->getMessage()]);
