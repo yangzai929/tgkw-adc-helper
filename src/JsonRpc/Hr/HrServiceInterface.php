@@ -70,12 +70,12 @@ interface HrServiceInterface
     public function getAllOrganizationsWithEmployees(int $tenantId): array;
 
     /**
-     * 获取租户下所有岗位信息.
+     * 获取租户下指定组织所有岗位信息.
      *
      * @param int $tenantId 租户ID
      * @return array 岗位信息列表
      */
-    public function getAllPositions(int $tenantId): array;
+    public function getAllPositions(int $tenantId,int $orgId=0): array;
 
     /**
      * 根据用户ID和租户ID查找该用户的直接上级（所在部门主要负责人，排除自身）.
