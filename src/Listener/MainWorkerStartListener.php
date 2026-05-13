@@ -75,106 +75,13 @@ class MainWorkerStartListener implements ListenerInterface
         //        }
 
         // 检测mq的queue、exchange命名规范（修正跨服务通信问题）
-        if (env('AMQP_USER') && env('AMQP_PASSWORD') && env('APP_NAME')) {
-            $currentServiceName = env('APP_NAME');
-            $localConsumerExchanges = []; // 记录当前服务Consumer使用的Exchange（本服务消费的Exchange）
-
-            // 1. Consumer校验：Queue和Exchange必须以当前服务名开头（或系统级），避免消费冲突
-            $consumerClasses = AnnotationCollector::getClassesByAnnotation(Consumer::class);
-            if (! empty($consumerClasses)) {
-                foreach ($consumerClasses as $item) {
-                    // 校验Queue：必须以服务名开头（系统级可例外，可选）
-                    if (! empty($item->queue) && stripos($item->queue, $currentServiceName) !== 0 && stripos($item->queue, 'system') !== 0) {
-                        $errorMsg = "❌ MQ Consumer 校验失败：Queue[{$item->queue}] 必须以服务名[{$currentServiceName}]或系统前缀[system]开头";
-                        LogHelper::error($errorMsg);
-                        echo $errorMsg . PHP_EOL;
-                        Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
-                        break;
-                    }
-
-                    // 校验Exchange：必须以服务名开头（系统级可例外）
-                    if (! empty($item->exchange) && stripos($item->exchange, $currentServiceName) !== 0 && stripos($item->exchange, 'system') !== 0) {
-                        $errorMsg = "❌ MQ Consumer 校验失败：Exchange[{$item->exchange}] 必须以服务名[{$currentServiceName}]或系统前缀[system]开头";
-                        LogHelper::error($errorMsg);
-                        echo $errorMsg . PHP_EOL;
-                        Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
-                        break;
-                    }
-
-                    $localConsumerExchanges[] = $item->exchange; // 记录本服务消费的Exchange
-                }
-            }
-
-            // 2. Producer校验：仅限制Exchange命名规范（非空、不非法），不限制归属（允许投递到其他服务的Exchange）
-            $producerClasses = AnnotationCollector::getClassesByAnnotation(Producer::class);
-            if (! empty($producerClasses)) {
-                foreach ($producerClasses as $item) {
-                    // 基础校验：Exchange不能为空（避免无效配置）
-                    if (empty($item->exchange)) {
-                        $errorMsg = '❌ MQ Producer 校验失败：Exchange 不能为空';
-                        LogHelper::error($errorMsg);
-                        echo $errorMsg . PHP_EOL;
-                        Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
-                        break;
-                    }
-
-                    // Exchange必须包含服务名（目标服务名或当前服务名），避免无意义命名
-                    if (! preg_match('/^[a-zA-Z0-9.-]+$/', $item->exchange) || substr_count($item->exchange, '.') < 1) {
-                        $errorMsg = "❌ MQ Producer 校验失败：Exchange[{$item->exchange}] 命名不规范！" . PHP_EOL
-                            . '允许字符：字母（a-z/A-Z）、数字（0-9）、点（.）、连字符（-）' . PHP_EOL
-                            . '建议格式：[服务名].[功能模块].[操作]（如 orderService.order.createOrder）';
-                        LogHelper::error($errorMsg);
-                        echo $errorMsg . PHP_EOL;
-                        Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
-                        break;
-                    }
-
-                    // 保留原逻辑：若Producer投递的Exchange是本服务Consumer正在使用的，需符合Consumer的规则（避免本服务Exchange命名冲突）
-                    if (in_array($item->exchange, $localConsumerExchanges) && stripos($item->exchange, $currentServiceName) !== 0 && stripos($item->exchange, 'system') !== 0) {
-                        $errorMsg = "❌ MQ Producer 校验失败：Exchange[{$item->exchange}] 是本服务Consumer使用的，必须以服务名[{$currentServiceName}]或系统前缀[system]开头";
-                        LogHelper::error($errorMsg);
-                        echo $errorMsg . PHP_EOL;
-                        Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
-                        break;
-                    }
-                }
-            }
-        }
+        $this->validateMqAnnotations();
 
         // 初始化打开 xxl-job
-        LogHelper::info('xxl-job-task init now');
-        if (env('XXL_JOB_ENABLE') === true) {
-            LogHelper::info('xxl-job is enable! ✅ ');
-            $XxlJobTaskHelper = new XxlJobTaskHelper();
-            $XxlJobTaskHelper->build(true);
-        }
+        $this->initXxlJob();
 
         // 初始化创建 rabbit-mq vhost
-        LogHelper::info('rabbit-mq vhost init now');
-        if (env('AMQP_VHOST_AUTO_CREATE') === true && env('AMQP_PORT_ADMIN')) {
-            $clientHttp = new Client();
-            try {
-                $response = $clientHttp->request(
-                    'PUT',
-                    sprintf(
-                        'http://%s:%s/api/vhosts/%s',
-                        env('AMQP_HOST'),
-                        env('AMQP_PORT_ADMIN'),
-                        env('AMQP_VHOST', 'adc')
-                    ),
-                    ['auth' => [env('AMQP_USER'), env('AMQP_PASSWORD')],
-                        'content-type' => 'application/json',
-                    ]
-                );
-
-                $mqResultCode = $response->getStatusCode();
-                if ($mqResultCode == 201 || $mqResultCode == 204) {
-                    LogHelper::info('rabbit-mq vhost create OK ! ✅ ');
-                }
-            } catch (GuzzleException $e) {
-                LogHelper::error('rabbit vhost create error：' . $e->getMessage());
-            }
-        }
+        $this->createRabbitMqVhost();
 
         LogHelper::info('开始同步菜单');
 
@@ -253,6 +160,10 @@ class MainWorkerStartListener implements ListenerInterface
             LogHelper::info('租户菜单数据:' . count($orgMenuData['annotations']) . '条', []);
             LogHelper::info('租户菜单数据:' . count($orgMenuData['annotations']) . '条', [$orgMenuData], 'org_menu_data');
 
+            if (! empty($orgMenuData['annotations'])) {
+                $this->validateMenuAccessCodes($orgMenuData['annotations'], 'OrgPermission');
+            }
+
             if ($appName === 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
                 $userService = make('\App\JsonRpc\Provider\UserService');
             } else {
@@ -271,6 +182,10 @@ class MainWorkerStartListener implements ListenerInterface
             LogHelper::info('系统菜单数据:' . count($sysMenuData) . '条', []);
             LogHelper::info('系统菜单数据:' . count($sysMenuData) . '条', [$sysMenuData], 'sys_menu_data');
 
+            if (! empty($sysMenuData)) {
+                $this->validateMenuAccessCodes($sysMenuData, 'SystemPermission');
+            }
+
             if ($appName === 'public' && class_exists('\App\JsonRpc\Provider\SystemService')) {
                 $systemService = make('\App\JsonRpc\Provider\SystemService');
             } else {
@@ -287,6 +202,167 @@ class MainWorkerStartListener implements ListenerInterface
                 'trace' => $e->getTraceAsString(),
             ]);
             // 不抛出异常，避免影响服务启动
+        }
+    }
+
+    /**
+     * 校验 MQ Consumer 和 Producer 的 Queue/Exchange 命名规范.
+     */
+    private function validateMqAnnotations(): void
+    {
+        if (! env('AMQP_USER') || ! env('AMQP_PASSWORD') || ! env('APP_NAME')) {
+            return;
+        }
+
+        $currentServiceName = env('APP_NAME');
+        $localConsumerExchanges = []; // 记录当前服务Consumer使用的Exchange（本服务消费的Exchange）
+
+        // 1. Consumer校验：Queue和Exchange必须以当前服务名开头（或系统级），避免消费冲突
+        $consumerClasses = AnnotationCollector::getClassesByAnnotation(Consumer::class);
+        if (! empty($consumerClasses)) {
+            foreach ($consumerClasses as $item) {
+                // 校验Queue：必须以服务名开头（系统级可例外，可选）
+                if (! empty($item->queue) && stripos($item->queue, $currentServiceName) !== 0 && stripos($item->queue, 'system') !== 0) {
+                    $errorMsg = "❌ MQ Consumer 校验失败：Queue[{$item->queue}] 必须以服务名[{$currentServiceName}]或系统前缀[system]开头";
+                    LogHelper::error($errorMsg);
+                    echo $errorMsg . PHP_EOL;
+                    Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                    return;
+                }
+
+                // 校验Exchange：必须以服务名开头（系统级可例外）
+                if (! empty($item->exchange) && stripos($item->exchange, $currentServiceName) !== 0 && stripos($item->exchange, 'system') !== 0) {
+                    $errorMsg = "❌ MQ Consumer 校验失败：Exchange[{$item->exchange}] 必须以服务名[{$currentServiceName}]或系统前缀[system]开头";
+                    LogHelper::error($errorMsg);
+                    echo $errorMsg . PHP_EOL;
+                    Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                    return;
+                }
+
+                $localConsumerExchanges[] = $item->exchange; // 记录本服务消费的Exchange
+            }
+        }
+
+        // 2. Producer校验：仅限制Exchange命名规范（非空、不非法），不限制归属（允许投递到其他服务的Exchange）
+        $producerClasses = AnnotationCollector::getClassesByAnnotation(Producer::class);
+        if (! empty($producerClasses)) {
+            foreach ($producerClasses as $item) {
+                // 基础校验：Exchange不能为空（避免无效配置）
+                if (empty($item->exchange)) {
+                    $errorMsg = '❌ MQ Producer 校验失败：Exchange 不能为空';
+                    LogHelper::error($errorMsg);
+                    echo $errorMsg . PHP_EOL;
+                    Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                    return;
+                }
+
+                // Exchange必须包含服务名（目标服务名或当前服务名），避免无意义命名
+                if (! preg_match('/^[a-zA-Z0-9.-]+$/', $item->exchange) || substr_count($item->exchange, '.') < 1) {
+                    $errorMsg = "❌ MQ Producer 校验失败：Exchange[{$item->exchange}] 命名不规范！" . PHP_EOL
+                        . '允许字符：字母（a-z/A-Z）、数字（0-9）、点（.）、连字符（-）' . PHP_EOL
+                        . '建议格式：[服务名].[功能模块].[操作]（如 orderService.order.createOrder）';
+                    LogHelper::error($errorMsg);
+                    echo $errorMsg . PHP_EOL;
+                    Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                    return;
+                }
+
+                // 保留原逻辑：若Producer投递的Exchange是本服务Consumer正在使用的，需符合Consumer的规则（避免本服务Exchange命名冲突）
+                if (in_array($item->exchange, $localConsumerExchanges) && stripos($item->exchange, $currentServiceName) !== 0 && stripos($item->exchange, 'system') !== 0) {
+                    $errorMsg = "❌ MQ Producer 校验失败：Exchange[{$item->exchange}] 是本服务Consumer使用的，必须以服务名[{$currentServiceName}]或系统前缀[system]开头";
+                    LogHelper::error($errorMsg);
+                    echo $errorMsg . PHP_EOL;
+                    Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                    return;
+                }
+            }
+        }
+    }
+
+    /**
+     * 初始化 xxl-job 任务.
+     */
+    private function initXxlJob(): void
+    {
+        LogHelper::info('xxl-job-task init now');
+        if (env('XXL_JOB_ENABLE') === true) {
+            LogHelper::info('xxl-job is enable! ✅ ');
+            $XxlJobTaskHelper = new XxlJobTaskHelper();
+            $XxlJobTaskHelper->build(true);
+        }
+    }
+
+    /**
+     * 自动创建 RabbitMQ vhost.
+     */
+    private function createRabbitMqVhost(): void
+    {
+        LogHelper::info('rabbit-mq vhost init now');
+        if (env('AMQP_VHOST_AUTO_CREATE') !== true || ! env('AMQP_PORT_ADMIN')) {
+            return;
+        }
+
+        $clientHttp = new Client();
+        try {
+            $response = $clientHttp->request(
+                'PUT',
+                sprintf(
+                    'http://%s:%s/api/vhosts/%s',
+                    env('AMQP_HOST'),
+                    env('AMQP_PORT_ADMIN'),
+                    env('AMQP_VHOST', 'adc')
+                ),
+                ['auth' => [env('AMQP_USER'), env('AMQP_PASSWORD')],
+                    'content-type' => 'application/json',
+                ]
+            );
+
+            $mqResultCode = $response->getStatusCode();
+            if ($mqResultCode == 201 || $mqResultCode == 204) {
+                LogHelper::info('rabbit-mq vhost create OK ! ✅ ');
+            }
+        } catch (GuzzleException $e) {
+            LogHelper::error('rabbit vhost create error：' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 校验菜单注解中的 accessCode 和 parentAccessCode 格式.
+     * 格式要求：全小写，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）.
+     *
+     * @param array $annotations 菜单注解列表
+     * @param string $type 注解类型（OrgPermission / SystemPermission）
+     */
+    private function validateMenuAccessCodes(array $annotations, string $type): void
+    {
+        // 格式：全小写，段内用-连词，段间用:分隔
+        $pattern = '/^[a-z][a-z0-9]*(-[a-z][a-z0-9]*)*(:[a-z][a-z0-9]*(-[a-z][a-z0-9]*)*)*$/';
+
+        foreach ($annotations as $item) {
+            $annotation = $item['annotation'] ?? null;
+            if ($annotation === null) {
+                continue;
+            }
+
+            $accessCode = $annotation->accessCode ?? '';
+            $parentAccessCode = $annotation->parentAccessCode ?? '';
+            $action = $item['action'] ?? 'unknown';
+
+            if (! empty($accessCode) && ! preg_match($pattern, $accessCode)) {
+                $errorMsg = "❌ {$type} accessCode 格式校验失败：action[{$action}] accessCode[{$accessCode}] 不符合规范！" . PHP_EOL
+                    . '格式要求：全小写字母，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）';
+                LogHelper::error($errorMsg);
+                echo $errorMsg . PHP_EOL;
+                Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+            }
+
+            if (! empty($parentAccessCode) && ! preg_match($pattern, $parentAccessCode)) {
+                $errorMsg = "❌ {$type} parentAccessCode 格式校验失败：action[{$action}] parentAccessCode[{$parentAccessCode}] 不符合规范！" . PHP_EOL
+                    . '格式要求：全小写字母，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）';
+                LogHelper::error($errorMsg);
+                echo $errorMsg . PHP_EOL;
+
+            }
         }
     }
 }
