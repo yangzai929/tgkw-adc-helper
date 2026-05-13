@@ -162,6 +162,8 @@ class MainWorkerStartListener implements ListenerInterface
 
             if (! empty($orgMenuData['annotations'])) {
                 $this->validateMenuAccessCodes($orgMenuData['annotations'], 'OrgPermission');
+                $this->validateMenuFrontRouteAlias($orgMenuData['annotations'], 'SystemPermission');
+
             }
 
             if ($appName === 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
@@ -179,11 +181,12 @@ class MainWorkerStartListener implements ListenerInterface
 
             // 同步系统总后台菜单
             $sysMenuData = SystemPermissionHelper::build();
-            LogHelper::info('系统菜单数据:' . count($sysMenuData) . '条', []);
-            LogHelper::info('系统菜单数据:' . count($sysMenuData) . '条', [$sysMenuData], 'sys_menu_data');
+            LogHelper::info('系统菜单数据:' . count($orgMenuData['annotations']) . '条', []);
+            LogHelper::info('系统菜单数据:' . count($orgMenuData['annotations']) . '条', [$sysMenuData], 'sys_menu_data');
 
             if (! empty($sysMenuData)) {
-                $this->validateMenuAccessCodes($sysMenuData, 'SystemPermission');
+                $this->validateMenuAccessCodes($orgMenuData['annotations'], 'SystemPermission');
+                $this->validateMenuFrontRouteAlias($orgMenuData['annotations'], 'SystemPermission');
             }
 
             if ($appName === 'public' && class_exists('\App\JsonRpc\Provider\SystemService')) {
@@ -363,6 +366,34 @@ class MainWorkerStartListener implements ListenerInterface
                 echo $errorMsg . PHP_EOL;
 
             }
+
         }
     }
+
+    private function validateMenuFrontRouteAlias(array $annotations, string $type): void
+    {
+
+        $pattern = '/^[a-z][a-z0-9]*(-[a-z][a-z0-9]*)*(.[a-z][a-z0-9]*(-[a-z][a-z0-9]*)*)*$/';
+
+        foreach ($annotations as $item) {
+            $annotation = $item['annotation'] ?? null;
+            if ($annotation === null) {
+                continue;
+            }
+
+            $frontRouteAlias = $annotation->frontRouteAlias ?? '';
+            $action = $item['action'] ?? 'unknown';
+
+            if (! empty($frontRouteAlias) && ! preg_match($pattern, $frontRouteAlias)) {
+                $errorMsg = "❌ {$type} frontRouteAlias 格式校验失败：action[{$action}] frontRouteAlias[{$frontRouteAlias}] 不符合规范！" . PHP_EOL
+                    . '格式要求：全小写字母，多单词用 - 连接，层级用 . 分隔（如 system.business-rules.recycle-rule）';
+                LogHelper::error($errorMsg);
+                echo $errorMsg . PHP_EOL;
+
+            }
+
+        }
+
+    }
+
 }
