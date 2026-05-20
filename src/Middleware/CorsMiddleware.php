@@ -24,7 +24,7 @@ class CorsMiddleware implements MiddlewareInterface
      * @var array
      */
     protected $allowOrigins = [
-        '*',
+        '*',      // 允许所有域名（仅开发环境使用，生产环境禁止）
     ];
 
     /**
@@ -85,9 +85,9 @@ class CorsMiddleware implements MiddlewareInterface
             return null;
         }
 
-        // 允许所有域名（仅开发环境使用，生产环境禁止）
-        if (in_array('*', $this->allowOrigins)) {
-            return '*';
+
+        if (in_array('*', $this->allowOrigins, true)) {
+            return $origin;
         }
 
         // 精确匹配
