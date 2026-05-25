@@ -11,11 +11,8 @@ declare(strict_types=1);
 namespace TgkwAdc\Helper;
 
 use DateTime;
-use Hyperf\Context\ApplicationContext;
-use Hyperf\Contract\ConfigInterface;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\UnableToWriteFile;
-use Mockery\Container;
 use Ramsey\Uuid\Uuid;
 use TgkwAdc\Constants\GlobalConstants;
 use TgkwAdc\FileSystem\FilesystemFactory;
@@ -76,9 +73,7 @@ class FileSystemHelper
     {
         $file_url = $this->adapter->temporaryUrl($object_key, new DateTime($expiresAt));
 
-        $file_url = str_replace('http://', 'https://', $file_url);
-
-        return $file_url;
+        return str_replace('http://', 'https://', $file_url);
     }
 
     public function upload($object_key, $path)

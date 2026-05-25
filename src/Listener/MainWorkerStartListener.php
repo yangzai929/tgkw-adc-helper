@@ -163,7 +163,6 @@ class MainWorkerStartListener implements ListenerInterface
             if (! empty($orgMenuData['annotations'])) {
                 $this->validateMenuAccessCodes($orgMenuData['annotations'], 'OrgPermission');
                 $this->validateMenuFrontRouteAlias($orgMenuData['annotations'], 'SystemPermission');
-
             }
 
             if ($appName === 'user' && class_exists('\App\JsonRpc\Provider\UserService')) {
@@ -364,15 +363,12 @@ class MainWorkerStartListener implements ListenerInterface
                     . '格式要求：全小写字母，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）';
                 LogHelper::error($errorMsg);
                 echo $errorMsg . PHP_EOL;
-
             }
-
         }
     }
 
     private function validateMenuFrontRouteAlias(array $annotations, string $type): void
     {
-
         $pattern = '/^[a-z][a-z0-9]*(-[a-z][a-z0-9]*)*(.[a-z][a-z0-9]*(-[a-z][a-z0-9]*)*)*$/';
 
         foreach ($annotations as $item) {
@@ -389,11 +385,7 @@ class MainWorkerStartListener implements ListenerInterface
                     . '格式要求：全小写字母，多单词用 - 连接，层级用 . 分隔（如 system.business-rules.recycle-rule）';
                 LogHelper::error($errorMsg);
                 echo $errorMsg . PHP_EOL;
-
             }
-
         }
-
     }
-
 }

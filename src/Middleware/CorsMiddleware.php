@@ -85,7 +85,6 @@ class CorsMiddleware implements MiddlewareInterface
             return null;
         }
 
-
         if (in_array('*', $this->allowOrigins, true)) {
             return $origin;
         }

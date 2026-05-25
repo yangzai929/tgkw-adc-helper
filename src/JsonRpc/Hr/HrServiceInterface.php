@@ -21,7 +21,7 @@ interface HrServiceInterface
      * @param bool $withRelations 是否包含关联数据（组织、岗位等）
      * @return array 员工信息
      */
-    public function getEmployeeByUserId(int $userId, int $tenantId,array $select=[],bool $withRelations = true): array;
+    public function getEmployeeByUserId(int $userId, int $tenantId, array $select = [], bool $withRelations = true): array;
 
     /**
      * 根据批量用户ID与租户ID获取员工信息.
@@ -32,7 +32,7 @@ interface HrServiceInterface
      * @param bool $withRelations 是否包含关联数据（组织、岗位等）
      * @return array 员工信息列表
      */
-    public function getEmployeesByUserIds(array $userIds, int $tenantId,array $select=[],bool $withRelations = true): array;
+    public function getEmployeesByUserIds(array $userIds, int $tenantId, array $select = [], bool $withRelations = true): array;
 
     /**
      * 根据组织ID与租户ID获取组织信息及该组织下员工信息.
@@ -56,10 +56,10 @@ interface HrServiceInterface
      * 获取所有组织信息.
      *
      * @param int $tenantId 租户ID
-     * $param string $type 获取组织类型，all为所有组织，company 为公司类型的组装（公司和子公司）
+     *                      $param string $type 获取组织类型，all为所有组织，company 为公司类型的组装（公司和子公司）
      * @return array 组织信息列表
      */
-    public function getAllOrganizations(int $tenantId,string $type= 'all'): array;
+    public function getAllOrganizations(int $tenantId, string $type = 'all'): array;
 
     /**
      * 获取所有组织信息及组织下的员工信息.
@@ -75,7 +75,7 @@ interface HrServiceInterface
      * @param int $tenantId 租户ID
      * @return array 岗位信息列表
      */
-    public function getAllPositions(int $tenantId,int $orgId=0): array;
+    public function getAllPositions(int $tenantId, int $orgId = 0): array;
 
     /**
      * 根据用户ID和租户ID查找该用户的直接上级（所在部门主要负责人，排除自身）.

@@ -13,6 +13,8 @@ use Hyperf\Context\Context;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Redis\Redis;
 use Hyperf\Redis\RedisFactory;
+use TgkwAdc\Annotation\EnumI18nInterface;
+use TgkwAdc\Constants\GlobalConstants;
 
 if (! function_exists('cfg')) {
     /**
@@ -78,25 +80,24 @@ if (! function_exists('container')) {
     }
 }
 
-
 if (! function_exists('auth_user')) {
     function auth_user($default = null)
     {
-        return Context::get(\TgkwAdc\Constants\GlobalConstants::ORG_USER_CONTEXT, $default);
+        return Context::get(GlobalConstants::ORG_USER_CONTEXT, $default);
     }
 }
 
 if (! function_exists('current_tenant_id')) {
     function current_tenant_id($default = null)
     {
-        return Context::get(\TgkwAdc\Constants\GlobalConstants::CURRENT_TENANT_ID, $default);
+        return Context::get(GlobalConstants::CURRENT_TENANT_ID, $default);
     }
 }
 
 if (! function_exists('system_admin')) {
     function system_admin($default = null)
     {
-        return Context::get(\TgkwAdc\Constants\GlobalConstants::SYS_ADMIN_CONTEXT, $default);
+        return Context::get(GlobalConstants::SYS_ADMIN_CONTEXT, $default);
     }
 }
 
@@ -248,7 +249,6 @@ if (! function_exists('i18nEnumArrConvert')) {
     }
 }
 
-
 /**
  * 构建表格列配置和值映射的通用方法.
  *
@@ -293,7 +293,7 @@ if (! function_exists('i18nEnumArrConvert')) {
 if (! function_exists('buildTableColumnsWithValueMaps')) {
     function buildTableColumnsWithValueMaps(string $listEnumClass, array $valueMapConfig = []): array
     {
-        if (! is_subclass_of($listEnumClass, \TgkwAdc\Annotation\EnumI18nInterface::class)) {
+        if (! is_subclass_of($listEnumClass, EnumI18nInterface::class)) {
             throw new InvalidArgumentException("{$listEnumClass} must implement EnumI18nInterface");
         }
 
@@ -340,7 +340,7 @@ if (! function_exists('filedI18nMap')) {
         foreach ($valueMapConfig as $fieldKey => $config) {
             $enumClass = $valueMapConfig[$fieldKey];
 
-            if (! is_subclass_of($enumClass, \TgkwAdc\Annotation\EnumI18nInterface::class)) {
+            if (! is_subclass_of($enumClass, EnumI18nInterface::class)) {
                 continue;
             }
 
