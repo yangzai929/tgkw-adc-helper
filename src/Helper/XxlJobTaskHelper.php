@@ -13,6 +13,7 @@ namespace TgkwAdc\Helper;
 use Hyperf\Di\Annotation\AnnotationCollector;
 use TgkwAdc\Annotation\XxlJobTask as VendorXxlJobTask;
 use TgkwAdc\Helper\Log\LogHelper;
+use Throwable;
 
 use function class_exists;
 
@@ -63,9 +64,68 @@ class XxlJobTaskHelper
             ]);
         }
 
-        // 预留注册逻辑：如需自动向 xxl-job-admin 注册，可在此实现 HTTP 调用。
         if ($register) {
-            LogHelper::info('xxl-job register skipped (stub). Implement admin registration if needed.');
+            $this->registerJobs($jobs);
+        }
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $jobs
+     */
+    private function registerJobs(array $jobs): void
+    {
+        if ($jobs === []) {
+            LogHelper::info('xxl-job register skipped: no jobs collected');
+            return;
+        }
+
+        if (env('XXL_JOB_AUTO_REGISTER', true) !== true) {
+            LogHelper::info('xxl-job register skipped: XXL_JOB_AUTO_REGISTER=false');
+            return;
+        }
+
+        $username = (string) env('XXL_JOB_ADMIN_USERNAME', '');
+        $password = (string) env('XXL_JOB_ADMIN_PASSWORD', '');
+        if ($username === '' || $password === '') {
+            LogHelper::warning('xxl-job register skipped: configure XXL_JOB_ADMIN_USERNAME and XXL_JOB_ADMIN_PASSWORD');
+            return;
+        }
+
+        $appName = (string) (cfg('xxl_job.app_name') ?? env('XXL_JOB_APP_NAME', ''));
+        if ($appName === '') {
+            LogHelper::warning('xxl-job register skipped: XXL_JOB_APP_NAME is empty');
+            return;
+        }
+
+        $appTitle = (string) env('XXL_JOB_APP_TITLE', $appName);
+        $autoStart = env('XXL_JOB_AUTO_START', false) === true;
+
+        try {
+            $client = new XxlJobAdminClient();
+            $jobGroupId = $client->resolveJobGroupId($appName, $appTitle);
+            LogHelper::info('xxl-job executor group resolved', [
+                'app_name' => $appName,
+                'app_title' => $appTitle,
+                'job_group_id' => $jobGroupId,
+            ]);
+
+            foreach ($jobs as $job) {
+                try {
+                    $client->registerJob($jobGroupId, $job, $autoStart);
+                    LogHelper::info('xxl-job job registered', [
+                        'handler' => $job['jobHandler'],
+                        'cron' => $job['cron'],
+                        'auto_start' => $autoStart,
+                    ]);
+                } catch (Throwable $exception) {
+                    LogHelper::error('xxl-job job register failed', [
+                        'handler' => $job['jobHandler'],
+                        'error' => $exception->getMessage(),
+                    ]);
+                }
+            }
+        } catch (Throwable $exception) {
+            LogHelper::error('xxl-job register failed', ['error' => $exception->getMessage()]);
         }
     }
 }
