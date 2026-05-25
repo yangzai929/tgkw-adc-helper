@@ -128,6 +128,88 @@ class XxlJobAdminClient
         $this->postForm('/jobinfo/start', ['id' => $jobId]);
     }
 
+    public function buildJobPayload(int $jobGroupId, array $job): array
+    {
+        $isV3 = version_compare((string) ($job['xxlVersion'] ?? '3.2.0'), '3.0.0', '>=');
+        $payload = [
+            'jobGroup' => $jobGroupId,
+            'jobDesc' => (string) ($job['jobDesc'] ?? ''),
+            'author' => (string) ($job['author'] ?? '机器注册(adc)'),
+            'alarmEmail' => '',
+            'executorRouteStrategy' => (string) (($job['routeStrategy'] ?? '') ?: 'FIRST'),
+            'executorHandler' => (string) ($job['jobHandler'] ?? ''),
+            'executorParam' => (string) ($job['jobParam'] ?? ''),
+            'executorBlockStrategy' => (string) (($job['blockStrategy'] ?? '') ?: 'SERIAL_EXECUTION'),
+            'executorTimeout' => (int) ($job['jobTimeout'] ?? 0),
+            'executorFailRetryCount' => (int) ($job['jobRetry'] ?? 0),
+            'glueType' => 'BEAN',
+            'glueRemark' => 'GLUE代码初始化',
+            'misfireStrategy' => 'DO_NOTHING',
+        ];
+
+        if ($isV3) {
+            $payload['scheduleType'] = (string) (($job['scheduleType'] ?? '') ?: 'CRON');
+            $payload['scheduleConf'] = (string) ($job['cron'] ?? '');
+        } else {
+            $payload['jobCron'] = (string) ($job['cron'] ?? '');
+        }
+
+        return $payload;
+    }
+
+    public function shouldUpdateExistingJob(array $existing, array $desired): bool
+    {
+        $compareFields = [
+            'jobDesc',
+            'author',
+            'scheduleConf',
+            'jobCron',
+            'executorRouteStrategy',
+            'executorBlockStrategy',
+            'executorParam',
+            'executorTimeout',
+            'executorFailRetryCount',
+        ];
+
+        foreach ($compareFields as $field) {
+            $existingValue = $existing[$field] ?? null;
+            $desiredValue = $desired[$field] ?? null;
+            if ($field === 'scheduleConf' && ($desiredValue === null || $desiredValue === '')) {
+                $desiredValue = $desired['jobCron'] ?? null;
+            }
+            if ((string) $existingValue !== (string) $desiredValue) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function registerJob(int $jobGroupId, array $job, bool $autoStart = false): void
+    {
+        $this->ensureLogin();
+        $payload = $this->buildJobPayload($jobGroupId, $job);
+        $handler = $payload['executorHandler'];
+        $existing = $this->findJob($jobGroupId, $handler);
+
+        if ($existing === null) {
+            $jobId = $this->addJob($payload);
+            if ($autoStart) {
+                $this->startJob($jobId);
+            }
+            return;
+        }
+
+        if ($this->shouldUpdateExistingJob($existing, $payload)) {
+            $payload['id'] = (int) $existing['id'];
+            $this->updateJob($payload);
+        }
+
+        if ($autoStart && (int) ($existing['triggerStatus'] ?? 0) !== 1) {
+            $this->startJob((int) $existing['id']);
+        }
+    }
+
     /**
      * @return array<int, array<string, mixed>>
      */
@@ -329,86 +411,5 @@ class XxlJobAdminClient
         }
 
         return $pairs === [] ? null : implode('; ', $pairs);
-    }
-
-    public function buildJobPayload(int $jobGroupId, array $job): array
-    {
-        $isV3 = version_compare((string) ($job['xxlVersion'] ?? '3.2.0'), '3.0.0', '>=');
-        $payload = [
-            'jobGroup' => $jobGroupId,
-            'jobDesc' => (string) ($job['jobDesc'] ?? ''),
-            'author' => (string) ($job['author'] ?? '机器注册(adc)'),
-            'alarmEmail' => '',
-            'executorRouteStrategy' => (string) (($job['routeStrategy'] ?? '') ?: 'FIRST'),
-            'executorHandler' => (string) ($job['jobHandler'] ?? ''),
-            'executorParam' => (string) ($job['jobParam'] ?? ''),
-            'executorBlockStrategy' => 'SERIAL_EXECUTION',
-            'executorTimeout' => (int) ($job['jobTimeout'] ?? 0),
-            'executorFailRetryCount' => (int) ($job['jobRetry'] ?? 0),
-            'glueType' => 'BEAN',
-            'glueRemark' => 'GLUE代码初始化',
-            'misfireStrategy' => 'DO_NOTHING',
-        ];
-
-        if ($isV3) {
-            $payload['scheduleType'] = (string) (($job['scheduleType'] ?? '') ?: 'CRON');
-            $payload['scheduleConf'] = (string) ($job['cron'] ?? '');
-        } else {
-            $payload['jobCron'] = (string) ($job['cron'] ?? '');
-        }
-
-        return $payload;
-    }
-
-    public function shouldUpdateExistingJob(array $existing, array $desired): bool
-    {
-        $compareFields = [
-            'jobDesc',
-            'author',
-            'scheduleConf',
-            'jobCron',
-            'executorRouteStrategy',
-            'executorParam',
-            'executorTimeout',
-            'executorFailRetryCount',
-        ];
-
-        foreach ($compareFields as $field) {
-            $existingValue = $existing[$field] ?? null;
-            $desiredValue = $desired[$field] ?? null;
-            if ($field === 'scheduleConf' && ($desiredValue === null || $desiredValue === '')) {
-                $desiredValue = $desired['jobCron'] ?? null;
-            }
-            if ((string) $existingValue !== (string) $desiredValue) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public function registerJob(int $jobGroupId, array $job, bool $autoStart = false): void
-    {
-        $this->ensureLogin();
-        $payload = $this->buildJobPayload($jobGroupId, $job);
-        $handler = $payload['executorHandler'];
-        $existing = $this->findJob($jobGroupId, $handler);
-
-        if ($existing === null) {
-            $jobId = $this->addJob($payload);
-            if ($autoStart) {
-                $this->startJob($jobId);
-            }
-            return;
-        }
-
-        if ($this->shouldUpdateExistingJob($existing, $payload)) {
-            $payload['id'] = (int) $existing['id'];
-            $this->updateJob($payload);
-        }
-
-        if ($autoStart && (int) ($existing['triggerStatus'] ?? 0) !== 1) {
-            $this->startJob((int) $existing['id']);
-        }
     }
 }

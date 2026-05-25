@@ -45,6 +45,7 @@ class XxlJobTaskHelper
                 'jobHandler' => $annotation->jobHandler ?: $methodName,
                 'jobParam' => $annotation->jobParam ?? '',
                 'routeStrategy' => $annotation->routeStrategy ?? '',
+                'blockStrategy' => $annotation->blockStrategy ?? '',
                 'jobTimeout' => (int) ($annotation->jobTimeout ?? 0),
                 'jobRetry' => (int) ($annotation->jobRetry ?? 0),
             ];

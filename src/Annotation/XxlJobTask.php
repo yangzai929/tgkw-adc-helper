@@ -14,7 +14,7 @@ use Attribute;
 use Hyperf\Di\Annotation\AbstractAnnotation;
 
 /**
- * 简单示例：#[XxlJobTask(jobDesc: '任务到期提醒', cron: '0/30 * * * * ?', jobHandler: 'taskEndTimeNoticeHandler')]
+ * 简单示例：#[XxlJobTask(jobDesc: '任务到期提醒', cron: '0/30 * * * * ?', jobHandler: 'taskEndTimeNoticeHandler', blockStrategy: 'SERIAL_EXECUTION')]
  * （上面示例30秒一次，规则使用xxl-Job后台的生成，确保正确）.
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
@@ -36,6 +36,8 @@ class XxlJobTask extends AbstractAnnotation
 
     public string $routeStrategy = ''; // 路由策略
 
+    public string $blockStrategy = ''; // 阻塞处理策略：SERIAL_EXECUTION|DISCARD_LATER|COVER_EARLY
+
     public int $jobTimeout = 0; // 任务超时时间，单位秒
 
     public int $jobRetry = 0; // 失败重试次数
@@ -49,6 +51,7 @@ class XxlJobTask extends AbstractAnnotation
         string $jobHandler = '',
         string $jobParam = '',
         string $routeStrategy = '',
+        string $blockStrategy = '',
         int $jobTimeout = 0,
         int $jobRetry = 0,
     ) {
@@ -60,6 +63,7 @@ class XxlJobTask extends AbstractAnnotation
         $this->jobHandler = $jobHandler;
         $this->jobParam = $jobParam;
         $this->routeStrategy = $routeStrategy;
+        $this->blockStrategy = $blockStrategy;
         $this->jobTimeout = $jobTimeout;
         $this->jobRetry = $jobRetry;
     }
