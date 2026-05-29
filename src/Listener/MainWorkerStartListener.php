@@ -340,6 +340,9 @@ class MainWorkerStartListener implements ListenerInterface
         // 格式：全小写，段内用-连词，段间用:分隔
         $pattern = '/^[a-z][a-z0-9]*(-[a-z][a-z0-9]*)*(:[a-z][a-z0-9]*(-[a-z][a-z0-9]*)*)*$/';
 
+        $accessCodes = [];
+        $parentRefs = [];
+
         foreach ($annotations as $item) {
             $annotation = $item['annotation'] ?? null;
             if ($annotation === null) {
@@ -363,6 +366,24 @@ class MainWorkerStartListener implements ListenerInterface
                     . '格式要求：全小写字母，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）';
                 LogHelper::error($errorMsg);
                 echo $errorMsg . PHP_EOL;
+            }
+
+            if (! empty($accessCode)) {
+                $accessCodes[$accessCode] = true;
+            }
+            if (! empty($parentAccessCode)) {
+                $parentRefs[$parentAccessCode] = $action;
+            }
+        }
+
+        // 校验：所有 parentAccessCode 必须存在对应的 accessCode，避免找不到父级
+        foreach ($parentRefs as $parentAccessCode => $action) {
+            if (! isset($accessCodes[$parentAccessCode])) {
+                $errorMsg = "❌ {$type} parentAccessCode 引用校验失败：action[{$action}] parentAccessCode[{$parentAccessCode}] 找不到对应的 accessCode！" . PHP_EOL
+                    . '请确认存在一个 accessCode 与该 parentAccessCode 完全一致。';
+                LogHelper::error($errorMsg);
+                echo $errorMsg . PHP_EOL;
+                Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
             }
         }
     }
