@@ -325,6 +325,9 @@ class MainWorkerStartListener implements ListenerInterface
             }
         } catch (GuzzleException $e) {
             LogHelper::error('rabbit vhost create error：' . $e->getMessage());
+            echo 'rabbit vhost create error：' . $e->getMessage() . PHP_EOL;
+            Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+            return;
         }
     }
 
@@ -354,15 +357,16 @@ class MainWorkerStartListener implements ListenerInterface
             $action = $item['action'] ?? 'unknown';
 
             if (! empty($accessCode) && ! preg_match($pattern, $accessCode)) {
-                $errorMsg = "❌ {$type} accessCode 格式校验失败：action[{$action}] accessCode[{$accessCode}] 不符合规范！" . PHP_EOL
+                $errorMsg = "❌ {$type} accessCode 格式校验失败：action [{$action}] accessCode [{$accessCode}] 不符合规范！" . PHP_EOL
                     . '格式要求：全小写字母，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）';
                 LogHelper::error($errorMsg);
                 echo $errorMsg . PHP_EOL;
                 Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                return;
             }
 
             if (! empty($parentAccessCode) && ! preg_match($pattern, $parentAccessCode)) {
-                $errorMsg = "❌ {$type} parentAccessCode 格式校验失败：action[{$action}] parentAccessCode[{$parentAccessCode}] 不符合规范！" . PHP_EOL
+                $errorMsg = "❌ {$type} parentAccessCode 格式校验失败：action [{$action}] parentAccessCode [{$parentAccessCode}] 不符合规范！" . PHP_EOL
                     . '格式要求：全小写字母，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）';
                 LogHelper::error($errorMsg);
                 echo $errorMsg . PHP_EOL;
@@ -379,11 +383,12 @@ class MainWorkerStartListener implements ListenerInterface
         // 校验：所有 parentAccessCode 必须存在对应的 accessCode，避免找不到父级
         foreach ($parentRefs as $parentAccessCode => $action) {
             if (! isset($accessCodes[$parentAccessCode])) {
-                $errorMsg = "❌ {$type} parentAccessCode 引用校验失败：action[{$action}] parentAccessCode[{$parentAccessCode}] 找不到对应的 accessCode！" . PHP_EOL
+                $errorMsg = "❌ {$type} parentAccessCode 引用校验失败：action [{$action}] parentAccessCode [{$parentAccessCode}] 找不到对应的 accessCode！" . PHP_EOL
                     . '请确认存在一个 accessCode 与该 parentAccessCode 完全一致。';
                 LogHelper::error($errorMsg);
                 echo $errorMsg . PHP_EOL;
                 Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                return;
             }
         }
     }
@@ -402,10 +407,12 @@ class MainWorkerStartListener implements ListenerInterface
             $action = $item['action'] ?? 'unknown';
 
             if (! empty($frontRouteAlias) && ! preg_match($pattern, $frontRouteAlias)) {
-                $errorMsg = "❌ {$type} frontRouteAlias 格式校验失败：action[{$action}] frontRouteAlias[{$frontRouteAlias}] 不符合规范！" . PHP_EOL
+                $errorMsg = "❌ {$type} frontRouteAlias 格式校验失败：action [{$action}] frontRouteAlias [{$frontRouteAlias}] 不符合规范！" . PHP_EOL
                     . '格式要求：全小写字母，多单词用 - 连接，层级用 . 分隔（如 system.business-rules.recycle-rule）';
                 LogHelper::error($errorMsg);
                 echo $errorMsg . PHP_EOL;
+                Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                return;
             }
         }
     }
