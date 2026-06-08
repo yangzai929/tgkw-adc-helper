@@ -155,6 +155,11 @@ class MainWorkerStartListener implements ListenerInterface
     private function syncMenus(string $appName): void
     {
         try {
+            if ($appName === 'idp'){
+                //IDP也用到了此包，其非微服务有内部同步机制，不需要同步菜单
+                return;
+            }
+
             // 同步租户菜单
             $orgMenuData = OrgPermissionHelper::build();
             LogHelper::info('租户菜单数据:' . count($orgMenuData['annotations']) . '条', []);
