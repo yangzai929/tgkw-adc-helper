@@ -267,8 +267,9 @@ class LogHelper
      */
     private static function getConfigLevel(string $group): int|string
     {
-        $configLevel = config("logger.{$group}.handler.constructor.level") ?? 'info';
-
+        $configLevel = config("logger.{$group}.handler.constructor.level")
+            ?? config("logger.{$group}.handlers.0.constructor.level")
+            ?? 'info';
         // 如果是 Monolog 3.x 的 Level 对象
         if ($configLevel instanceof Level) {
             return strtolower($configLevel->name); // 返回 'info'、'debug' 等
