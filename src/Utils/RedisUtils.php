@@ -18,7 +18,7 @@ class RedisUtils
     {
         if (self::$prefix === null) {
             $name = env('APP_NAME') ?: 'app';
-            self::$prefix = rtrim($name, ':_') . ':';
+            self::$prefix = rtrim(trim($name), ':_') . ':';
         }
 
         return self::$prefix;
