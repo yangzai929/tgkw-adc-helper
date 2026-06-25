@@ -23,6 +23,7 @@ use TgkwAdc\JsonRpc\User\UserServiceConsumer;
 use TgkwAdc\JsonRpc\User\UserServiceInterface;
 use TgkwAdc\Listener\MainWorkerStartListener;
 use TgkwAdc\Listener\PackageVersionCheckListener;
+use TgkwAdc\Listener\RabbitMqVhostInitListener;
 
 class ConfigProvider
 {
@@ -38,11 +39,20 @@ class ConfigProvider
             ],
             'commands' => [
             ],
+            'publish' => [
+                [
+                    'id' => 'company_verify',
+                    'description' => '企业核验三方适配器配置',
+                    'source' => __DIR__ . '/../publish/company_verify.php',
+                    'destination' => BASE_PATH . '/config/autoload/company_verify.php',
+                ],
+            ],
             'aspects' => [
                 RpcConsumerServiceAspect::class,
                 RpcProviderServiceAspect::class,
             ],
             'listeners' => [
+                RabbitMqVhostInitListener::class,
                 MainWorkerStartListener::class,
                 PackageVersionCheckListener::class,
             ],

@@ -80,9 +80,6 @@ class MainWorkerStartListener implements ListenerInterface
         // 初始化打开 xxl-job
         $this->initXxlJob();
 
-        // 初始化创建 rabbit-mq vhost
-        $this->createRabbitMqVhost();
-
         LogHelper::info('开始同步菜单');
 
         //        // 同步菜单 - 等待配置从 Nacos 同步完成
@@ -108,46 +105,6 @@ class MainWorkerStartListener implements ListenerInterface
         LogHelper::info('启动完成！（耗时：' . number_format(microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'], 2) . 's）');
     }
 
-    /**
-     * 等待 systemConfig 配置从 Nacos 同步完成.
-     *
-     * @return null|array 配置数组，失败返回 null
-     */
-    private function waitForSystemConfig(): ?array
-    {
-        $maxRetries = (int) env('CONFIG_SYNC_MAX_RETRIES', 10); // 最多重试次数，可通过环境变量配置
-        $retryDelay = (float) env('CONFIG_SYNC_RETRY_DELAY', 0.5); // 重试间隔（秒），可通过环境变量配置
-
-        for ($i = 0; $i < $maxRetries; ++$i) {
-            $configStr = cfg('systemConfig');
-
-            if (! empty($configStr) && is_string($configStr)) {
-                $config = json_decode($configStr, true);
-
-                // 检查 JSON 解析是否成功
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    LogHelper::warning('systemConfig JSON 解析失败: ' . json_last_error_msg() . ' (尝试 ' . ($i + 1) . "/{$maxRetries})");
-                    if ($i < $maxRetries - 1) {
-                        Coroutine::sleep($retryDelay);
-                    }
-                    continue;
-                }
-
-                if (is_array($config) && ! empty($config)) {
-                    LogHelper::info('成功获取 systemConfig 配置 (尝试 ' . ($i + 1) . "/{$maxRetries})");
-                    return $config;
-                }
-            }
-
-            if ($i < $maxRetries - 1) {
-                LogHelper::info('等待 systemConfig 配置同步... (尝试 ' . ($i + 1) . "/{$maxRetries})");
-                Coroutine::sleep($retryDelay);
-            }
-        }
-
-        LogHelper::error("经过 {$maxRetries} 次重试后仍无法获取 systemConfig 配置");
-        return null;
-    }
 
     /**
      * 同步菜单到用户服务和系统服务.
@@ -296,43 +253,6 @@ class MainWorkerStartListener implements ListenerInterface
             LogHelper::info('xxl-job is enable! ✅ ');
             $XxlJobTaskHelper = new XxlJobTaskHelper();
             $XxlJobTaskHelper->build(true);
-        }
-    }
-
-    /**
-     * 自动创建 RabbitMQ vhost.
-     */
-    private function createRabbitMqVhost(): void
-    {
-        LogHelper::info('rabbit-mq vhost init now');
-        if (env('AMQP_VHOST_AUTO_CREATE') !== true || ! env('AMQP_PORT_ADMIN')) {
-            return;
-        }
-
-        $clientHttp = new Client();
-        try {
-            $response = $clientHttp->request(
-                'PUT',
-                sprintf(
-                    'http://%s:%s/api/vhosts/%s',
-                    env('AMQP_HOST'),
-                    env('AMQP_PORT_ADMIN'),
-                    env('AMQP_VHOST', 'adc')
-                ),
-                ['auth' => [env('AMQP_USER'), env('AMQP_PASSWORD')],
-                    'content-type' => 'application/json',
-                ]
-            );
-
-            $mqResultCode = $response->getStatusCode();
-            if ($mqResultCode == 201 || $mqResultCode == 204) {
-                LogHelper::info('rabbit-mq vhost create OK ! ✅ ');
-            }
-        } catch (GuzzleException $e) {
-            LogHelper::error('rabbit vhost create error：' . $e->getMessage());
-            echo 'rabbit vhost create error：' . $e->getMessage() . PHP_EOL;
-            Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
-            return;
         }
     }
 
