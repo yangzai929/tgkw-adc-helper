@@ -90,7 +90,7 @@ if (! function_exists('auth_user')) {
 if (! function_exists('current_tenant_id')) {
     function current_tenant_id($default = null)
     {
-        return Context::get(GlobalConstants::CURRENT_TENANT_ID, $default);
+        return (int) Context::get(GlobalConstants::CURRENT_TENANT_ID, $default);
     }
 }
 
