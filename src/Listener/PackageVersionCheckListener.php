@@ -15,12 +15,22 @@ use Hyperf\Contract\ConfigInterface;
 use Hyperf\Event\Contract\ListenerInterface;
 use Hyperf\Framework\Event\BootApplication;
 use RuntimeException;
+use Swoole\Process;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * 应用启动时校验指定 Composer 包版本.
  */
 class PackageVersionCheckListener implements ListenerInterface
 {
+    /**
+     * The output interface implementation.
+     *
+     * @var OutputInterface
+     */
+    protected $output;
+
     public function __construct(
         private ConfigInterface $config
     ) {
@@ -33,18 +43,25 @@ class PackageVersionCheckListener implements ListenerInterface
 
     public function process(object $event): void
     {
+        $this->output = new ConsoleOutput();
+
         $required = $this->config->get('package_versions', []);
+        $this->output->writeln('<info>[包版本] 开始校验 Composer 包版本：' . count($required) . ' 个</info>');
         foreach ($required as $package => $constraint) {
             $installed = InstalledVersions::getVersion($package);
             if ($installed === null) {
-                throw new RuntimeException("包 [{$package}] 未安装");
+                $errorMsg = "包 [{$package}] 未安装";
+                $this->output->writeln('<error>❌ [包版本] ' . $errorMsg . '</error>');
+                Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
             }
             if (! $this->satisfies($installed, $constraint)) {
-                throw new RuntimeException(
-                    "包 [{$package}] 版本不满足当前服务最新代码要求: 已安装 {$installed}, 需要 {$constraint}，请先更新tgkw-adc/helper到最新版本"
-                );
+                $errorMsg = "包 [{$package}] 版本不满足当前服务最新代码要求: 已安装 {$installed}, 需要 {$constraint}，请先更新tgkw-adc/helper到最新版本";
+                $this->output->writeln('<error>❌ [包版本] ' . $errorMsg . '</error>');
+                Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
             }
+            $this->output->writeln("<info>[包版本] {$package} {$installed} 满足 {$constraint} ✅</info>");
         }
+        $this->output->writeln('<info>[包版本] 校验通过 ✅</info>');
     }
 
     private function satisfies(string $installed, string $constraint): bool
