@@ -63,22 +63,6 @@ interface UserServiceInterface
      */
     public function getAppid(array $param): int;
 
-    /**
-     * 根据联系方式获取或创建用户.
-     *
-     * @param string $contact 联系方式（手机号/邮箱等）
-     * @return array 用户信息
-     */
-    public function getOrCreateUserByContact(string $contact): array;
-
-    /**
-     * 绑定用户与租户关系.
-     *
-     * @param int $userId 用户ID
-     * @param int $tenantId 租户ID
-     * @return array 绑定结果
-     */
-    public function bindUserTenant(int $userId, int $tenantId): array;
 
     /**
      * 获取当前租户下的角色列表.
