@@ -37,7 +37,7 @@ class ShumaiDataProvider implements CompanyProviderInterface
     public function verify(string $companyName, ?string $creditCode = null): bool
     {
         foreach ($this->search($companyName) as $item) {
-            if (trim($item->name) !== trim($companyName)) {
+            if (! $this->equalsName($item->name, $companyName)) {
                 continue;
             }
 
@@ -67,7 +67,11 @@ class ShumaiDataProvider implements CompanyProviderInterface
         if ($list === []) {
             LogHelper::info('shumai empty result', [
                 'keyword' => $keyword,
-                'response_keys' => array_keys($response),
+                'success' => $response['success'] ?? null,
+                'code' => $response['code'] ?? null,
+                'msg' => $response['msg'] ?? null,
+                'data_type' => gettype($response['data'] ?? null),
+                'data_keys' => is_array($response['data'] ?? null) ? array_keys($response['data']) : null,
             ], 'company_verify');
         }
 
@@ -91,7 +95,7 @@ class ShumaiDataProvider implements CompanyProviderInterface
 
         // 优先返回名称完全匹配的结果，否则取第一条候选
         foreach ($results as $item) {
-            if (trim($item->name) === trim($companyName)) {
+            if ($this->equalsName($item->name, $companyName)) {
                 return $item;
             }
         }
@@ -101,11 +105,22 @@ class ShumaiDataProvider implements CompanyProviderInterface
 
     /**
      * 从三方响应中提取企业列表，兼容常见的包裹结构.
+     *
+     * 数脉 fuzzy 成功结构：
+     * { success, code, msg, data: { orderNo, data: [...], paging } }
      */
     private function extractList(array $response): array
     {
-        // 可能的结构：{data: [...]}、{data: {items: [...]}}、{result: [...]}、或直接 [...]
+        // 接口业务失败（如 1003 未查询到数据）直接视为空列表
+        if (isset($response['success']) && $response['success'] === false) {
+            return [];
+        }
+        if (isset($response['code']) && (int) $response['code'] !== 200) {
+            return [];
+        }
+
         $candidates = [
+            $response['data']['data'] ?? null,   // 数脉标准：data.data[]
             $response['data']['items'] ?? null,
             $response['data']['list'] ?? null,
             $response['data'] ?? null,
@@ -128,13 +143,13 @@ class ShumaiDataProvider implements CompanyProviderInterface
     private function mapItem(array $item): CompanyInfo
     {
         return CompanyInfo::fromArray([
-            'name' => $item['name'] ?? $item['companyName'] ?? '',
-            'creditCode' => $item['creditCode'] ?? $item['creditNo'] ?? $item['unifiedCode'] ?? null,
-            'legalPersonName' => $item['legalPersonName'] ?? $item['operName'] ?? $item['legalPerson'] ?? null,
-            'regStatus' => $item['regStatus'] ?? $item['status'] ?? null,
+            'name' => $item['companyName'] ?? $item['name'] ?? '',
+            'creditCode' => $item['creditNo'] ?? $item['creditCode'] ?? $item['unifiedCode'] ?? null,
+            'legalPersonName' => $item['legalPerson'] ?? $item['legalPersonName'] ?? $item['operName'] ?? null,
+            'regStatus' => $item['companyStatus'] ?? $item['regStatus'] ?? $item['status'] ?? null,
             'regCapital' => $item['regCapital'] ?? null,
-            'regNumber' => $item['regNumber'] ?? $item['regNo'] ?? null,
-            'estiblishTime' => $item['estiblishTime'] ?? $item['startDate'] ?? $item['establishTime'] ?? null,
+            'regNumber' => $item['companyCode'] ?? $item['regNumber'] ?? $item['regNo'] ?? null,
+            'estiblishTime' => $item['establishDate'] ?? $item['estiblishTime'] ?? $item['startDate'] ?? null,
             'regLocation' => $item['regLocation'] ?? $item['address'] ?? null,
             'businessScope' => $item['businessScope'] ?? $item['scope'] ?? null,
             'provider' => $this->name(),
@@ -145,5 +160,25 @@ class ShumaiDataProvider implements CompanyProviderInterface
     private function equalsCode(?string $a, string $b): bool
     {
         return $a !== null && strcasecmp(trim($a), trim($b)) === 0;
+    }
+
+    /**
+     * 企业名称比较：忽略中英文括号差异与首尾空白.
+     */
+    private function equalsName(?string $a, string $b): bool
+    {
+        if ($a === null) {
+            return false;
+        }
+
+        return $this->normalizeName($a) === $this->normalizeName($b);
+    }
+
+    private function normalizeName(string $name): string
+    {
+        $name = trim($name);
+        $name = str_replace(['（', '）'], ['(', ')'], $name);
+
+        return $name;
     }
 }
