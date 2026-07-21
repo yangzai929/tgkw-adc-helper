@@ -8,13 +8,13 @@ declare(strict_types=1);
  * @document https://hyperf.wiki
  */
 
-namespace TgkwAdc\CompanyVerify;
+namespace TgkwAdc\Utils\CompanyVerify;
 
-use TgkwAdc\CompanyVerify\Contract\CompanyProviderInterface;
-use TgkwAdc\CompanyVerify\DTO\CompanyInfo;
-use TgkwAdc\CompanyVerify\Exception\CompanyVerifyException;
-use TgkwAdc\CompanyVerify\Provider\ShumaiDataProvider;
-use TgkwAdc\CompanyVerify\Provider\TianYanChaProvider;
+use TgkwAdc\Utils\CompanyVerify\Contract\CompanyProviderInterface;
+use TgkwAdc\Utils\CompanyVerify\DTO\CompanyInfo;
+use TgkwAdc\Utils\CompanyVerify\Exception\CompanyVerifyException;
+use TgkwAdc\Utils\CompanyVerify\Provider\ShumaiDataProvider;
+use TgkwAdc\Utils\CompanyVerify\Provider\TianYanChaProvider;
 use TgkwAdc\Utils\ShumaiData;
 use TgkwAdc\Utils\TianYanChaApi;
 

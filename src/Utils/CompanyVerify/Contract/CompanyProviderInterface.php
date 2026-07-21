@@ -8,9 +8,9 @@ declare(strict_types=1);
  * @document https://hyperf.wiki
  */
 
-namespace TgkwAdc\CompanyVerify\Contract;
+namespace TgkwAdc\Utils\CompanyVerify\Contract;
 
-use TgkwAdc\CompanyVerify\DTO\CompanyInfo;
+use TgkwAdc\Utils\CompanyVerify\DTO\CompanyInfo;
 
 /**
  * 企业信息查询三方服务统一契约.

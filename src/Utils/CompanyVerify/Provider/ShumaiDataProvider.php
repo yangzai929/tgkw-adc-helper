@@ -8,13 +8,13 @@ declare(strict_types=1);
  * @document https://hyperf.wiki
  */
 
-namespace TgkwAdc\CompanyVerify\Provider;
+namespace TgkwAdc\Utils\CompanyVerify\Provider;
 
-use Throwable;
-use TgkwAdc\CompanyVerify\Contract\CompanyProviderInterface;
-use TgkwAdc\CompanyVerify\DTO\CompanyInfo;
-use TgkwAdc\CompanyVerify\Exception\CompanyVerifyException;
+use TgkwAdc\Utils\CompanyVerify\Contract\CompanyProviderInterface;
+use TgkwAdc\Utils\CompanyVerify\DTO\CompanyInfo;
+use TgkwAdc\Utils\CompanyVerify\Exception\CompanyVerifyException;
 use TgkwAdc\Utils\ShumaiData;
+use Throwable;
 
 /**
  * 数脉数据 Provider.

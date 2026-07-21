@@ -8,7 +8,7 @@ declare(strict_types=1);
  * @document https://hyperf.wiki
  */
 
-namespace TgkwAdc\CompanyVerify\DTO;
+namespace TgkwAdc\Utils\CompanyVerify\DTO;
 
 /**
  * 标准企业信息对象.
