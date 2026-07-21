@@ -151,13 +151,35 @@ class CompanyVerifyManager implements CompanyProviderInterface
         $options = (array) ($this->config['providers'][$name] ?? []);
 
         return match ($name) {
-            'tianyancha' => new TianYanChaProvider(
-                new TianYanChaApi((string) ($options['token'] ?? ''))
-            ),
-            'shumai' => new ShumaiDataProvider(
-                new ShumaiData((string) ($options['app_code'] ?? ''))
-            ),
+            'tianyancha' => $this->makeTianYanChaProvider($options),
+            'shumai' => $this->makeShumaiProvider($options),
             default => throw new CompanyVerifyException("不支持的企业核验三方: {$name}"),
         };
+    }
+
+    private function makeTianYanChaProvider(array $options): TianYanChaProvider
+    {
+        $token = (string) ($options['token'] ?? '');
+        if ($token === '') {
+            LogHelper::error('company verify tianyancha token missing', [
+                'key' => 'company_verify_tianyancha_token',
+            ], 'company_verify');
+            throw new CompanyVerifyException('未配置天眼查 Token（systemConfig.company_verify_tianyancha_token）');
+        }
+
+        return new TianYanChaProvider(new TianYanChaApi($token));
+    }
+
+    private function makeShumaiProvider(array $options): ShumaiDataProvider
+    {
+        $appCode = (string) ($options['app_code'] ?? '');
+        if ($appCode === '') {
+            LogHelper::error('company verify shumai app_code missing', [
+                'key' => 'company_verify_shumai_app_code',
+            ], 'company_verify');
+            throw new CompanyVerifyException('未配置数脉 AppCode（systemConfig.company_verify_shumai_app_code）');
+        }
+
+        return new ShumaiDataProvider(new ShumaiData($appCode));
     }
 }

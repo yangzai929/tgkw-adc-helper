@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Utils\CompanyVerify\Provider;
 
+use TgkwAdc\Helper\Log\LogHelper;
 use TgkwAdc\Utils\CompanyVerify\Contract\CompanyProviderInterface;
 use TgkwAdc\Utils\CompanyVerify\DTO\CompanyInfo;
 use TgkwAdc\Utils\CompanyVerify\Exception\CompanyVerifyException;
@@ -55,10 +56,20 @@ class ShumaiDataProvider implements CompanyProviderInterface
         try {
             $response = $this->api->query($keyword);
         } catch (Throwable $e) {
+            LogHelper::error('shumai query failed', [
+                'keyword' => $keyword,
+                'message' => $e->getMessage(),
+            ], 'company_verify');
             throw new CompanyVerifyException('数脉数据查询失败: ' . $e->getMessage(), 0, $e);
         }
 
         $list = $this->extractList($response);
+        if ($list === []) {
+            LogHelper::info('shumai empty result', [
+                'keyword' => $keyword,
+                'response_keys' => array_keys($response),
+            ], 'company_verify');
+        }
 
         $companies = [];
         foreach ($list as $item) {

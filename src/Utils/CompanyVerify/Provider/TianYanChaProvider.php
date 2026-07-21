@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Utils\CompanyVerify\Provider;
 
+use TgkwAdc\Helper\Log\LogHelper;
 use TgkwAdc\Utils\CompanyVerify\Contract\CompanyProviderInterface;
 use TgkwAdc\Utils\CompanyVerify\DTO\CompanyInfo;
 use TgkwAdc\Utils\CompanyVerify\Exception\CompanyVerifyException;
@@ -59,16 +60,28 @@ class TianYanChaProvider implements CompanyProviderInterface
         try {
             $response = $this->api->getCompanyBaseInfo($companyName);
         } catch (Throwable $e) {
+            LogHelper::error('tianyancha query failed', [
+                'company_name' => $companyName,
+                'message' => $e->getMessage(),
+            ], 'company_verify');
             throw new CompanyVerifyException('天眼查查询失败: ' . $e->getMessage(), 0, $e);
         }
 
         // error_code 为 0 表示成功，其余（如 300006 余额不足、查无结果）视为无数据
         if (($response['error_code'] ?? -1) !== 0) {
+            LogHelper::warning('tianyancha response not success', [
+                'company_name' => $companyName,
+                'error_code' => $response['error_code'] ?? null,
+                'reason' => $response['reason'] ?? null,
+            ], 'company_verify');
             return null;
         }
 
         $result = $response['result'] ?? null;
         if (! is_array($result) || empty($result)) {
+            LogHelper::info('tianyancha empty result', [
+                'company_name' => $companyName,
+            ], 'company_verify');
             return null;
         }
 
