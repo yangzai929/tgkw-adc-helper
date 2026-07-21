@@ -40,12 +40,6 @@ class ConfigProvider
             'commands' => [
             ],
             'publish' => [
-                [
-                    'id' => 'company_verify',
-                    'description' => '企业核验三方适配器配置',
-                    'source' => __DIR__ . '/../publish/company_verify.php',
-                    'destination' => BASE_PATH . '/config/autoload/company_verify.php',
-                ],
             ],
             'aspects' => [
                 RpcConsumerServiceAspect::class,

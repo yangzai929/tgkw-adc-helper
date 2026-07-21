@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace TgkwAdc\Utils\CompanyVerify;
 
+use TgkwAdc\Helper\Log\LogHelper;
 use TgkwAdc\Utils\CompanyVerify\Contract\CompanyProviderInterface;
 use TgkwAdc\Utils\CompanyVerify\DTO\CompanyInfo;
 use TgkwAdc\Utils\CompanyVerify\Exception\CompanyVerifyException;
@@ -21,9 +22,14 @@ use TgkwAdc\Utils\TianYanChaApi;
 /**
  * 企业核验管理器（工厂 + 门面）.
  *
- * 业务系统统一通过本类查询，默认 provider 由配置 company_verify.default 决定，
+ * 业务系统统一通过本类查询，默认 provider 由 systemConfig.company_verify_driver 决定，
  * 也可在调用时显式指定。新增三方时只需实现 {@see CompanyProviderInterface}
  * 并在 {@see CompanyVerifyManager::makeProvider()} 中注册即可。
+ *
+ * systemConfig 字段：
+ *   - company_verify_driver              默认三方：tianyancha | shumai
+ *   - company_verify_tianyancha_token    天眼查 Token
+ *   - company_verify_shumai_app_code     数脉 AppCode
  *
  * 用法：
  *   $m = new CompanyVerifyManager();
@@ -40,12 +46,12 @@ class CompanyVerifyManager implements CompanyProviderInterface
     private array $providers = [];
 
     /**
-     * @param null|array $config 配置数组，为空时从 company_verify 配置读取
+     * @param null|array $config 配置数组，为空时从 systemConfig 读取
      */
     public function __construct(private ?array $config = null)
     {
         if ($this->config === null) {
-            $this->config = (array) (function_exists('cfg') ? cfg('company_verify', []) : []);
+            $this->config = self::buildConfigFromSystem();
         }
     }
 
@@ -88,10 +94,53 @@ class CompanyVerifyManager implements CompanyProviderInterface
     {
         $default = $this->config['default'] ?? null;
         if (empty($default)) {
-            throw new CompanyVerifyException('未配置默认企业核验三方（company_verify.default）');
+            throw new CompanyVerifyException('未配置默认企业核验三方（systemConfig.company_verify_driver）');
         }
 
         return (string) $default;
+    }
+
+    /**
+     * 从 systemConfig 组装内部配置结构.
+     */
+    private static function buildConfigFromSystem(): array
+    {
+        $systemConfig = self::getSystemConfig();
+
+        return [
+            'default' => (string) ($systemConfig['company_verify_driver'] ?? 'tianyancha'),
+            'providers' => [
+                'tianyancha' => [
+                    'token' => (string) ($systemConfig['company_verify_tianyancha_token'] ?? ''),
+                ],
+                'shumai' => [
+                    'app_code' => (string) ($systemConfig['company_verify_shumai_app_code'] ?? ''),
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * 统一获取并解析系统配置.
+     */
+    private static function getSystemConfig(): array
+    {
+        $systemConfig = function_exists('cfg') ? cfg('systemConfig') : null;
+
+        if (is_array($systemConfig)) {
+            return $systemConfig;
+        }
+
+        if (is_string($systemConfig)) {
+            $decoded = json_decode($systemConfig, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        LogHelper::error('systemConfig invalid', ['value' => $systemConfig], 'company_verify');
+
+        return [];
     }
 
     /**

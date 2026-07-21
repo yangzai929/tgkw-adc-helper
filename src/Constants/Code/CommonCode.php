@@ -154,4 +154,13 @@ enum CommonCode: int implements EnumCodeInterface
         ]
     )]
     case VERIFICATION_FAILED = 40;
+
+    #[EnumCode(
+        msg: 'OCR识别失败',
+        i18nMsg: [
+            'en' => 'OCR recognition failed',
+            'zh_hk' => 'OCR識別失敗',
+        ]
+    )]
+    case OCR_FAILED = 41;
 }
