@@ -8,12 +8,12 @@ declare(strict_types=1);
  * @document https://hyperf.wiki
  */
 
-namespace TgkwAdc\Utils\CompanyVerify\Provider;
+namespace TgkwAdc\Helper\CompanyVerify\Provider;
 
+use TgkwAdc\Helper\CompanyVerify\Contract\CompanyProviderInterface;
+use TgkwAdc\Helper\CompanyVerify\DTO\CompanyInfo;
+use TgkwAdc\Helper\CompanyVerify\Exception\CompanyVerifyException;
 use TgkwAdc\Helper\Log\LogHelper;
-use TgkwAdc\Utils\CompanyVerify\Contract\CompanyProviderInterface;
-use TgkwAdc\Utils\CompanyVerify\DTO\CompanyInfo;
-use TgkwAdc\Utils\CompanyVerify\Exception\CompanyVerifyException;
 use TgkwAdc\Utils\TianYanChaApi;
 use Throwable;
 

@@ -8,7 +8,7 @@ declare(strict_types=1);
  * @document https://hyperf.wiki
  */
 
-namespace TgkwAdc\CompanyVerify\Exception;
+namespace TgkwAdc\Helper\CompanyVerify\Exception;
 
 use RuntimeException;
 
