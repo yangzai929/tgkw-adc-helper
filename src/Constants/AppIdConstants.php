@@ -28,5 +28,21 @@ class AppIdConstants
 
     public const WORK_ORDER = 1009; // 工单中心
 
-    public const WORK_TASK = 1010; // 工单中心
+    public const WORK_TASK = 1010; // 任务中心
+
+    public const REVISIT = 1011; // 回访中心
+
+    public const KNOWLEDGE = 1012; // 知识库
+
+    public const CALENDAR = 1013; // 日历中心
+
+    public const CONTRACT = 1014; // 合同管理
+
+    public const MERCHANT = 1015; // 商家中心
+
+    public const SCM = 1016;  // 供应链管理
+
+    public const SAS = 1017;  // 分账系统
+
+    public const REQ = 1018;  // 需求中心
 }
