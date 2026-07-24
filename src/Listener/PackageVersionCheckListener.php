@@ -13,14 +13,13 @@ namespace TgkwAdc\Listener;
 use Composer\InstalledVersions;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Event\Contract\ListenerInterface;
-use Hyperf\Framework\Event\BootApplication;
-use RuntimeException;
+use Hyperf\Framework\Event\BeforeMainServerStart;
 use Swoole\Process;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * 应用启动时校验指定 Composer 包版本.
+ * 服务启动时校验指定 Composer 包版本（不在执行 Command 时触发）.
  */
 class PackageVersionCheckListener implements ListenerInterface
 {
@@ -38,7 +37,7 @@ class PackageVersionCheckListener implements ListenerInterface
 
     public function listen(): array
     {
-        return [BootApplication::class];
+        return [BeforeMainServerStart::class];
     }
 
     public function process(object $event): void
@@ -50,18 +49,30 @@ class PackageVersionCheckListener implements ListenerInterface
         foreach ($required as $package => $constraint) {
             $installed = InstalledVersions::getVersion($package);
             if ($installed === null) {
-                $errorMsg = "包 [{$package}] 未安装";
-                $this->output->writeln('<error>❌ [包版本] ' . $errorMsg . '</error>');
+                $errorMsg = "[包版本] 校验失败：包 [{$package}] 未安装";
+                $this->writeError($errorMsg);
                 Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                return;
             }
             if (! $this->satisfies($installed, $constraint)) {
-                $errorMsg = "包 [{$package}] 版本不满足当前服务最新代码要求: 已安装 {$installed}, 需要 {$constraint}，请先更新tgkw-adc/helper到最新版本";
-                $this->output->writeln('<error>❌ [包版本] ' . $errorMsg . '</error>');
+                $errorMsg = "[包版本] 校验失败：包 [{$package}] 版本不满足当前服务最新代码要求" . PHP_EOL
+                    . "  已安装：{$installed}" . PHP_EOL
+                    . "  需要：{$constraint}" . PHP_EOL
+                    . '  请先更新 tgkw-adc/helper 到最新版本';
+                $this->writeError($errorMsg);
                 Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                return;
             }
-            $this->output->writeln("<info>[包版本] {$package} {$installed} 满足 {$constraint} ✅</info>");
+            $this->output->writeln("<info>[包版本] {$package} {$installed} 满足 {$constraint}</info>");
         }
-        $this->output->writeln('<info>[包版本] 校验通过 ✅</info>');
+        $this->output->writeln('<info>[包版本] 校验通过</info>');
+    }
+
+    private function writeError(string $message): void
+    {
+        foreach (preg_split("/\r\n|\n|\r/", $message) ?: [$message] as $line) {
+            $this->output->writeln('<fg=red;options=bold>' . $line . '</>');
+        }
     }
 
     private function satisfies(string $installed, string $constraint): bool

@@ -189,7 +189,7 @@ class MainWorkerStartListener implements ListenerInterface
             LogHelper::error('菜单同步失败: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
-            $this->output->writeln('<error>[菜单] 菜单同步失败：' . $e->getMessage() . '</error>');
+            $this->writeError('[菜单] 菜单同步失败：' . $e->getMessage());
             // 不抛出异常，避免影响服务启动
         }
     }
@@ -214,28 +214,20 @@ class MainWorkerStartListener implements ListenerInterface
             foreach ($consumerClasses as $item) {
                 // 校验Queue：必须以服务名开头（系统级可例外，可选）
                 if (! empty($item->queue) && stripos($item->queue, $currentServiceName) !== 0 && stripos($item->queue, 'system') !== 0) {
-                    $errorMsg = "❌ MQ Consumer 校验失败：Queue[{$item->queue}] 必须以服务名[{$currentServiceName}]或系统前缀[system]开头";
-                    LogHelper::error($errorMsg);
-                    echo $errorMsg . PHP_EOL;
-                    $this->output->writeln('<error>' . $errorMsg . '</error>');
-                    Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                    $this->failAndKill("[MQ] Consumer 校验失败：Queue [{$item->queue}] 必须以服务名 [{$currentServiceName}] 或系统前缀 [system] 开头");
                     return;
                 }
 
                 // 校验Exchange：必须以服务名开头（系统级可例外）
                 if (! empty($item->exchange) && stripos($item->exchange, $currentServiceName) !== 0 && stripos($item->exchange, 'system') !== 0) {
-                    $errorMsg = "❌ MQ Consumer 校验失败：Exchange[{$item->exchange}] 必须以服务名[{$currentServiceName}]或系统前缀[system]开头";
-                    LogHelper::error($errorMsg);
-                    echo $errorMsg . PHP_EOL;
-                    $this->output->writeln('<error>' . $errorMsg . '</error>');
-                    Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                    $this->failAndKill("[MQ] Consumer 校验失败：Exchange [{$item->exchange}] 必须以服务名 [{$currentServiceName}] 或系统前缀 [system] 开头");
                     return;
                 }
 
                 $localConsumerExchanges[] = $item->exchange; // 记录本服务消费的Exchange
             }
         }
-        $this->output->writeln('<info>[MQ] Consumer 校验通过 ✅</info>');
+        $this->output->writeln('<info>[MQ] Consumer 校验通过</info>');
 
         // 2. Producer校验：仅限制Exchange命名规范（非空、不非法），不限制归属（允许投递到其他服务的Exchange）
         $producerClasses = AnnotationCollector::getClassesByAnnotation(Producer::class);
@@ -244,38 +236,28 @@ class MainWorkerStartListener implements ListenerInterface
             foreach ($producerClasses as $item) {
                 // 基础校验：Exchange不能为空（避免无效配置）
                 if (empty($item->exchange)) {
-                    $errorMsg = '❌ MQ Producer 校验失败：Exchange 不能为空';
-                    LogHelper::error($errorMsg);
-                    echo $errorMsg . PHP_EOL;
-                    $this->output->writeln('<error>' . $errorMsg . '</error>');
-                    Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                    $this->failAndKill('[MQ] Producer 校验失败：Exchange 不能为空');
                     return;
                 }
 
                 // Exchange必须包含服务名（目标服务名或当前服务名），避免无意义命名
                 if (! preg_match('/^[a-zA-Z0-9.-]+$/', $item->exchange) || substr_count($item->exchange, '.') < 1) {
-                    $errorMsg = "❌ MQ Producer 校验失败：Exchange[{$item->exchange}] 命名不规范！" . PHP_EOL
-                        . '允许字符：字母（a-z/A-Z）、数字（0-9）、点（.）、连字符（-）' . PHP_EOL
-                        . '建议格式：[服务名].[功能模块].[操作]（如 orderService.order.createOrder）';
-                    LogHelper::error($errorMsg);
-                    echo $errorMsg . PHP_EOL;
-                    $this->output->writeln('<error>' . $errorMsg . '</error>');
-                    Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                    $this->failAndKill(
+                        "[MQ] Producer 校验失败：Exchange [{$item->exchange}] 命名不规范" . PHP_EOL
+                        . '  允许字符：字母（a-z/A-Z）、数字（0-9）、点（.）、连字符（-）' . PHP_EOL
+                        . '  建议格式：[服务名].[功能模块].[操作]（如 orderService.order.createOrder）'
+                    );
                     return;
                 }
 
                 // 保留原逻辑：若Producer投递的Exchange是本服务Consumer正在使用的，需符合Consumer的规则（避免本服务Exchange命名冲突）
                 if (in_array($item->exchange, $localConsumerExchanges) && stripos($item->exchange, $currentServiceName) !== 0 && stripos($item->exchange, 'system') !== 0) {
-                    $errorMsg = "❌ MQ Producer 校验失败：Exchange[{$item->exchange}] 是本服务Consumer使用的，必须以服务名[{$currentServiceName}]或系统前缀[system]开头";
-                    LogHelper::error($errorMsg);
-                    echo $errorMsg . PHP_EOL;
-                    $this->output->writeln('<error>' . $errorMsg . '</error>');
-                    Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                    $this->failAndKill("[MQ] Producer 校验失败：Exchange [{$item->exchange}] 是本服务 Consumer 使用的，必须以服务名 [{$currentServiceName}] 或系统前缀 [system] 开头");
                     return;
                 }
             }
         }
-        $this->output->writeln('<info>[MQ] Producer 校验通过 ✅</info>');
+        $this->output->writeln('<info>[MQ] Producer 校验通过</info>');
     }
 
     /**
@@ -296,8 +278,10 @@ class MainWorkerStartListener implements ListenerInterface
     }
 
     /**
-     * 校验菜单注解中的 accessCode 和 parentAccessCode 格式.
-     * 格式要求：全小写，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）.
+     * 校验菜单注解中的 accessCode / parentAccessCode / grantedByAccessCode.
+     * - accessCode、parentAccessCode 格式：全小写，多单词用 - 连接，层级用 : 分隔
+     * - parentAccessCode 必须能匹配到本服务某条 accessCode
+     * - grantedByAccessCode 必须引用本服务已存在的 accessCode，且不得引用「仍有子集」的权限
      *
      * @param array $annotations 菜单注解列表
      * @param string $type 注解类型（OrgPermission / SystemPermission）
@@ -309,6 +293,10 @@ class MainWorkerStartListener implements ListenerInterface
 
         $accessCodes = [];
         $parentRefs = [];
+        /** @var array<string, true> 被其他节点引用为 parentAccessCode 的短码 = 有子集的权限 */
+        $codesWithChildren = [];
+        /** @var list<array{action: string, code: string}> */
+        $grantedRefs = [];
 
         foreach ($annotations as $item) {
             $annotation = $item['annotation'] ?? null;
@@ -316,48 +304,113 @@ class MainWorkerStartListener implements ListenerInterface
                 continue;
             }
 
-            $accessCode = $annotation->accessCode ?? '';
-            $parentAccessCode = $annotation->parentAccessCode ?? '';
+            $accessCode = (string) ($annotation->accessCode ?? '');
+            $parentAccessCode = (string) ($annotation->parentAccessCode ?? '');
             $action = $item['action'] ?? 'unknown';
 
-            if (! empty($accessCode) && ! preg_match($pattern, $accessCode)) {
-                $errorMsg = "❌ {$type} accessCode 格式校验失败：action [{$action}] accessCode [{$accessCode}] 不符合规范！" . PHP_EOL
-                    . '格式要求：全小写字母，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）';
-                LogHelper::error($errorMsg);
-                echo $errorMsg . PHP_EOL;
-                $this->output->writeln('<error>' . $errorMsg . '</error>');
-                Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+            if ($accessCode !== '' && ! preg_match($pattern, $accessCode)) {
+                $this->failAndKill(
+                    "[菜单] {$type} accessCode 格式校验失败" . PHP_EOL
+                    . "  action：{$action}" . PHP_EOL
+                    . "  accessCode：{$accessCode}" . PHP_EOL
+                    . '  格式要求：全小写字母，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）'
+                );
                 return;
             }
 
-            if (! empty($parentAccessCode) && ! preg_match($pattern, $parentAccessCode)) {
-                $errorMsg = "❌ {$type} parentAccessCode 格式校验失败：action [{$action}] parentAccessCode [{$parentAccessCode}] 不符合规范！" . PHP_EOL
-                    . '格式要求：全小写字母，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）';
-                LogHelper::error($errorMsg);
-                echo $errorMsg . PHP_EOL;
-                $this->output->writeln('<error>' . $errorMsg . '</error>');
+            if ($parentAccessCode !== '' && ! preg_match($pattern, $parentAccessCode)) {
+                $this->writeError(
+                    "[菜单] {$type} parentAccessCode 格式校验失败" . PHP_EOL
+                    . "  action：{$action}" . PHP_EOL
+                    . "  parentAccessCode：{$parentAccessCode}" . PHP_EOL
+                    . '  格式要求：全小写字母，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）'
+                );
             }
 
-            if (! empty($accessCode)) {
+            if ($accessCode !== '') {
                 $accessCodes[$accessCode] = true;
             }
-            if (! empty($parentAccessCode)) {
+            if ($parentAccessCode !== '') {
                 $parentRefs[$parentAccessCode] = $action;
+                $codesWithChildren[$parentAccessCode] = true;
+            }
+
+            $grantedByAccessCode = $annotation->grantedByAccessCode ?? [];
+            if (! is_array($grantedByAccessCode)) {
+                continue;
+            }
+            foreach ($grantedByAccessCode as $grantedCode) {
+                $grantedCode = trim((string) $grantedCode);
+                if ($grantedCode === '') {
+                    continue;
+                }
+                $grantedRefs[] = ['action' => (string) $action, 'code' => $grantedCode];
             }
         }
 
         // 校验：所有 parentAccessCode 必须存在对应的 accessCode，避免找不到父级
         foreach ($parentRefs as $parentAccessCode => $action) {
             if (! isset($accessCodes[$parentAccessCode])) {
-                $errorMsg = "❌ {$type} parentAccessCode 引用校验失败：action [{$action}] parentAccessCode [{$parentAccessCode}] 找不到对应的 accessCode！" . PHP_EOL
-                    . '请确认存在一个 accessCode 与该 parentAccessCode 完全一致。';
-                LogHelper::error($errorMsg);
-                echo $errorMsg . PHP_EOL;
-                $this->output->writeln('<error>' . $errorMsg . '</error>');
-                Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                $this->failAndKill(
+                    "[菜单] {$type} parentAccessCode 引用校验失败" . PHP_EOL
+                    . "  action：{$action}" . PHP_EOL
+                    . "  parentAccessCode：{$parentAccessCode}" . PHP_EOL
+                    . '  请确认存在一个 accessCode 与该 parentAccessCode 完全一致'
+                );
                 return;
             }
         }
+
+        // 校验：grantedByAccessCode 必须是本服务已声明的正确权限短码，且不能挂「有子集」的权限
+        foreach ($grantedRefs as $ref) {
+            $grantedCode = $ref['code'];
+            $action = $ref['action'];
+
+            if (! preg_match($pattern, $grantedCode)) {
+                $this->failAndKill(
+                    "[菜单] {$type} grantedByAccessCode 格式校验失败" . PHP_EOL
+                    . "  action：{$action}" . PHP_EOL
+                    . "  grantedByAccessCode：{$grantedCode}" . PHP_EOL
+                    . '  格式要求：全小写字母，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）'
+                );
+                return;
+            }
+
+            if (! isset($accessCodes[$grantedCode])) {
+                $this->failAndKill(
+                    "[菜单] {$type} grantedByAccessCode 引用校验失败" . PHP_EOL
+                    . "  action：{$action}" . PHP_EOL
+                    . "  grantedByAccessCode：{$grantedCode}" . PHP_EOL
+                    . '  找不到对应的 accessCode，请确认本服务存在与该短码完全一致的权限码'
+                );
+                return;
+            }
+
+            if (isset($codesWithChildren[$grantedCode])) {
+                $this->failAndKill(
+                    "[菜单] {$type} grantedByAccessCode 引用校验失败" . PHP_EOL
+                    . "  action：{$action}" . PHP_EOL
+                    . "  grantedByAccessCode：{$grantedCode}" . PHP_EOL
+                    . '  该短码指向仍有子集的权限；用户只要拥有任意子集即默认拥有该父级' . PHP_EOL
+                    . '  请改为引用叶子权限短码（通常为具体 BUTTON），多入口时显式列出多个叶子短码'
+                );
+                return;
+            }
+        }
+    }
+
+    private function writeError(string $message): void
+    {
+        foreach (preg_split("/\r\n|\n|\r/", $message) ?: [$message] as $line) {
+            $this->output->writeln('<fg=red;options=bold>' . $line . '</>');
+        }
+    }
+
+    private function failAndKill(string $errorMsg): void
+    {
+        LogHelper::error($errorMsg);
+        $this->writeError($errorMsg);
+        Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
     }
 
     private function validateMenuFrontRouteAlias(array $annotations, string $type): void
@@ -374,12 +427,12 @@ class MainWorkerStartListener implements ListenerInterface
             $action = $item['action'] ?? 'unknown';
 
             if (! empty($frontRouteAlias) && ! preg_match($pattern, $frontRouteAlias)) {
-                $errorMsg = "❌ {$type} frontRouteAlias 格式校验失败：action [{$action}] frontRouteAlias [{$frontRouteAlias}] 不符合规范！" . PHP_EOL
-                    . '格式要求：全小写字母，多单词用 - 连接，层级用 . 分隔（如 system.business-rules.recycle-rule）';
-                LogHelper::error($errorMsg);
-                echo $errorMsg . PHP_EOL;
-                $this->output->writeln('<error>' . $errorMsg . '</error>');
-                Process::kill((int) file_get_contents(\Hyperf\Config\config('server.settings.pid_file')));
+                $this->failAndKill(
+                    "[菜单] {$type} frontRouteAlias 格式校验失败" . PHP_EOL
+                    . "  action：{$action}" . PHP_EOL
+                    . "  frontRouteAlias：{$frontRouteAlias}" . PHP_EOL
+                    . '  格式要求：全小写字母，多单词用 - 连接，层级用 . 分隔（如 system.business-rules.recycle-rule）'
+                );
                 return;
             }
         }
