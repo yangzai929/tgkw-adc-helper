@@ -15,7 +15,10 @@ interface PublicServiceInterface
     public function handleFileUsed(string $object_key, int $is_used);
 
     public function handleFilesUsed(array $object_keys, int $is_used);
+
     public function getFileInfo(string $object_key);
+
+    public function getFilesInfo(array $object_keys);
 
     public function getRegion(array $params);
 }
