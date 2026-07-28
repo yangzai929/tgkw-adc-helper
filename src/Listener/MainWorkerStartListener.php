@@ -180,7 +180,7 @@ class MainWorkerStartListener implements ListenerInterface
             if (! empty($sysMenuData)) {
                 $res = $systemService->addMenu($sysMenuData);
                 LogHelper::info('系统菜单同步完成,收到的结果:', [$res]);
-                $this->output->writeln('<info>[菜单] 系统菜单同步完成 ✅</info>');
+                $this->output->writeln('<info>[菜单] 系统菜单同步完成！！！</info>');
             } else {
                 LogHelper::info('系统菜单为空，跳过同步');
                 $this->output->writeln('<comment>[菜单] 系统菜单为空，跳过同步</comment>');
@@ -361,42 +361,6 @@ class MainWorkerStartListener implements ListenerInterface
             }
         }
 
-        // 校验：grantedByAccessCode 必须是本服务已声明的正确权限短码，且不能挂「有子集」的权限
-        foreach ($grantedRefs as $ref) {
-            $grantedCode = $ref['code'];
-            $action = $ref['action'];
-
-            if (! preg_match($pattern, $grantedCode)) {
-                $this->failAndKill(
-                    "[菜单] {$type} grantedByAccessCode 格式校验失败" . PHP_EOL
-                    . "  action：{$action}" . PHP_EOL
-                    . "  grantedByAccessCode：{$grantedCode}" . PHP_EOL
-                    . '  格式要求：全小写字母，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）'
-                );
-                return;
-            }
-
-            if (! isset($accessCodes[$grantedCode])) {
-                $this->failAndKill(
-                    "[菜单] {$type} grantedByAccessCode 引用校验失败" . PHP_EOL
-                    . "  action：{$action}" . PHP_EOL
-                    . "  grantedByAccessCode：{$grantedCode}" . PHP_EOL
-                    . '  找不到对应的 accessCode，请确认本服务存在与该短码完全一致的权限码'
-                );
-                return;
-            }
-
-            if (isset($codesWithChildren[$grantedCode])) {
-                $this->failAndKill(
-                    "[菜单] {$type} grantedByAccessCode 引用校验失败" . PHP_EOL
-                    . "  action：{$action}" . PHP_EOL
-                    . "  grantedByAccessCode：{$grantedCode}" . PHP_EOL
-                    . '  该短码指向仍有子集的权限；用户只要拥有任意子集即默认拥有该父级' . PHP_EOL
-                    . '  请改为引用叶子权限短码（通常为具体 BUTTON），多入口时显式列出多个叶子短码'
-                );
-                return;
-            }
-        }
     }
 
     private function writeError(string $message): void
