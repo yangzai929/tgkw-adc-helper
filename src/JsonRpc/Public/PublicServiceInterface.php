@@ -21,4 +21,8 @@ interface PublicServiceInterface
     public function getFilesInfo(array $object_keys);
 
     public function getRegion(array $params);
+
+    public function ocr(array $params);
+
+    public function companyVerify(array $params);
 }
