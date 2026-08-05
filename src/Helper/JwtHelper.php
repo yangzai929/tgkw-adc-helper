@@ -25,6 +25,8 @@ class JwtHelper
 
     private static ?string $org_key = null;
 
+    private static ?string $user_key = null;
+
     private static ?string $alg = 'HS256';
 
     public static function init(): void
@@ -44,6 +46,15 @@ class JwtHelper
             }
 
             self::$org_key = $systemCfg['JWT_ORG_KEY'];
+        }
+
+        if (self::$user_key == null) {
+            $systemCfg = cfg('systemConfig');
+            if (is_string($systemCfg)) {
+                $systemCfg = json_decode($systemCfg, true);
+            }
+
+            self::$user_key = $systemCfg['JWT_USER_KEY'] ?? $systemCfg['JWT_ORG_KEY'];
         }
     }
 
@@ -102,10 +113,11 @@ class JwtHelper
     {
         self::init();
 
-        $token_key = GlobalConstants::ORG_TOKEN_KEY;
-        if ($type == GlobalConstants::SYS_TOKEN_TYPE) {
-            $token_key = GlobalConstants::SYS_TOKEN_KEY;
-        }
+        $token_key = match ($type) {
+            GlobalConstants::SYS_TOKEN_TYPE => GlobalConstants::SYS_TOKEN_KEY,
+            GlobalConstants::USER_TOKEN_TYPE => GlobalConstants::USER_TOKEN_KEY,
+            default => GlobalConstants::ORG_TOKEN_KEY,
+        };
 
         $authHeader = $request->getHeaderLine($token_key);
         if (! $authHeader) {
@@ -120,10 +132,10 @@ class JwtHelper
 
     private static function getKey(string $type): string
     {
-        if ($type == GlobalConstants::SYS_TOKEN_TYPE) {
-            return self::$sys_key;
-        }
-
-        return self::$org_key;
+        return match ($type) {
+            GlobalConstants::SYS_TOKEN_TYPE => self::$sys_key,
+            GlobalConstants::USER_TOKEN_TYPE => self::$user_key,
+            default => self::$org_key,
+        };
     }
 }

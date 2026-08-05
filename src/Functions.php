@@ -87,6 +87,13 @@ if (! function_exists('auth_user')) {
     }
 }
 
+if (! function_exists('base_auth_user')) {
+    function base_auth_user($default = null)
+    {
+        return Context::get(GlobalConstants::BASE_USER_CONTEXT, $default);
+    }
+}
+
 if (! function_exists('current_tenant_id')) {
     function current_tenant_id($default = null)
     {
