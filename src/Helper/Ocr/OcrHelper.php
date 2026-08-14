@@ -216,6 +216,9 @@ class OcrHelper
             'accessKeyId' => $systemConfig['aliyun_ocr_access_key_id'],
             'accessKeySecret' => $systemConfig['aliyun_ocr_access_key_secret'],
         ]);
+
+        LogHelper::info('aliyun ocr config', [$credConfig], self::LOG_CHANNEL);
+
         $credential = new Credential($credConfig);
         $config = new OpenApiConfig([
             'credential' => $credential,
