@@ -17,6 +17,8 @@ use Ramsey\Uuid\Uuid;
 use TgkwAdc\Constants\GlobalConstants;
 use TgkwAdc\FileSystem\FilesystemFactory;
 use TgkwAdc\Helper\Log\LogHelper;
+use function Hyperf\Stringable\str;
+use function PHPUnit\Framework\stringContains;
 
 class FileSystemHelper
 {
@@ -71,6 +73,9 @@ class FileSystemHelper
 
     public function genFileTempUrl($object_key, string $expiresAt = '+1 days')
     {
+        if (filter_var($object_key, FILTER_VALIDATE_URL)) {
+            return $object_key;
+        }
         $file_url = $this->adapter->temporaryUrl($object_key, new DateTime($expiresAt));
 
         return str_replace('http://', 'https://', $file_url);
