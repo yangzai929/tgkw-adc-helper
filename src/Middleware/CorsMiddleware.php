@@ -37,7 +37,7 @@ class CorsMiddleware implements MiddlewareInterface
      * 允许的请求头.
      * @var string
      */
-    protected $allowHeaders = 'DNT,Keep-Alive,User-Agent,Cache-Control,Content-Type,Authorization,Language,Org-Token,Current-Tenant-Id,System-token';
+    protected $allowHeaders = 'DNT,Keep-Alive,User-Agent,Cache-Control,Content-Type,Authorization,Language,Org-Token,Current-Tenant-Id,System-token,User-token';
 
     /**
      * 预检请求的缓存时间（秒）.
