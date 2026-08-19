@@ -24,6 +24,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use RuntimeException;
 use TgkwAdc\Constants\GlobalConstants;
 use TgkwAdc\Exception\TokenException;
+use TgkwAdc\Helper\JwtHelper;
 use TgkwAdc\Middleware\BaseUserMiddleware;
 
 /**
@@ -82,7 +83,38 @@ class BaseUserMiddlewareLoggingTest extends TestCase
         $this->assertSame(substr(hash('sha256', 'access-token'), 0, 16), $middleware->authLogs[0]['context']['token_fingerprint']);
         $this->assertSame(GlobalConstants::ORG_TOKEN_REDIS_KEY_PREFIX . 'access-token', $redis->requestedKey);
         $this->assertSame(GlobalConstants::USER_TOKEN_KEY, $middleware->authLogs[0]['context']['token_header']);
+        $this->assertFalse($middleware->authLogs[0]['context']['jwt_valid']);
+        $this->assertNotEmpty($middleware->authLogs[0]['context']['jwt_exception_class']);
         $this->assertArrayNotHasKey('token', $middleware->authLogs[0]['context']);
+    }
+
+    public function testCacheMissLogsValidatedBusinessTokenClaims(): void
+    {
+        $redis = new BaseUserMiddlewareLoggingTestRedis(null);
+        $this->setTestContainer($redis);
+        $token = JwtHelper::createToken(GlobalConstants::ORG_TOKEN_TYPE, [
+            'id' => 923,
+            'session_id' => 'idp-session-001',
+            'idp_sub' => 'idp-user-923',
+            'token_type' => 'access',
+        ], 3600);
+        $middleware = new TestableBaseUserMiddleware();
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $handler->expects($this->never())->method('handle');
+        $request = new ServerRequest('GET', '/v1/user/test', [
+            'Org-Token' => $token,
+        ]);
+
+        $response = $middleware->process($request, $handler);
+
+        $this->assertSame(401, $response->getStatusCode());
+        $this->assertTrue($middleware->authLogs[0]['context']['jwt_valid']);
+        $this->assertSame(923, $middleware->authLogs[0]['context']['jwt_user_id']);
+        $this->assertSame('idp-session-001', $middleware->authLogs[0]['context']['jwt_session_id']);
+        $this->assertSame('idp-user-923', $middleware->authLogs[0]['context']['jwt_idp_sub']);
+        $this->assertSame('access', $middleware->authLogs[0]['context']['jwt_token_type']);
+        $this->assertIsInt($middleware->authLogs[0]['context']['jwt_iat']);
+        $this->assertIsInt($middleware->authLogs[0]['context']['jwt_exp']);
     }
 
     public function testOrgTokenLoadsBusinessTokenCacheWithoutTenantAuthorization(): void

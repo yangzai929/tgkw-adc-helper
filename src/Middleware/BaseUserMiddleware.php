@@ -76,7 +76,8 @@ class BaseUserMiddleware implements MiddlewareInterface
                         'stage' => 'redis',
                         'reason' => 'token_cache_miss',
                         'redis_key_prefix' => GlobalConstants::ORG_TOKEN_REDIS_KEY_PREFIX,
-                    ]
+                    ],
+                    $this->buildJwtDiagnostic($token)
                 ));
                 return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN, httpStatusCode: 401);
             }
@@ -196,6 +197,42 @@ class BaseUserMiddleware implements MiddlewareInterface
     private function tokenFingerprint(?string $token): ?string
     {
         return empty($token) ? null : substr(hash('sha256', $token), 0, 16);
+    }
+
+    private function buildJwtDiagnostic(string $token): array
+    {
+        $diagnostic = [
+            'jwt_valid' => false,
+            'jwt_user_id' => null,
+            'jwt_session_id' => null,
+            'jwt_idp_sub' => null,
+            'jwt_token_type' => null,
+            'jwt_iat' => null,
+            'jwt_exp' => null,
+            'jwt_exception_class' => null,
+            'jwt_exception_code' => null,
+            'jwt_exception_message' => null,
+        ];
+
+        try {
+            $payload = JwtHelper::getPayloadFromToken($token, GlobalConstants::ORG_TOKEN_TYPE);
+
+            return array_merge($diagnostic, [
+                'jwt_valid' => true,
+                'jwt_user_id' => $this->resolveUserId($payload),
+                'jwt_session_id' => $payload['session_id'] ?? null,
+                'jwt_idp_sub' => $payload['idp_sub'] ?? null,
+                'jwt_token_type' => $payload['token_type'] ?? null,
+                'jwt_iat' => $payload['iat'] ?? null,
+                'jwt_exp' => $payload['exp'] ?? null,
+            ]);
+        } catch (Throwable $e) {
+            return array_merge($diagnostic, [
+                'jwt_exception_class' => $e::class,
+                'jwt_exception_code' => $e->getCode(),
+                'jwt_exception_message' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function resolveUserId(array $user): int|string|null
