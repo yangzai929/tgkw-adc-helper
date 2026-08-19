@@ -17,6 +17,7 @@ use Firebase\JWT\Key;
 use Psr\Http\Message\ServerRequestInterface;
 use TgkwAdc\Constants\Code\AuthCode;
 use TgkwAdc\Constants\GlobalConstants;
+use TgkwAdc\Exception\BusinessException;
 use TgkwAdc\Exception\TokenException;
 use TgkwAdc\Helper\Log\LogHelper;
 
@@ -89,7 +90,7 @@ class JwtHelper
             if ($e instanceof ExpiredException) {
                 throw new TokenException(AuthCode::EXPIRED_TOKEN);
             }
-            throw new TokenException(AuthCode::NEED_LOGIN);
+            throw new TokenException(AuthCode::INVALID_TOKEN);
         }
     }
 
@@ -103,9 +104,11 @@ class JwtHelper
             return self::parseToken($type, token: $token);
         } catch (ExpiredException $e) {
             // 单独处理过期异常
-            throw new TokenException(AuthCode::EXPIRED_TOKEN);
+            LogHelper::info('Token 已过期');
+            throw new BusinessException(AuthCode::EXPIRED_TOKEN);
         } catch (Exception $e) {
             // 所有其他异常统一视为无效令牌
+            LogHelper::info('Token 无效');
             throw new TokenException(AuthCode::NEED_LOGIN);
         }
     }
@@ -122,7 +125,7 @@ class JwtHelper
 
         $authHeader = $request->getHeaderLine($token_key);
         if (! $authHeader) {
-            LogHelper::info('Token is missing');
+
             throw new TokenException(AuthCode::NEED_LOGIN);
         }
         if (! str_starts_with($authHeader, 'Bearer ')) {
