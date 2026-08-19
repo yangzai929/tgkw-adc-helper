@@ -18,6 +18,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TgkwAdc\Constants\Code\AuthCode;
 use TgkwAdc\Constants\GlobalConstants;
 use TgkwAdc\Exception\TokenException;
+use TgkwAdc\Helper\Log\LogHelper;
 
 class JwtHelper
 {
@@ -121,6 +122,7 @@ class JwtHelper
 
         $authHeader = $request->getHeaderLine($token_key);
         if (! $authHeader) {
+            LogHelper::info('Token is missing');
             throw new TokenException(AuthCode::NEED_LOGIN);
         }
         if (! str_starts_with($authHeader, 'Bearer ')) {
