@@ -30,11 +30,18 @@ class BaseUserMiddleware implements MiddlewareInterface
 {
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        $tokenType = $request->getHeaderLine(GlobalConstants::ORG_TOKEN_KEY) !== ''
+            ? GlobalConstants::ORG_TOKEN_TYPE
+            : GlobalConstants::USER_TOKEN_TYPE;
+        $tokenHeader = $tokenType === GlobalConstants::ORG_TOKEN_TYPE
+            ? GlobalConstants::ORG_TOKEN_KEY
+            : GlobalConstants::USER_TOKEN_KEY;
+
         try {
-            $token = JwtHelper::getTokenFromRequest($request, GlobalConstants::USER_TOKEN_TYPE);
+            $token = JwtHelper::getTokenFromRequest($request, $tokenType);
         } catch (Throwable $e) {
             $this->logAuth('warning', '基础用户认证失败：Token 提取异常', array_merge(
-                $this->buildAuthLogContext($request),
+                $this->buildAuthLogContext($request, tokenHeader: $tokenHeader),
                 [
                     'stage' => 'token_extraction',
                     'reason' => 'token_header_missing_or_invalid',
@@ -48,7 +55,7 @@ class BaseUserMiddleware implements MiddlewareInterface
 
         if (empty($token)) {
             $this->logAuth('warning', '基础用户认证失败：Token 为空', array_merge(
-                $this->buildAuthLogContext($request, $token),
+                $this->buildAuthLogContext($request, $token, $tokenHeader),
                 [
                     'stage' => 'token_extraction',
                     'reason' => 'empty_token',
@@ -61,14 +68,14 @@ class BaseUserMiddleware implements MiddlewareInterface
         $authSource = 'redis';
 
         try {
-            $payload = redis()->get(GlobalConstants::USER_TOKEN_REDIS_KEY_PREFIX . $token);
+            $payload = redis()->get(GlobalConstants::ORG_TOKEN_REDIS_KEY_PREFIX . $token);
             if (! $payload) {
                 $this->logAuth('warning', '基础用户认证失败：Redis 中未找到 Token', array_merge(
-                    $this->buildAuthLogContext($request, $token),
+                    $this->buildAuthLogContext($request, $token, $tokenHeader),
                     [
                         'stage' => 'redis',
                         'reason' => 'token_cache_miss',
-                        'redis_key_prefix' => GlobalConstants::USER_TOKEN_REDIS_KEY_PREFIX,
+                        'redis_key_prefix' => GlobalConstants::ORG_TOKEN_REDIS_KEY_PREFIX,
                     ]
                 ));
                 return ApiResponseHelper::error(code: AuthCode::NEED_LOGIN, httpStatusCode: 401);
@@ -77,7 +84,7 @@ class BaseUserMiddleware implements MiddlewareInterface
 
             if (! is_array($user)) {
                 $this->logAuth('warning', '基础用户认证异常：Redis 用户数据不是有效 JSON 对象', array_merge(
-                    $this->buildAuthLogContext($request, $token),
+                    $this->buildAuthLogContext($request, $token, $tokenHeader),
                     [
                         'stage' => 'redis_payload',
                         'reason' => 'invalid_cached_user_payload',
@@ -89,7 +96,7 @@ class BaseUserMiddleware implements MiddlewareInterface
             }
         } catch (Exception $e) {
             $this->logAuth('warning', '基础用户认证降级：Redis 访问异常', array_merge(
-                $this->buildAuthLogContext($request, $token),
+                $this->buildAuthLogContext($request, $token, $tokenHeader),
                 [
                     'stage' => 'redis',
                     'reason' => 'redis_unavailable',
@@ -100,10 +107,10 @@ class BaseUserMiddleware implements MiddlewareInterface
             ));
 
             try {
-                $jwtPayload = JwtHelper::getPayloadFromToken($token, GlobalConstants::USER_TOKEN_TYPE);
+                $jwtPayload = JwtHelper::getPayloadFromToken($token, GlobalConstants::ORG_TOKEN_TYPE);
             } catch (Throwable $jwtException) {
                 $this->logAuth('warning', '基础用户认证失败：离线 JWT 校验失败', array_merge(
-                    $this->buildAuthLogContext($request, $token),
+                    $this->buildAuthLogContext($request, $token, $tokenHeader),
                     [
                         'stage' => 'jwt_fallback',
                         'reason' => 'jwt_validation_failed',
@@ -118,7 +125,7 @@ class BaseUserMiddleware implements MiddlewareInterface
 
             if (empty($jwtPayload)) {
                 $this->logAuth('warning', '基础用户认证失败：离线 JWT Payload 为空', array_merge(
-                    $this->buildAuthLogContext($request, $token),
+                    $this->buildAuthLogContext($request, $token, $tokenHeader),
                     [
                         'stage' => 'jwt_fallback',
                         'reason' => 'empty_jwt_payload',
@@ -143,7 +150,7 @@ class BaseUserMiddleware implements MiddlewareInterface
         Context::set(GlobalConstants::BASE_USER_CONTEXT, $user);
 
         $this->logAuth('info', '基础用户认证成功', array_merge(
-            $this->buildAuthLogContext($request, $token),
+            $this->buildAuthLogContext($request, $token, $tokenHeader),
             [
                 'stage' => 'completed',
                 'reason' => 'authenticated',
@@ -166,8 +173,11 @@ class BaseUserMiddleware implements MiddlewareInterface
         };
     }
 
-    private function buildAuthLogContext(ServerRequestInterface $request, ?string $token = null): array
-    {
+    private function buildAuthLogContext(
+        ServerRequestInterface $request,
+        ?string $token = null,
+        string $tokenHeader = GlobalConstants::USER_TOKEN_KEY
+    ): array {
         return [
             'trace_id' => Context::get('trace_id'),
             'client_ip' => Context::get('client_ip')
@@ -176,8 +186,8 @@ class BaseUserMiddleware implements MiddlewareInterface
             'method' => $request->getMethod(),
             'path' => $request->getUri()->getPath(),
             'user_agent' => Context::get('user_agent') ?: $request->getHeaderLine('User-Agent'),
-            'token_header' => GlobalConstants::USER_TOKEN_KEY,
-            'token_header_present' => $request->getHeaderLine(GlobalConstants::USER_TOKEN_KEY) !== '',
+            'token_header' => $tokenHeader,
+            'token_header_present' => $request->getHeaderLine($tokenHeader) !== '',
             'token_length' => $token === null ? 0 : strlen($token),
             'token_fingerprint' => $this->tokenFingerprint($token),
         ];

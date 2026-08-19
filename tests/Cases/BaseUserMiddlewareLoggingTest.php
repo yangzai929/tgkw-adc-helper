@@ -58,7 +58,8 @@ class BaseUserMiddlewareLoggingTest extends TestCase
 
     public function testCacheMissLogsTheAuthenticationRejectionReason(): void
     {
-        $this->setTestContainer(new BaseUserMiddlewareLoggingTestRedis(null));
+        $redis = new BaseUserMiddlewareLoggingTestRedis(null);
+        $this->setTestContainer($redis);
         $middleware = new TestableBaseUserMiddleware();
         $handler = $this->createMock(RequestHandlerInterface::class);
         $handler->expects($this->never())->method('handle');
@@ -79,7 +80,35 @@ class BaseUserMiddlewareLoggingTest extends TestCase
         $this->assertSame('trace-test-001', $middleware->authLogs[0]['context']['trace_id']);
         $this->assertSame('203.0.113.10', $middleware->authLogs[0]['context']['client_ip']);
         $this->assertSame(substr(hash('sha256', 'access-token'), 0, 16), $middleware->authLogs[0]['context']['token_fingerprint']);
+        $this->assertSame(GlobalConstants::ORG_TOKEN_REDIS_KEY_PREFIX . 'access-token', $redis->requestedKey);
+        $this->assertSame(GlobalConstants::USER_TOKEN_KEY, $middleware->authLogs[0]['context']['token_header']);
         $this->assertArrayNotHasKey('token', $middleware->authLogs[0]['context']);
+    }
+
+    public function testOrgTokenLoadsBusinessTokenCacheWithoutTenantAuthorization(): void
+    {
+        $redis = new BaseUserMiddlewareLoggingTestRedis(json_encode([
+            'id' => 923,
+            'current_tenant_id' => '1001',
+        ], JSON_THROW_ON_ERROR));
+        $this->setTestContainer($redis);
+        $middleware = new TestableBaseUserMiddleware();
+        $expected = new Response(200);
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $handler->expects($this->once())->method('handle')->willReturn($expected);
+        $request = new ServerRequest('GET', '/v1/user/test', [
+            'Org-Token' => 'Bearer access-token',
+        ]);
+
+        $actual = $middleware->process($request, $handler);
+
+        $this->assertSame($expected, $actual);
+        $this->assertSame(GlobalConstants::ORG_TOKEN_REDIS_KEY_PREFIX . 'access-token', $redis->requestedKey);
+        $this->assertSame([
+            'id' => 923,
+            'current_tenant_id' => '1001',
+        ], Context::get(GlobalConstants::BASE_USER_CONTEXT));
+        $this->assertSame(GlobalConstants::ORG_TOKEN_KEY, $middleware->authLogs[0]['context']['token_header']);
     }
 
     public function testMissingHeaderLogsBeforeTheTokenExceptionIsRethrown(): void
@@ -197,12 +226,16 @@ final class BaseUserMiddlewareLoggingTestRedisFactory
 
 final class BaseUserMiddlewareLoggingTestRedis
 {
+    public ?string $requestedKey = null;
+
     public function __construct(private readonly ?string $payload)
     {
     }
 
     public function get(string $key): ?string
     {
+        $this->requestedKey = $key;
+
         return $this->payload;
     }
 }
