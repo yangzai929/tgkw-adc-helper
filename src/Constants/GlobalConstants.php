@@ -35,9 +35,6 @@ class GlobalConstants
     public const USER_TOKEN_TYPE = 'USER'; // 基础用户令牌类型标识（仅认证，不校验租户/权限）
 
     public const USER_TOKEN_KEY = 'User-Token'; // 基础用户令牌标识
-
-    public const USER_TOKEN_REDIS_KEY_PREFIX = 'base_user_token:token:'; // 基础用户令牌缓存标识
-
     public const BASE_USER_CONTEXT = 'baseUser'; // 协程上下文中基础用户（仅 token 认证）
 
     public const SYS_ADMIN_CONTEXT = 'nowSystemAdmin'; // 协程上下文中系统总后台当前管理员
