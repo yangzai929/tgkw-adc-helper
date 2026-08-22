@@ -240,8 +240,9 @@ class HttpAccessLogMiddleware implements MiddlewareInterface
 
     private function exceptionStatusCode(Throwable $exception): int
     {
-        if (is_callable([$exception, 'getStatusCode'])) {
-            $statusCode = (int) $exception->getStatusCode();
+        $statusCodeGetter = [$exception, 'getStatusCode'];
+        if (is_callable($statusCodeGetter)) {
+            $statusCode = (int) call_user_func($statusCodeGetter);
             if ($statusCode >= 400 && $statusCode <= 599) {
                 return $statusCode;
             }
