@@ -156,6 +156,51 @@ final class HttpAccessLogMiddlewareTest extends AbstractTestCase
         self::assertCount(1, $middleware->publishErrors);
     }
 
+    public function testNonPublicStatusCodeMethodDoesNotReplaceBusinessException(): void
+    {
+        $middleware = new TestableHttpAccessLogMiddleware();
+        $original = new ExceptionWithProtectedStatusCode('business failed');
+
+        try {
+            $middleware->process(
+                $this->request('POST', '/v1/failing'),
+                new CallbackRequestHandler(static function () use ($original): never {
+                    throw $original;
+                })
+            );
+            self::fail('Expected the original exception.');
+        } catch (ExceptionWithProtectedStatusCode $exception) {
+            self::assertSame($original, $exception);
+        }
+    }
+
+    public function testConfigurationAndFailureLoggerErrorsNeverChangeBusinessResponse(): void
+    {
+        $response = new Response(200);
+        $configurationFailure = new TestableHttpAccessLogMiddleware();
+        $configurationFailure->shouldPublishFailure = new RuntimeException('configuration unavailable');
+
+        self::assertSame(
+            $response,
+            $configurationFailure->process(
+                $this->request('GET', '/v1/items'),
+                new CallbackRequestHandler(static fn (): ResponseInterface => $response)
+            )
+        );
+
+        $loggingFailure = new TestableHttpAccessLogMiddleware();
+        $loggingFailure->publishFailure = new RuntimeException('rabbit unavailable');
+        $loggingFailure->logFailure = new RuntimeException('logger unavailable');
+
+        self::assertSame(
+            $response,
+            $loggingFailure->process(
+                $this->request('GET', '/v1/items'),
+                new CallbackRequestHandler(static fn (): ResponseInterface => $response)
+            )
+        );
+    }
+
     public function testAnonymousAndSystemRequestsUseCorrectActorContext(): void
     {
         $anonymous = new TestableHttpAccessLogMiddleware();
@@ -225,9 +270,22 @@ final class TestableHttpAccessLogMiddleware extends HttpAccessLogMiddleware
 
     public ?Throwable $publishFailure = null;
 
+    public ?Throwable $shouldPublishFailure = null;
+
+    public ?Throwable $logFailure = null;
+
     public function __construct()
     {
         parent::__construct(new EmptyContainer());
+    }
+
+    protected function shouldPublish(ServerRequestInterface $request): bool
+    {
+        if ($this->shouldPublishFailure) {
+            throw $this->shouldPublishFailure;
+        }
+
+        return parent::shouldPublish($request);
     }
 
     protected function publish(array $payload): void
@@ -241,6 +299,10 @@ final class TestableHttpAccessLogMiddleware extends HttpAccessLogMiddleware
 
     protected function logPublishFailure(Throwable $exception, array $context): void
     {
+        if ($this->logFailure) {
+            throw $this->logFailure;
+        }
+
         $this->publishErrors[] = $exception;
     }
 }
@@ -267,5 +329,13 @@ final class EmptyContainer implements ContainerInterface
     public function has(string $id): bool
     {
         return false;
+    }
+}
+
+final class ExceptionWithProtectedStatusCode extends RuntimeException
+{
+    protected function getStatusCode(): int
+    {
+        return 418;
     }
 }

@@ -62,8 +62,8 @@ class HttpAccessLogMiddleware implements MiddlewareInterface
 
             throw $exception;
         } finally {
-            if ($this->shouldPublish($request)) {
-                try {
+            try {
+                if ($this->shouldPublish($request)) {
                     $payload = $this->buildPayload(
                         $request,
                         $response,
@@ -72,12 +72,16 @@ class HttpAccessLogMiddleware implements MiddlewareInterface
                         $startedAt
                     );
                     $this->publish($payload);
-                } catch (Throwable $exception) {
+                }
+            } catch (Throwable $exception) {
+                try {
                     $this->logPublishFailure($exception, [
                         'method' => $request->getMethod(),
                         'router' => $request->getUri()->getPath(),
                         'trace_id' => (string) Context::get('trace_id', ''),
                     ]);
+                } catch (Throwable) {
+                    // 访问日志链路不得改变业务响应或覆盖原始业务异常。
                 }
             }
         }
@@ -236,7 +240,7 @@ class HttpAccessLogMiddleware implements MiddlewareInterface
 
     private function exceptionStatusCode(Throwable $exception): int
     {
-        if (method_exists($exception, 'getStatusCode')) {
+        if (is_callable([$exception, 'getStatusCode'])) {
             $statusCode = (int) $exception->getStatusCode();
             if ($statusCode >= 400 && $statusCode <= 599) {
                 return $statusCode;
