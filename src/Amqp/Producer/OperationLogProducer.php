@@ -16,7 +16,7 @@ use Hyperf\Amqp\Message\ProducerMessage;
 #[Producer(exchange: 'log.operationLog', routingKey: 'log.operationLog')]
 class OperationLogProducer extends ProducerMessage
 {
-    public function __construct($data)
+    public function __construct(array $data)
     {
         $this->payload = $data;
     }

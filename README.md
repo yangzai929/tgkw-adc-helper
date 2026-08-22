@@ -183,6 +183,49 @@ use TgkwAdc\Middleware\TraceIdMiddleware;
 // 自动为每个请求生成唯一追踪ID
 ```
 
+#### HTTP 访问日志中间件
+
+```php
+use TgkwAdc\Middleware\HttpAccessLogMiddleware;
+
+return [
+    'http' => [
+        HttpAccessLogMiddleware::class,
+    ],
+];
+```
+
+`HttpAccessLogMiddleware` 记录轻量 HTTP 访问元数据，用于接口调用追踪和故障排查，不承担业务数据修改前后值审计职责。旧的 `OperationLogMiddleware` 类名继续保留并继承该实现，现有服务可以平滑升级。
+
+默认记录：
+
+- 事件 ID、发生时间、服务和应用；
+- 租户和操作者基本信息；
+- HTTP Method、Path、状态码和耗时；
+- Trace ID、Request ID、IP、User-Agent；
+- 响应大小和异常类型。
+
+默认不记录：
+
+- 完整请求正文；
+- 完整响应正文；
+- Token、密码、验证码或完整用户上下文。
+
+可在业务服务中覆盖过滤规则：
+
+```php
+// config/autoload/access_log.php
+return [
+    'enabled' => true,
+    'exclude_routes' => [
+        'GET /health',
+        'GET /favicon.ico',
+        'POST */query',
+    ],
+];
+```
+
+访问日志发布失败只记录最小错误上下文，不会改变已经成功的业务响应，也不会覆盖原始业务异常。需要记录业务实体前后值的操作应使用独立的 Transactional Outbox 审计框架。
 ### 资源类
 
 #### 基础资源类
