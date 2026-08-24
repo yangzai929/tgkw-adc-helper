@@ -150,14 +150,14 @@ interface HrServiceInterface
     public function getEmployeeByUsersPeriScope(int $userId, int $tenantId, array $scopeData): array;
 
     /**
-     * 根据用户ID和租户ID获取该用户所属公司/子公司为根的完整组织树.
+     * 根据用户ID和租户ID获取该用户所属公司/子公司为根的组织树（仅含公司、子公司，不含部门）.
      *
-     * 先定位用户所在部门，再向上找到最近的公司或子公司组织，返回以该组织为根的完整部门树。
+     * 先定位用户所在部门，再向上找到最近的公司或子公司组织，返回以该组织为根、其子树内全部公司/子公司节点。
      * 找不到用户、部门或所属公司时返回空数组。
      *
      * @param int $userId 用户ID
      * @param int $tenantId 租户ID
-     * @return array 以公司/子公司为根的组织树
+     * @return array 公司/子公司组织列表
      */
     public function getCompanyOrgTreeByUserId(int $userId, int $tenantId): array;
 

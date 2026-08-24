@@ -154,9 +154,9 @@ class HrServiceConsumer extends AbstractServiceClient implements HrServiceInterf
     }
 
     /**
-     * 根据用户ID和租户ID获取该用户所属公司/子公司为根的完整组织树.
+     * 根据用户ID和租户ID获取该用户所属公司/子公司为根的组织树（仅含公司、子公司，不含部门）.
      *
-     * @return array 以公司/子公司为根的组织树，找不到时返回空数组
+     * @return array 公司/子公司组织列表，找不到时返回空数组
      */
     public function getCompanyOrgTreeByUserId(int $userId, int $tenantId): array
     {
