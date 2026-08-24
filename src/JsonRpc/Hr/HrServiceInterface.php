@@ -148,4 +148,28 @@ interface HrServiceInterface
      * @return array 员工信息
      */
     public function getEmployeeByUsersPeriScope(int $userId, int $tenantId, array $scopeData): array;
+
+    /**
+     * 根据用户ID和租户ID获取该用户所属公司/子公司为根的完整组织树.
+     *
+     * 先定位用户所在部门，再向上找到最近的公司或子公司组织，返回以该组织为根的完整部门树。
+     * 找不到用户、部门或所属公司时返回空数组。
+     *
+     * @param int $userId 用户ID
+     * @param int $tenantId 租户ID
+     * @return array 以公司/子公司为根的组织树
+     */
+    public function getCompanyOrgTreeByUserId(int $userId, int $tenantId): array;
+
+    /**
+     * 根据负责人用户ID和租户ID获取其管辖范围内的在职员工 user_id 列表.
+     *
+     * 管辖范围：该用户作为部门负责人（含次要负责人）的部门及其全部下级部门。
+     * 无管辖部门或无在职员工时返回空数组。
+     *
+     * @param int $userId 负责人用户ID
+     * @param int $tenantId 租户ID
+     * @return array 在职员工 user_id 列表
+     */
+    public function getManagedUserIdsByLeaderUserId(int $userId, int $tenantId): array;
 }

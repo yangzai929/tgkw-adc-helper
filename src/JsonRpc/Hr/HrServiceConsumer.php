@@ -152,4 +152,26 @@ class HrServiceConsumer extends AbstractServiceClient implements HrServiceInterf
     {
         return $this->__request(__FUNCTION__, compact('userId', 'tenantId', 'scopeData'));
     }
+
+    /**
+     * 根据用户ID和租户ID获取该用户所属公司/子公司为根的完整组织树.
+     *
+     * @return array 以公司/子公司为根的组织树，找不到时返回空数组
+     */
+    public function getCompanyOrgTreeByUserId(int $userId, int $tenantId): array
+    {
+        return $this->__request(__FUNCTION__, compact('userId', 'tenantId'));
+    }
+
+    /**
+     * 根据负责人用户ID和租户ID获取其管辖范围内的在职员工 user_id 列表.
+     *
+     * 管辖范围：该用户作为部门负责人（含次要负责人）的部门及其全部下级部门。
+     *
+     * @return array 在职员工 user_id 列表，无数据时返回空数组
+     */
+    public function getManagedUserIdsByLeaderUserId(int $userId, int $tenantId): array
+    {
+        return $this->__request(__FUNCTION__, compact('userId', 'tenantId'));
+    }
 }
