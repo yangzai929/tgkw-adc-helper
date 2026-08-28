@@ -31,6 +31,7 @@ use AlibabaCloud\Tea\Exception\TeaError;
 use Darabonba\OpenApi\Models\Config as OpenApiConfig;
 use Exception;
 use GuzzleHttp\Psr7\Utils;
+use Psr\Http\Message\StreamInterface;
 use TgkwAdc\Constants\Code\CommonCode;
 use TgkwAdc\Exception\BusinessException;
 use TgkwAdc\Helper\Log\LogHelper;
@@ -247,7 +248,7 @@ class OcrHelper
     }
 
     /**
-     * @return array{url?: string, body?: \Psr\Http\Message\StreamInterface}
+     * @return array{url?: string, body?: StreamInterface}
      */
     private static function resolveImage(string $image): array
     {

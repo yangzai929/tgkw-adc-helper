@@ -37,10 +37,8 @@ class ConfigProvider
                 PublicServiceInterface::class => PublicServiceConsumer::class,
                 HrServiceInterface::class => HrServiceConsumer::class,
             ],
-            'commands' => [
-            ],
-            'publish' => [
-            ],
+            'commands' => [],
+            'publish' => [],
             'aspects' => [
                 RpcConsumerServiceAspect::class,
                 RpcProviderServiceAspect::class,

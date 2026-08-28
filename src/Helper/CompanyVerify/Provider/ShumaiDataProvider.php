@@ -177,8 +177,6 @@ class ShumaiDataProvider implements CompanyProviderInterface
     private function normalizeName(string $name): string
     {
         $name = trim($name);
-        $name = str_replace(['（', '）'], ['(', ')'], $name);
-
-        return $name;
+        return str_replace(['（', '）'], ['(', ')'], $name);
     }
 }

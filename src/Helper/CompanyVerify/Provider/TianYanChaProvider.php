@@ -102,6 +102,7 @@ class TianYanChaProvider implements CompanyProviderInterface
 
     /**
      * 天眼查时间字段为毫秒时间戳，转为 Y-m-d 字符串.
+     * @param mixed $value
      */
     private function formatTime($value): ?string
     {

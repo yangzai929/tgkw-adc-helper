@@ -11,8 +11,6 @@ declare(strict_types=1);
 namespace TgkwAdc\Listener;
 
 use Exception;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 use Hyperf\Amqp\Annotation\Consumer;
 use Hyperf\Amqp\Annotation\Producer;
 use Hyperf\Context\ApplicationContext;
@@ -21,28 +19,27 @@ use Hyperf\Di\Annotation\AnnotationCollector;
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
 use Hyperf\Framework\Event\MainWorkerStart;
-use Swoole\Coroutine;
 use Swoole\Process;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 use TgkwAdc\Helper\Log\LogHelper;
 use TgkwAdc\Helper\OrgPermissionHelper;
 use TgkwAdc\Helper\SystemPermissionHelper;
 use TgkwAdc\Helper\XxlJobTaskHelper;
 use TgkwAdc\JsonRpc\Public\SystemServiceInterface;
 use TgkwAdc\JsonRpc\User\UserServiceInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 #[Listener(priority: 0)]
 class MainWorkerStartListener implements ListenerInterface
 {
-
     /**
      * The output interface implementation.
      *
      * @var OutputInterface
      */
     protected $output;
+
     public function listen(): array
     {
         return [
@@ -120,15 +117,14 @@ class MainWorkerStartListener implements ListenerInterface
         $this->output->writeln("<info>[启动] 启动完成！（耗时：{$elapsed}s）</info>");
     }
 
-
     /**
      * 同步菜单到用户服务和系统服务.
      */
     private function syncMenus(string $appName): void
     {
         try {
-            if ($appName === 'idp'){
-                //IDP也用到了此包，其非微服务有内部同步机制，不需要同步菜单
+            if ($appName === 'idp') {
+                // IDP也用到了此包，其非微服务有内部同步机制，不需要同步菜单
                 $this->output->writeln('<comment>[菜单] 当前服务为 idp，跳过菜单同步</comment>');
                 return;
             }
@@ -281,7 +277,7 @@ class MainWorkerStartListener implements ListenerInterface
      * 校验菜单注解中的 accessCode / parentAccessCode / grantedByAccessCode.
      * - accessCode、parentAccessCode 格式：全小写，多单词用 - 连接，层级用 : 分隔
      * - parentAccessCode 必须能匹配到本服务某条 accessCode
-     * - grantedByAccessCode 必须引用本服务已存在的 accessCode，且不得引用「仍有子集」的权限
+     * - grantedByAccessCode 必须引用本服务已存在的 accessCode，且不得引用「仍有子集」的权限.
      *
      * @param array $annotations 菜单注解列表
      * @param string $type 注解类型（OrgPermission / SystemPermission）
@@ -362,41 +358,41 @@ class MainWorkerStartListener implements ListenerInterface
         }
 
         // 校验：grantedByAccessCode 必须是本服务已声明的正确权限短码，且不能挂「有子集」的权限
-//        foreach ($grantedRefs as $ref) {
-//            $grantedCode = $ref['code'];
-//            $action = $ref['action'];
-//
-//            if (! preg_match($pattern, $grantedCode)) {
-//                $this->failAndKill(
-//                    "[菜单] {$type} grantedByAccessCode 格式校验失败" . PHP_EOL
-//                    . "  action：{$action}" . PHP_EOL
-//                    . "  grantedByAccessCode：{$grantedCode}" . PHP_EOL
-//                    . '  格式要求：全小写字母，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）'
-//                );
-//                return;
-//            }
-//
-//            if (! isset($accessCodes[$grantedCode])) {
-//                $this->failAndKill(
-//                    "[菜单] {$type} grantedByAccessCode 引用校验失败" . PHP_EOL
-//                    . "  action：{$action}" . PHP_EOL
-//                    . "  grantedByAccessCode：{$grantedCode}" . PHP_EOL
-//                    . '  找不到对应的 accessCode，请确认本服务存在与该短码完全一致的权限码'
-//                );
-//                return;
-//            }
-//
-//            if (isset($codesWithChildren[$grantedCode])) {
-//                $this->failAndKill(
-//                    "[菜单] {$type} grantedByAccessCode 引用校验失败" . PHP_EOL
-//                    . "  action：{$action}" . PHP_EOL
-//                    . "  grantedByAccessCode：{$grantedCode}" . PHP_EOL
-//                    . '  该短码指向仍有子集的权限；用户只要拥有任意子集即默认拥有该父级' . PHP_EOL
-//                    . '  请改为引用叶子权限短码（通常为具体 BUTTON），多入口时显式列出多个叶子短码'
-//                );
-//                return;
-//            }
-//        }
+        //        foreach ($grantedRefs as $ref) {
+        //            $grantedCode = $ref['code'];
+        //            $action = $ref['action'];
+        //
+        //            if (! preg_match($pattern, $grantedCode)) {
+        //                $this->failAndKill(
+        //                    "[菜单] {$type} grantedByAccessCode 格式校验失败" . PHP_EOL
+        //                    . "  action：{$action}" . PHP_EOL
+        //                    . "  grantedByAccessCode：{$grantedCode}" . PHP_EOL
+        //                    . '  格式要求：全小写字母，多单词用 - 连接，层级用 : 分隔（如 system:business-rules:recycle-rule）'
+        //                );
+        //                return;
+        //            }
+        //
+        //            if (! isset($accessCodes[$grantedCode])) {
+        //                $this->failAndKill(
+        //                    "[菜单] {$type} grantedByAccessCode 引用校验失败" . PHP_EOL
+        //                    . "  action：{$action}" . PHP_EOL
+        //                    . "  grantedByAccessCode：{$grantedCode}" . PHP_EOL
+        //                    . '  找不到对应的 accessCode，请确认本服务存在与该短码完全一致的权限码'
+        //                );
+        //                return;
+        //            }
+        //
+        //            if (isset($codesWithChildren[$grantedCode])) {
+        //                $this->failAndKill(
+        //                    "[菜单] {$type} grantedByAccessCode 引用校验失败" . PHP_EOL
+        //                    . "  action：{$action}" . PHP_EOL
+        //                    . "  grantedByAccessCode：{$grantedCode}" . PHP_EOL
+        //                    . '  该短码指向仍有子集的权限；用户只要拥有任意子集即默认拥有该父级' . PHP_EOL
+        //                    . '  请改为引用叶子权限短码（通常为具体 BUTTON），多入口时显式列出多个叶子短码'
+        //                );
+        //                return;
+        //            }
+        //        }
     }
 
     private function writeError(string $message): void

@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of tgkw-adc.
+ *
+ * @link     https://www.tgkw.com
+ * @document https://hyperf.wiki
+ */
+
 namespace TgkwAdc\Utils;
 
 use Hyperf\Context\ApplicationContext;
@@ -12,37 +20,6 @@ class RedisUtils
 {
     // 前缀缓存（运行期不变）
     private static ?string $prefix = null;
-
-    // 全局统一前缀，确保以分隔符结尾
-    protected static function prefix(): string
-    {
-        if (self::$prefix === null) {
-            $name = env('APP_NAME') ?: 'app';
-            self::$prefix = rtrim(trim($name), ':_') . ':';
-        }
-
-        return self::$prefix;
-    }
-
-    protected static function getRedis(?string $pool = 'default')
-    {
-        /** @var RedisFactory $factory */
-        $factory = ApplicationContext::getContainer()->get(RedisFactory::class);
-
-        return $factory->get($pool ?? 'default');
-    }
-
-    // 自动拼接前缀
-    protected static function buildKey(string $key): string
-    {
-        return self::prefix() . $key;
-    }
-
-    // 批量拼接前缀
-    protected static function buildKeys(array $keys): array
-    {
-        return array_map(fn ($k) => self::buildKey($k), $keys);
-    }
 
     /* ===================== 通用 Key 操作 ===================== */
 
@@ -709,5 +686,36 @@ class RedisUtils
     public static function geoSearchStore(string $dst, string $src, $position, $shape, string $unit, array $options = [])
     {
         return self::getRedis()->geosearchstore(self::buildKey($dst), self::buildKey($src), $position, $shape, $unit, $options);
+    }
+
+    // 全局统一前缀，确保以分隔符结尾
+    protected static function prefix(): string
+    {
+        if (self::$prefix === null) {
+            $name = env('APP_NAME') ?: 'app';
+            self::$prefix = rtrim(trim($name), ':_') . ':';
+        }
+
+        return self::$prefix;
+    }
+
+    protected static function getRedis(?string $pool = 'default')
+    {
+        /** @var RedisFactory $factory */
+        $factory = ApplicationContext::getContainer()->get(RedisFactory::class);
+
+        return $factory->get($pool ?? 'default');
+    }
+
+    // 自动拼接前缀
+    protected static function buildKey(string $key): string
+    {
+        return self::prefix() . $key;
+    }
+
+    // 批量拼接前缀
+    protected static function buildKeys(array $keys): array
+    {
+        return array_map(fn ($k) => self::buildKey($k), $keys);
     }
 }

@@ -212,6 +212,11 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
             'center' => Format::FORMAT_ALIGN_CENTER,
             'right' => Format::FORMAT_ALIGN_RIGHT,
         ];
+        $templateConfig = is_array($infos['template'] ?? null) ? $infos['template'] : [];
+        $fieldConfig = is_array($infos['field_config'] ?? null) ? $infos['field_config'] : [];
+        $enhancedTemplate = $templateConfig !== [] || $fieldConfig !== [];
+        $firstDataRow = max(3, (int) ($templateConfig['first_data_row'] ?? 3));
+        $lastDataRow = max($firstDataRow, (int) ($templateConfig['last_data_row'] ?? $firstDataRow));
 
         // 初始化列配置数组
         $columnName = [];
@@ -239,27 +244,34 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
         }
 
         // 生成临时文件名
-        $tempFileName = 'export_' . time() . '.xlsx';
+        $tempFileName = 'export_' . bin2hex(random_bytes(16)) . '.xlsx';
         $runtimePath = static::getRuntimePath();
 
         // 创建xlswriter对象
         $xlsxObject = new \Vtiful\Kernel\Excel(['path' => $runtimePath . '/']);
-        $fileObject = $xlsxObject->fileName($tempFileName)->header($columnName);
-        $columnFormat = new Format($fileObject->getHandle());
+        $fileObject = $xlsxObject->fileName($tempFileName);
         $rowFormat = new Format($fileObject->getHandle());
 
         // 设置列格式
         for ($i = 0; $i < count($columnField); ++$i) {
             $currentProperty = $properties[$i] ?? [];
             $columnIndex = $this->getColumnIndex($i);
+            $columnSettings = is_array($fieldConfig[$currentProperty['name']] ?? null)
+                ? $fieldConfig[$currentProperty['name']]
+                : [];
+            $numberFormat = $columnSettings['number_format'] ?? $templateConfig['data_number_format'] ?? null;
+            $columnFormat = (new Format($fileObject->getHandle()))
+                ->align($currentProperty['align'] ? $aligns[$currentProperty['align']] : $aligns['left'])
+                ->background($currentProperty['bgColor'] ?? Format::COLOR_WHITE)
+                ->border(Format::BORDER_THIN)
+                ->fontColor($currentProperty['color'] ?? Format::COLOR_BLACK);
+            if ($enhancedTemplate && is_string($numberFormat) && $numberFormat !== '') {
+                $columnFormat->number($numberFormat);
+            }
             $fileObject->setColumn(
                 sprintf('%s:%s', $columnIndex, $columnIndex),
                 $currentProperty['width'] ?? mb_strlen($columnName[$i]) * 5,
-                $columnFormat->align($currentProperty['align'] ? $aligns[$currentProperty['align']] : $aligns['left'])
-                    ->background($currentProperty['bgColor'] ?? Format::COLOR_WHITE)
-                    ->border(Format::BORDER_THIN)
-                    ->fontColor($currentProperty['color'] ?? Format::COLOR_BLACK)
-                    ->toResource()
+                $columnFormat->toResource()
             );
 
             // 判断校验字段
@@ -270,65 +282,78 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
             }
         }
 
-        $fileObject->setRow(
-            sprintf('A1:%s1', $this->getColumnIndex(count($columnField))),
-            $properties[0]['headHeight'] ?? 24,
-            $rowFormat->bold()->toResource()
-        );
+        $fileObject->setRow('A1:A1', $properties[0]['headHeight'] ?? 24, $rowFormat->bold()->toResource());
 
-        // 表头加样式
+        // 表头加样式：按单元格设置，避免 setRow 给整行铺背景色
         if (! empty($infos['is_export'])) {
-            $fileObject->setRow(
-                sprintf('A1:%s1', $this->getColumnIndex(count($columnField))),
-                $properties[0]['headHeight'] ?? 24,
-                $rowFormat->bold()
-                    ->align(Format::FORMAT_ALIGN_CENTER, Format::FORMAT_ALIGN_VERTICAL_CENTER)
-                    ->background(0x4AC1FF)
-                    ->fontColor(Format::COLOR_BLACK)
-                    ->toResource()
-            );
-        }
-
-        // 表内容加样式 - 为每列数据行设置对齐
-        $dataLength = max(count($data), 50);
-        for ($i = 0; $i < count($columnField); ++$i) {
-            $currentProperty = $properties[$i] ?? [];
-            $columnIndex = $this->getColumnIndex($i);
-            $dataAlign = $currentProperty['align'] ? $aligns[$currentProperty['align']] : $aligns['left'];
-            $fileObject->setRow(
-                sprintf('%s2:%s%s', $columnIndex, $columnIndex, $dataLength + 2),
-                $properties[0]['height'] ?? 24,
-                (new Format($fileObject->getHandle()))
-                    ->align($dataAlign, Format::FORMAT_ALIGN_VERTICAL_CENTER)
-                    ->toResource()
-            );
-        }
-
-        //        // 设置表头样式
-        if (empty($infos['is_export'])) {
             for ($i = 0; $i < count($columnField); ++$i) {
-                $currentProperty = $properties[$i] ?? [];
+                if ($columnName[$i] === '' || $columnName[$i] === null) {
+                    continue;
+                }
                 $fileObject->insertText(
-                    1,
+                    0,
                     $i,
                     $columnName[$i],
                     null,
                     (new Format($fileObject->getHandle()))
                         ->bold()
                         ->align(Format::FORMAT_ALIGN_CENTER, Format::FORMAT_ALIGN_VERTICAL_CENTER)
-//                        ->background($currentProperty['headBgColor'] ?? 0x4AC1FF)
-                        ->fontColor($currentProperty['headColor'] ?? Format::COLOR_BLACK)
+                        ->background(0x90EE90)
+                        ->fontColor(Format::COLOR_BLACK)
                         ->toResource()
                 );
             }
         }
 
-        $exportData = [];
-        if (empty($infos['is_export'])) {
-            $exportData = [
-                [],
-            ];
+        // 数据行高度由行设置，列对齐和数字格式由列样式统一负责
+        $dataLength = max(count($data), 50);
+        if ($enhancedTemplate) {
+            $fileObject->setRow(
+                sprintf('A%s:A%s', $firstDataRow, $lastDataRow),
+                $properties[0]['height'] ?? 24
+            );
+        } else {
+            for ($i = 0; $i < count($columnField); ++$i) {
+                $currentProperty = $properties[$i] ?? [];
+                $columnIndex = $this->getColumnIndex($i);
+                $dataAlign = $currentProperty['align'] ? $aligns[$currentProperty['align']] : $aligns['left'];
+                $fileObject->setRow(
+                    sprintf('%s2:%s%s', $columnIndex, $columnIndex, $dataLength + 2),
+                    $properties[0]['height'] ?? 24,
+                    (new Format($fileObject->getHandle()))
+                        ->align($dataAlign, Format::FORMAT_ALIGN_VERTICAL_CENTER)
+                        ->toResource()
+                );
+            }
         }
+
+        // 导入模板表头位于第 2 行；样式可按必填/选填字段统一配置
+        if (empty($infos['is_export'])) {
+            for ($i = 0; $i < count($columnField); ++$i) {
+                if ($columnName[$i] === '' || $columnName[$i] === null) {
+                    continue;
+                }
+                $currentProperty = $properties[$i] ?? [];
+                $headerKey = ! empty($currentProperty['required']) ? 'required_header' : 'optional_header';
+                $headerConfig = is_array($templateConfig[$headerKey] ?? null) ? $templateConfig[$headerKey] : [];
+                $headerFormat = (new Format($fileObject->getHandle()))
+                    ->bold()
+                    ->align(Format::FORMAT_ALIGN_CENTER, Format::FORMAT_ALIGN_VERTICAL_CENTER);
+                if (isset($headerConfig['background'])) {
+                    $headerFormat->background($headerConfig['background'], Format::PATTERN_SOLID);
+                }
+                $headerFormat->fontColor($headerConfig['font_color'] ?? $currentProperty['headColor'] ?? Format::COLOR_BLACK);
+                $fileObject->insertText(
+                    1,
+                    $i,
+                    $columnName[$i],
+                    null,
+                    $headerFormat->toResource()
+                );
+            }
+        }
+
+        $exportData = [];
 
         // 构造导出行数据
         foreach ($data as $item) {
@@ -400,14 +425,57 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
         // 写入数据
         $filePath = $fileObject->data($exportData);
 
-        // 添加数据验证
-        foreach ($validationField as $key => $item) {
-            $validation = new Validation();
-            $validation = $validation->validationType(Validation::TYPE_LIST)->valueList($item);
-            $forRows = max(count($exportData), 22);
+        // 添加数据验证。未启用增强配置时保留旧版逐单元格范围。
+        foreach ($properties as $key => $property) {
+            $field = $property['name'];
+            $settings = is_array($fieldConfig[$field] ?? null) ? $fieldConfig[$field] : [];
+            $validationConfig = is_array($settings['validation'] ?? null) ? $settings['validation'] : [];
+            $validationType = $validationConfig['type'] ?? null;
+            if ($validationType === null && isset($validationField[$key])) {
+                $validationType = 'list';
+            }
+            if ($validationType === null && $enhancedTemplate && ($property['dateTime'] ?? null) === 'date') {
+                $validationType = 'date';
+            }
+            if ($validationType === null) {
+                continue;
+            }
+
             $column = $this->getColumnIndex($key);
-            for ($i = 3; $i < $forRows; ++$i) {
-                $filePath = $filePath->validation($column . $i, $validation->toResource());
+            $allowBlank = (bool) ($validationConfig['allow_blank'] ?? ! $property['required']);
+            $validation = new Validation();
+            if ($enhancedTemplate) {
+                $validation->ignoreBlank($allowBlank);
+            }
+            if ($validationType === 'list') {
+                $values = $validationField[$key] ?? [];
+                if ($values === []) {
+                    continue;
+                }
+                $validation->validationType(Validation::TYPE_LIST)
+                    ->valueList($values)
+                    ->dropdown(true);
+            } elseif ($validationType === 'date') {
+                $anchor = $column . $firstDataRow;
+                $validation->validationType(Validation::TYPE_CUSTOM_FORMULA)
+                    ->valueFormula($this->buildDateValidationFormula(
+                        $anchor,
+                        $allowBlank
+                    ));
+            } else {
+                continue;
+            }
+
+            $this->applyValidationMessages($validation, $validationConfig);
+            if ($enhancedTemplate) {
+                $range = sprintf('%s%s:%s%s', $column, $firstDataRow, $column, $lastDataRow);
+                $filePath = $filePath->validation($range, $validation->toResource());
+                continue;
+            }
+
+            $forRows = max(count($exportData), 22);
+            for ($row = 3; $row < $forRows; ++$row) {
+                $filePath = $filePath->validation($column . $row, $validation->toResource());
             }
         }
 
@@ -427,5 +495,34 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
         @unlink($filePath);
 
         return $res;
+    }
+
+    private function applyValidationMessages(Validation $validation, array $config): void
+    {
+        if (isset($config['input_title'])) {
+            $validation->inputTitle((string) $config['input_title']);
+        }
+        if (isset($config['input_message'])) {
+            $validation->inputMessage((string) $config['input_message']);
+        }
+        if (isset($config['error_title'])) {
+            $validation->errorTitle((string) $config['error_title']);
+        }
+        if (isset($config['error_message'])) {
+            $validation->errorMessage((string) $config['error_message']);
+        }
+    }
+
+    private function buildDateValidationFormula(string $anchor, bool $allowBlank): string
+    {
+        $normalized = sprintf('IF(ISNUMBER(%1$s),TEXT(%1$s,"yyyy-mm-dd"),%1$s)', $anchor);
+        $dateExpression = sprintf(
+            'AND(LEN(%1$s)=10,MID(%1$s,5,1)="-",MID(%1$s,8,1)="-",NOT(ISERROR(DATEVALUE(%1$s))))',
+            $normalized
+        );
+
+        return $allowBlank
+            ? sprintf('=OR(%s="",%s)', $anchor, $dateExpression)
+            : '=' . $dateExpression;
     }
 }

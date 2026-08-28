@@ -124,7 +124,6 @@ class JwtHelper
 
         $authHeader = $request->getHeaderLine($token_key);
         if (! $authHeader) {
-
             throw new TokenException(AuthCode::NEED_LOGIN);
         }
         if (! str_starts_with($authHeader, 'Bearer ')) {

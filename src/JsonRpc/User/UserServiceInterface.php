@@ -63,7 +63,6 @@ interface UserServiceInterface
      */
     public function getAppid(array $param): int;
 
-
     /**
      * 获取当前租户下的角色列表.
      *
