@@ -276,17 +276,25 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
             $rowFormat->bold()->toResource()
         );
 
-        // 表头加样式
+        // 表头加样式：按单元格设置，避免 setRow 给整行铺背景色
         if (! empty($infos['is_export'])) {
-            $fileObject->setRow(
-                sprintf('A1:%s1', $this->getColumnIndex(count($columnField))),
-                $properties[0]['headHeight'] ?? 24,
-                $rowFormat->bold()
-                    ->align(Format::FORMAT_ALIGN_CENTER, Format::FORMAT_ALIGN_VERTICAL_CENTER)
-                    ->background(0x4AC1FF)
-                    ->fontColor(Format::COLOR_BLACK)
-                    ->toResource()
-            );
+            for ($i = 0; $i < count($columnField); ++$i) {
+                if ($columnName[$i] === '' || $columnName[$i] === null) {
+                    continue;
+                }
+                $fileObject->insertText(
+                    0,
+                    $i,
+                    $columnName[$i],
+                    null,
+                    (new Format($fileObject->getHandle()))
+                        ->bold()
+                        ->align(Format::FORMAT_ALIGN_CENTER, Format::FORMAT_ALIGN_VERTICAL_CENTER)
+                        ->background(0x90EE90)
+                        ->fontColor(Format::COLOR_BLACK)
+                        ->toResource()
+                );
+            }
         }
 
         // 表内容加样式 - 为每列数据行设置对齐
@@ -307,6 +315,9 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
         //        // 设置表头样式
         if (empty($infos['is_export'])) {
             for ($i = 0; $i < count($columnField); ++$i) {
+                if ($columnName[$i] === '' || $columnName[$i] === null) {
+                    continue;
+                }
                 $currentProperty = $properties[$i] ?? [];
                 $fileObject->insertText(
                     1,
@@ -316,7 +327,6 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
                     (new Format($fileObject->getHandle()))
                         ->bold()
                         ->align(Format::FORMAT_ALIGN_CENTER, Format::FORMAT_ALIGN_VERTICAL_CENTER)
-                        ->background($currentProperty['headBgColor'] ?? 0x4AC1FF)
                         ->fontColor($currentProperty['headColor'] ?? Format::COLOR_BLACK)
                         ->toResource()
                 );
