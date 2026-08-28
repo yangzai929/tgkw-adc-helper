@@ -244,7 +244,7 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
 
         // 创建xlswriter对象
         $xlsxObject = new \Vtiful\Kernel\Excel(['path' => $runtimePath . '/']);
-        $fileObject = $xlsxObject->fileName($tempFileName);
+        $fileObject = $xlsxObject->fileName($tempFileName)->header($columnName);
         $columnFormat = new Format($fileObject->getHandle());
         $rowFormat = new Format($fileObject->getHandle());
 
@@ -270,27 +270,23 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
             }
         }
 
-        $fileObject->setRow('A1:A1', $properties[0]['headHeight'] ?? 24, $rowFormat->bold()->toResource());
+        $fileObject->setRow(
+            sprintf('A1:%s1', $this->getColumnIndex(count($columnField))),
+            $properties[0]['headHeight'] ?? 24,
+            $rowFormat->bold()->toResource()
+        );
 
-        // 表头加样式：按单元格设置，避免 setRow 给整行铺背景色
+        // 表头加样式
         if (! empty($infos['is_export'])) {
-            for ($i = 0; $i < count($columnField); ++$i) {
-                if ($columnName[$i] === '' || $columnName[$i] === null) {
-                    continue;
-                }
-                $fileObject->insertText(
-                    0,
-                    $i,
-                    $columnName[$i],
-                    null,
-                    (new Format($fileObject->getHandle()))
-                        ->bold()
-                        ->align(Format::FORMAT_ALIGN_CENTER, Format::FORMAT_ALIGN_VERTICAL_CENTER)
-                        ->background(0x90EE90)
-                        ->fontColor(Format::COLOR_BLACK)
-                        ->toResource()
-                );
-            }
+            $fileObject->setRow(
+                sprintf('A1:%s1', $this->getColumnIndex(count($columnField))),
+                $properties[0]['headHeight'] ?? 24,
+                $rowFormat->bold()
+                    ->align(Format::FORMAT_ALIGN_CENTER, Format::FORMAT_ALIGN_VERTICAL_CENTER)
+                    ->background(0x4AC1FF)
+                    ->fontColor(Format::COLOR_BLACK)
+                    ->toResource()
+            );
         }
 
         // 表内容加样式 - 为每列数据行设置对齐
@@ -308,21 +304,19 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
             );
         }
 
-        // 导入模板表头：必填红字、选填黑字，无背景
+        //        // 设置表头样式
         if (empty($infos['is_export'])) {
             for ($i = 0; $i < count($columnField); ++$i) {
-                if ($columnName[$i] === '' || $columnName[$i] === null) {
-                    continue;
-                }
                 $currentProperty = $properties[$i] ?? [];
                 $fileObject->insertText(
-                    0,
+                    1,
                     $i,
                     $columnName[$i],
                     null,
                     (new Format($fileObject->getHandle()))
                         ->bold()
                         ->align(Format::FORMAT_ALIGN_CENTER, Format::FORMAT_ALIGN_VERTICAL_CENTER)
+//                        ->background($currentProperty['headBgColor'] ?? 0x4AC1FF)
                         ->fontColor($currentProperty['headColor'] ?? Format::COLOR_BLACK)
                         ->toResource()
                 );
@@ -331,7 +325,9 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
 
         $exportData = [];
         if (empty($infos['is_export'])) {
-            $exportData[] = array_fill(0, count($columnField), '');
+            $exportData = [
+                [],
+            ];
         }
 
         // 构造导出行数据
