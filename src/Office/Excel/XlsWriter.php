@@ -244,7 +244,7 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
 
         // 创建xlswriter对象
         $xlsxObject = new \Vtiful\Kernel\Excel(['path' => $runtimePath . '/']);
-        $fileObject = $xlsxObject->fileName($tempFileName)->header($columnName);
+        $fileObject = $xlsxObject->fileName($tempFileName);
         $columnFormat = new Format($fileObject->getHandle());
         $rowFormat = new Format($fileObject->getHandle());
 
@@ -270,11 +270,7 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
             }
         }
 
-        $fileObject->setRow(
-            sprintf('A1:%s1', $this->getColumnIndex(count($columnField))),
-            $properties[0]['headHeight'] ?? 24,
-            $rowFormat->bold()->toResource()
-        );
+        $fileObject->setRow('A1:A1', $properties[0]['headHeight'] ?? 24, $rowFormat->bold()->toResource());
 
         // 表头加样式：按单元格设置，避免 setRow 给整行铺背景色
         if (! empty($infos['is_export'])) {
@@ -312,7 +308,7 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
             );
         }
 
-        //        // 设置表头样式
+        // 导入模板表头：必填红字、选填黑字，无背景
         if (empty($infos['is_export'])) {
             for ($i = 0; $i < count($columnField); ++$i) {
                 if ($columnName[$i] === '' || $columnName[$i] === null) {
@@ -320,7 +316,7 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
                 }
                 $currentProperty = $properties[$i] ?? [];
                 $fileObject->insertText(
-                    1,
+                    0,
                     $i,
                     $columnName[$i],
                     null,
@@ -335,9 +331,7 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
 
         $exportData = [];
         if (empty($infos['is_export'])) {
-            $exportData = [
-                [],
-            ];
+            $exportData[] = array_fill(0, count($columnField), '');
         }
 
         // 构造导出行数据
