@@ -68,6 +68,20 @@ class EnumI18nAlignTest extends AbstractTestCase
         $formatted = $resource->toArray();
 
         $this->assertSame('center', $formatted['columns'][0]['align']);
-        $this->assertArrayNotHasKey('align', $formatted['columns'][1]);
+        $this->assertSame('center', $formatted['columns'][1]['align']);
+    }
+
+    public function testResourceUsesDefaultWidthAndAlignWhenTheyAreNotSet(): void
+    {
+        $resource = new TableListColumnsResource([
+            'columns' => [
+                ['key' => 'name'],
+            ],
+        ]);
+
+        $formatted = $resource->toArray();
+
+        $this->assertSame('150px', $formatted['columns'][0]['width']);
+        $this->assertSame('center', $formatted['columns'][0]['align']);
     }
 }

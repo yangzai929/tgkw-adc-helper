@@ -23,16 +23,12 @@ class TableListColumnsResource extends BaseResource
                 'key' => $column['key'] ?? '',
                 'i18n_txt' => $column['i18n_txt'] ?? [],
                 'i18n_key' => $column['i18n_key'] ?? '',
+                'width' => $column['width'] ?? '150px',
+                'align' => $column['align'] ?? 'center',
             ];
 
             if (isset($column['value_map_key'])) {
                 $formattedColumn['value_map_key'] = $column['value_map_key'];
-            }
-            if (isset($column['width'])) {
-                $formattedColumn['width'] = $column['width'];
-            }
-            if (isset($column['align'])) {
-                $formattedColumn['align'] = $column['align'];
             }
 
             $columns[] = $formattedColumn;
