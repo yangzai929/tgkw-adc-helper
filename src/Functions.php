@@ -279,7 +279,9 @@ if (! function_exists('i18nEnumArrConvert')) {
  *               'key' => string,          // 列对应的字段名
  *               'i18n_txt' => array,          // 国际化文本数组（如 ['zh_cn' => '名称', 'en' => 'Name']）
  *               'i18n_key' => string,     // 国际化键名
- *               'value_map_key' => string // 若该列配置了值映射，则为映射键名（可选）
+ *               'value_map_key' => string, // 若该列配置了值映射，则为映射键名（可选）
+ *               'width' => string,        // 列宽（可选）
+ *               'align' => string         // 列对齐方式（可选）
  *               ],
  *               ...
  *               ],
@@ -316,6 +318,9 @@ if (! function_exists('buildTableColumnsWithValueMaps')) {
             ];
             if (! empty($enumData['width'])) {
                 $column['width'] = (string) $enumData['width'];
+            }
+            if (! empty($enumData['align'])) {
+                $column['align'] = (string) $enumData['align'];
             }
 
             // 检查该字段是否需要值映射

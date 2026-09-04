@@ -31,6 +31,9 @@ class TableListColumnsResource extends BaseResource
             if (isset($column['width'])) {
                 $formattedColumn['width'] = $column['width'];
             }
+            if (isset($column['align'])) {
+                $formattedColumn['align'] = $column['align'];
+            }
 
             $columns[] = $formattedColumn;
         }

@@ -153,6 +153,7 @@ trait EnumI18nGet
                 'txt' => $obj->txt,
                 'i18nTxt' => $langList[$caseValue] ?? $obj->i18nTxt,
                 'width' => $obj->width ?? null,
+                'align' => $obj->align ?? null,
                 'group' => [
                     'groupCode' => $groupCode,
                 ],

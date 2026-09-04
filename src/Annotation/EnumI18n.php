@@ -51,18 +51,27 @@ class EnumI18n extends AbstractAnnotation
     public ?string $width = null;
 
     /**
+     * 列对齐方式（用于表格列）。
+     */
+    public ?string $align = null;
+
+    /**
      * 构造函数.
      *
      * @param string $txt 中文内容，不能为空
      * @param null|array $i18nTxt 国际化内容数组，键为语言代码，值为对应文本
+     * @param null|string $width 列宽
+     * @param null|string $align 列对齐方式
      */
     public function __construct(
         string $txt,
         ?array $i18nTxt = null,
         ?string $width = null,
+        ?string $align = null,
     ) {
         $this->txt = $txt;
         $this->i18nTxt = $i18nTxt;
         $this->width = $width ?? '200px';
+        $this->align = $align;
     }
 }

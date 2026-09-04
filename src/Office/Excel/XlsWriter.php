@@ -61,9 +61,9 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
     /**
      * 导入数据.
      *
-     * @param Model $model 目标模型实例，用于持久化
+     * @param Model        $model   目标模型实例，用于持久化
      * @param null|Closure $closure 自定义处理闭包，若提供则由闭包接管导入逻辑
-     * @param int $orgId 预留组织维度参数
+     * @param int          $orgId   预留组织维度参数
      */
     public function import(Model $model, ?Closure $closure = null, int $orgId = 0): bool
     {
@@ -191,12 +191,12 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
     /**
      * 导出 Excel 并以下载形式返回响应.
      *
-     * @param string $filename 输出文件名（不含扩展名）
-     * @param array|Closure $closure 提供原始数据或返回数据的闭包
-     * @param null|Closure $callbackData 数据行回调，可对每行做最后加工
-     * @param bool $isDemo 是否导出示例行
-     * @param int $orgId 预留组织维度参数
-     * @param array $infos 额外配置，如导出标记、提示信息等
+     * @param string        $filename     输出文件名（不含扩展名）
+     * @param array|Closure $closure      提供原始数据或返回数据的闭包
+     * @param null|Closure  $callbackData 数据行回调，可对每行做最后加工
+     * @param bool          $isDemo       是否导出示例行
+     * @param int           $orgId        预留组织维度参数
+     * @param array         $infos        额外配置，如导出标记、提示信息等
      */
     public function export(string $filename, array|Closure $closure, ?Closure $callbackData = null, bool $isDemo = false, int $orgId = 0, array $infos = []): \Psr\Http\Message\ResponseInterface
     {
@@ -284,27 +284,6 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
 
         $fileObject->setRow('A1:A1', $properties[0]['headHeight'] ?? 24, $rowFormat->bold()->toResource());
 
-        // 表头加样式：按单元格设置，避免 setRow 给整行铺背景色
-        if (! empty($infos['is_export'])) {
-            for ($i = 0; $i < count($columnField); ++$i) {
-                if ($columnName[$i] === '' || $columnName[$i] === null) {
-                    continue;
-                }
-                $fileObject->insertText(
-                    0,
-                    $i,
-                    $columnName[$i],
-                    null,
-                    (new Format($fileObject->getHandle()))
-                        ->bold()
-                        ->align(Format::FORMAT_ALIGN_CENTER, Format::FORMAT_ALIGN_VERTICAL_CENTER)
-                        ->background(0x90EE90)
-                        ->fontColor(Format::COLOR_BLACK)
-                        ->toResource()
-                );
-            }
-        }
-
         // 数据行高度由行设置，列对齐和数字格式由列样式统一负责
         $dataLength = max(count($data), 50);
         if ($enhancedTemplate) {
@@ -354,6 +333,9 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
         }
 
         $exportData = [];
+        if (! empty($infos['is_export'])) {
+            $exportData[] = $columnName;
+        }
 
         // 构造导出行数据
         foreach ($data as $item) {
@@ -422,8 +404,29 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
         // 获取响应对象
         $response = container_get(ResponseInterface::class);
 
-        // 写入数据
+        // 写入数据。导出模式下表头作为第 1 行写入，避免 data() 覆盖预先插入的表头。
         $filePath = $fileObject->data($exportData);
+
+        // data() 会应用默认列样式，导出表头需在数据写入后重新设置专用样式。
+        if (! empty($infos['is_export'])) {
+            for ($i = 0; $i < count($columnField); ++$i) {
+                if ($columnName[$i] === '' || $columnName[$i] === null) {
+                    continue;
+                }
+                $filePath->insertText(
+                    0,
+                    $i,
+                    $columnName[$i],
+                    null,
+                    (new Format($fileObject->getHandle()))
+                        ->bold()
+                        ->align(Format::FORMAT_ALIGN_CENTER, Format::FORMAT_ALIGN_VERTICAL_CENTER)
+                        ->background(0x90EE90)
+                        ->fontColor(Format::COLOR_BLACK)
+                        ->toResource()
+                );
+            }
+        }
 
         // 添加数据验证。未启用增强配置时保留旧版逐单元格范围。
         foreach ($properties as $key => $property) {
@@ -462,6 +465,13 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
                         $anchor,
                         $allowBlank
                     ));
+            } elseif ($validationType === 'custom') {
+                $formula = $validationConfig['formula'] ?? null;
+                if (! is_string($formula) || $formula === '') {
+                    continue;
+                }
+                $validation->validationType(Validation::TYPE_CUSTOM_FORMULA)
+                    ->valueFormula(str_replace('{cell}', $column . $firstDataRow, $formula));
             } else {
                 continue;
             }
