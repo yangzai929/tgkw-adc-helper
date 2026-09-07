@@ -60,7 +60,7 @@ class OrgPermission extends AbstractAnnotation
 
     public string $method = ''; // 请求方法, 目录时填 #
 
-    public int $showMobile = 1; // 移动端是否显示: 0=否, 1=是  隐藏时  菜单在移动端不显示 但会在PC端配置权限时在权限树中显示
+    public int $showMobile = 0; // 移动端是否显示: 0=否, 1=是  隐藏时  菜单在移动端不显示 但会在PC端配置权限时在权限树中显示
 
     public string $app = ''; // 微前端提供者
 
