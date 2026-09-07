@@ -526,9 +526,14 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
     private function buildDateValidationFormula(string $anchor, bool $allowBlank): string
     {
         $normalized = sprintf('IF(ISNUMBER(%1$s),TEXT(%1$s,"yyyy-mm-dd"),%1$s)', $anchor);
-        $dateExpression = sprintf(
-            'AND(LEN(%1$s)=10,MID(%1$s,5,1)="-",MID(%1$s,8,1)="-",NOT(ISERROR(DATEVALUE(%1$s))))',
+        $roundTrip = sprintf(
+            'IFERROR(TEXT(DATE(VALUE(LEFT(%1$s,4)),VALUE(MID(%1$s,6,2)),VALUE(RIGHT(%1$s,2))),"yyyy-mm-dd")=%1$s,FALSE)',
             $normalized
+        );
+        $dateExpression = sprintf(
+            'AND(LEN(%1$s)=10,MID(%1$s,5,1)="-",MID(%1$s,8,1)="-",%2$s)',
+            $normalized,
+            $roundTrip
         );
 
         return $allowBlank
