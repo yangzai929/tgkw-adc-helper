@@ -23,13 +23,13 @@ interface UserServiceInterface
     /**
      * 批量校验用户访问权限.
      *
-     * @param string $sub 用户标识，如 user:123
-     * @param string $obj 租户标识，如 tenant:1
+     * @param int $userId 用户ID
+     * @param int $tenantId 租户ID
      * @param string[] $acts 待校验的 action 列表
      * @param array $options 可选参数，支持 grantedByAccessCodes、micro
      * @return array 各 action 校验结果，形如 ['action1' => true, 'action2' => false]
      */
-    public function checkAccessPermissions(string $sub, string $obj, array $acts, array $options = []): array;
+    public function checkAccessPermissions(int $userId, int $tenantId, array $acts, array $options = []): array;
 
     /**
      * 新增菜单及按钮权限配置.
