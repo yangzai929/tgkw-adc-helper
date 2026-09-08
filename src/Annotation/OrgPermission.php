@@ -62,6 +62,8 @@ class OrgPermission extends AbstractAnnotation
 
     public int $showMobile = 0; // 移动端是否显示: 0=否, 1=是  隐藏时  菜单在移动端不显示 但会在PC端配置权限时在权限树中显示
 
+    public int $showPc = 1; // PC端是否显示: 0=否, 1=是  隐藏时  菜单在PC端不显示 但会在配置权限时在权限树中显示
+
     public string $app = ''; // 微前端提供者
 
     public string $micro = ''; // 微服务提供者
@@ -89,7 +91,8 @@ class OrgPermission extends AbstractAnnotation
         int $isEnable = 1,
         int $needAuth = 1,
         string $method = '',
-        int $showMobile = 1,
+        int $showMobile = 0,
+        int $showPc = 1,
         string $app = '',
         string $micro = '',
         int $appId = 0,
@@ -112,6 +115,7 @@ class OrgPermission extends AbstractAnnotation
         $this->needAuth = $needAuth;
         $this->method = $method;
         $this->showMobile = $showMobile;
+        $this->showPc = $showPc;
         $this->app = $app;
         $this->micro = $micro;
         $this->appId = $appId;
