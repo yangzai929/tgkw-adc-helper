@@ -29,6 +29,11 @@ class UserServiceConsumer extends AbstractServiceClient implements UserServiceIn
         return $this->__request(__FUNCTION__, compact('param'));
     }
 
+    public function checkAccessPermissions(string $sub, string $obj, array $acts, array $options = []): array
+    {
+        return $this->__request(__FUNCTION__, compact('sub', 'obj', 'acts', 'options'));
+    }
+
     public function addMenu(array $param): array
     {
         return $this->__request(__FUNCTION__, compact('param'));
