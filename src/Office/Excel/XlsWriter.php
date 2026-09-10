@@ -261,7 +261,10 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
                 : [];
             $numberFormat = $columnSettings['number_format'] ?? $templateConfig['data_number_format'] ?? null;
             $columnFormat = (new Format($fileObject->getHandle()))
-                ->align($currentProperty['align'] ? $aligns[$currentProperty['align']] : $aligns['left'])
+                ->align(
+                    $currentProperty['align'] ? $aligns[$currentProperty['align']] : $aligns['center'],
+                    Format::FORMAT_ALIGN_VERTICAL_CENTER
+                )
                 ->background($currentProperty['bgColor'] ?? Format::COLOR_WHITE)
                 ->border(Format::BORDER_THIN)
                 ->fontColor($currentProperty['color'] ?? Format::COLOR_BLACK);
@@ -284,18 +287,22 @@ class XlsWriter extends Excel implements ExcelPropertyInterface
 
         $fileObject->setRow('A1:A1', $properties[0]['headHeight'] ?? 24, $rowFormat->bold()->toResource());
 
-        // 数据行高度由行设置，列对齐和数字格式由列样式统一负责
+        // 导入模板的表头与数据区使用同一行高；单元格对齐和数字格式由列样式统一负责。
         $dataLength = max(count($data), 50);
         if ($enhancedTemplate) {
+            $rowHeight = $properties[0]['height'] ?? 24;
+            if (empty($infos['is_export'])) {
+                $fileObject->setRow('A2:A2', $rowHeight);
+            }
             $fileObject->setRow(
                 sprintf('A%s:A%s', $firstDataRow, $lastDataRow),
-                $properties[0]['height'] ?? 24
+                $rowHeight
             );
         } else {
             for ($i = 0; $i < count($columnField); ++$i) {
                 $currentProperty = $properties[$i] ?? [];
                 $columnIndex = $this->getColumnIndex($i);
-                $dataAlign = $currentProperty['align'] ? $aligns[$currentProperty['align']] : $aligns['left'];
+                $dataAlign = $currentProperty['align'] ? $aligns[$currentProperty['align']] : $aligns['center'];
                 $fileObject->setRow(
                     sprintf('%s2:%s%s', $columnIndex, $columnIndex, $dataLength + 2),
                     $properties[0]['height'] ?? 24,
