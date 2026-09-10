@@ -12,9 +12,9 @@ namespace TgkwAdc\Office;
 
 use Exception;
 use Hyperf\Di\Annotation\AnnotationCollector;
-use Hyperf\HttpMessage\Stream\SwooleStream;
 use Psr\Http\Message\ResponseInterface;
 use TgkwAdc\Constants\I18n\Excel\ExcelCommonI18n;
+use TgkwAdc\Helper\Http\ExcelDownloadResponse;
 use TgkwAdc\Helper\Intl\I18nHelper;
 use TgkwAdc\Office\Annotation\ExcelProperty;
 use TgkwAdc\Office\Interfaces\ModelExcelInterface;
@@ -71,11 +71,11 @@ abstract class Excel
     /**
      * 构造函数.
      *
-     * @param string $dto DTO类名，用于获取Excel列的配置信息
-     * @param array $extraData 额外数据配置
-     * @param bool $isDemo 是否为示例模式
-     * @param int $orgId 组织ID
-     * @param array $infos 额外信息数组
+     * @param  string    $dto       DTO类名，用于获取Excel列的配置信息
+     * @param  array     $extraData 额外数据配置
+     * @param  bool      $isDemo    是否为示例模式
+     * @param  int       $orgId     组织ID
+     * @param  array     $infos     额外信息数组
      * @throws Exception 当DTO类未实现ModelExcelInterface接口时抛出异常
      */
     public function __construct(string $dto, array $extraData = [], bool $isDemo = false, int $orgId = 0, array $infos = [])
@@ -236,27 +236,23 @@ abstract class Excel
     /**
      * 下载excel文件.
      *
-     * @param string $filename 文件名
-     * @param string $content 文件内容
+     * @param  string            $filename 文件名
+     * @param  string            $content  文件内容
      * @return ResponseInterface HTTP响应对象
      */
     protected function downloadExcel(string $filename, string $content): ResponseInterface
     {
-        return $response = context_get(ResponseInterface::class)
-            ->withHeader('Server', 'TgkwAdc')
-            ->withHeader('access-control-expose-headers', 'content-disposition')
-            ->withHeader('content-description', 'File Transfer')
-            ->withHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            ->withHeader('content-disposition', "attachment; filename={$filename}; filename*=UTF-8''" . rawurlencode($filename))
-            ->withHeader('content-transfer-encoding', 'binary')
-            ->withHeader('pragma', 'public')
-            ->withBody(new SwooleStream($content));
+        return ExcelDownloadResponse::create(
+            $content,
+            $filename,
+            context_get(ResponseInterface::class)
+        );
     }
 
     /**
      * 获取 Excel 列索引.
      *
-     * @param int $columnIndex 列索引（从0开始）
+     * @param  int    $columnIndex 列索引（从0开始）
      * @return string Excel列标识符（如A、B、AA等）
      */
     protected function getColumnIndex(int $columnIndex = 0): string
