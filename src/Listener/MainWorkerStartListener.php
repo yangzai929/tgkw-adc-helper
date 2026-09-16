@@ -30,7 +30,6 @@ use TgkwAdc\Helper\XxlJobTaskHelper;
 use TgkwAdc\JsonRpc\Public\SystemServiceInterface;
 use TgkwAdc\JsonRpc\User\UserServiceInterface;
 
-#[Listener(priority: 0)]
 class MainWorkerStartListener implements ListenerInterface
 {
     /**
