@@ -29,7 +29,7 @@ class AppExceptionHandler extends ExceptionHandler
         $this->logger->error($throwable->getTraceAsString());
 
         // 2. 区分环境返回不同响应
-        if (env('APP_ENV') === 'dev') {
+        if (env('NOT_SHOW_TRACEINFO_IN_API')) {
             // 开发环境：构造结构化的错误信息（JSON 格式）
             $errorData = [
                 'code' => $throwable->getCode() ?: 500,

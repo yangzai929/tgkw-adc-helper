@@ -60,7 +60,7 @@ class XxlJobAdminClient
         $guzzleConfig = $config['guzzle_config'] ?? [];
         $this->client = new Client(array_merge([
             'base_uri' => $this->baseUri,
-            'timeout' => 10,
+            'timeout' => env('XXL_JOB_GUZZLE_TIMEOUT', 30),
             'headers' => [
                 'charset' => 'UTF-8',
             ],
