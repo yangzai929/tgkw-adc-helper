@@ -25,10 +25,19 @@ use Throwable;
  *   // 或
  *   (new CompanyVerifyService())->verify($params);
  *
- * 三方通道由服务端 systemConfig.company_verify_driver 决定，入参不支持指定。
+ * 三方通道由服务端配置决定，入参不支持指定：优先使用操作级
+ * company_verify_{verify|search|detail}_driver；为空时回退到默认
+ * systemConfig.company_verify_driver。
  */
 class CompanyVerifyService
 {
+    /**
+     * 允许测试或非 DI 场景注入 Manager；生产环境按需创建默认实例。
+     */
+    public function __construct(private ?CompanyVerifyManager $manager = null)
+    {
+    }
+
     /**
      * 企业名称 / 信用代码核验.
      *
@@ -49,15 +58,20 @@ class CompanyVerifyService
             'company_name' => $companyName,
             'credit_code' => $creditCode,
         ], function () use ($companyName, $creditCode): array {
-            $manager = new CompanyVerifyManager();
-            $provider = $manager->driverFor('verify');
-            $matched = $this->findMatchedCompany($provider->search($companyName), $companyName, $creditCode);
+            $provider = $this->manager()->driverFor('verify');
+            $company = $this->findCompanyByName($provider->search($companyName), $companyName);
 
-            // 名称检索未命中且传了信用代码时，再用信用代码检索
-            if ($matched === null && $creditCode !== null) {
-                $matched = $this->findMatchedCompany($provider->search($creditCode), $companyName, $creditCode);
+            // 仅在名称完全未命中时，才使用信用代码补偿检索。
+            // 名称已命中但信用代码不一致属于正常的核验不通过，不能再将错误信用代码
+            // 发送给上游 search 接口，否则上游错误会被误转为「操作失败」。
+            if ($company === null && $creditCode !== null) {
+                $company = $this->findCompanyByName($provider->search($creditCode), $companyName);
             }
 
+            $matched = $company !== null
+                && ($creditCode === null || $this->equalsCode($company->creditCode, $creditCode))
+                ? $company
+                : null;
             $verified = $matched !== null;
 
             LogHelper::info('company verify result', [
@@ -88,8 +102,7 @@ class CompanyVerifyService
         $keyword = (string) ($params['keyword'] ?? '');
 
         return $this->run('search', ['keyword' => $keyword], function () use ($keyword): array {
-            $manager = new CompanyVerifyManager();
-            $provider = $manager->driverFor('search');
+            $provider = $this->manager()->driverFor('search');
             $companies = $provider->search($keyword);
 
             LogHelper::info('company search result', [
@@ -121,8 +134,7 @@ class CompanyVerifyService
         $companyName = (string) ($params['company_name'] ?? '');
 
         return $this->run('detail', ['company_name' => $companyName], function () use ($companyName): array {
-            $manager = new CompanyVerifyManager();
-            $provider = $manager->driverFor('detail');
+            $provider = $this->manager()->driverFor('detail');
             $info = $provider->detail($companyName);
 
             LogHelper::info('company detail result', [
@@ -136,6 +148,11 @@ class CompanyVerifyService
                 'company' => $info !== null ? $this->formatCompany($info) : null,
             ];
         });
+    }
+
+    private function manager(): CompanyVerifyManager
+    {
+        return $this->manager ??= new CompanyVerifyManager();
     }
 
     /**
@@ -164,19 +181,19 @@ class CompanyVerifyService
     }
 
     /**
+     * 从候选企业中查找名称完全匹配项。
+     *
+     * 名称匹配与信用代码匹配必须分开处理：前者用于决定是否需要补偿检索，
+     * 后者只决定本次核验是否通过。
+     *
      * @param CompanyInfo[] $companies
      */
-    private function findMatchedCompany(array $companies, string $companyName, ?string $creditCode): ?CompanyInfo
+    private function findCompanyByName(array $companies, string $companyName): ?CompanyInfo
     {
         foreach ($companies as $item) {
-            if (! $this->equalsName($item->name, $companyName)) {
-                continue;
+            if ($this->equalsName($item->name, $companyName)) {
+                return $item;
             }
-            if ($creditCode !== null && ! $this->equalsCode($item->creditCode, $creditCode)) {
-                continue;
-            }
-
-            return $item;
         }
 
         return null;

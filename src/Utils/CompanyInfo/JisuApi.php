@@ -27,10 +27,12 @@ use InvalidArgumentException;
  * 在阿里云市场控制台获取（productCode=cmapi033475）。
  *
  * 成功返回结构（status 为字符串 "0" 表示成功，其余为失败）：
- * { "status": "0", "msg": "ok", "result": { name, type, regcapital, scope,
- *   startdate, enddate, regorgan, legalperson, status, orgno, creditno, regno,
- *   regaddress, regcapitalcur, reccap, nicname, insurenum, ... } }
- * search 的 result 为企业列表结构。
+ * { "status": "0", "msg": "ok", "result": { "basic": { name, type, regcapital,
+ *   regcapitalcn, scope, startdate, enddate, regorgan, legalperson, status,
+ *   orgno, creditno, regno, regaddress, regcapitalcur, reccap, nicname,
+ *   insurenum, ... } } }
+ * 说明：精准查询(query)的企业字段位于 result.basic；search 的 result 为企业列表，
+ * 单条结构同样可能被 basic 包裹，Provider 层已做兼容解包。
  */
 class JisuApi
 {

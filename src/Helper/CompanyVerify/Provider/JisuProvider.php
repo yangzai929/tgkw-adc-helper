@@ -57,10 +57,14 @@ class JisuProvider implements CompanyProviderInterface
 
         $companies = [];
         foreach ($list as $item) {
-            if (! is_array($item) || ($item['name'] ?? '') === '') {
+            if (! is_array($item)) {
                 continue;
             }
-            $companies[] = $this->mapItem($item);
+            $basic = $this->unwrapBasic($item);
+            if (($basic['name'] ?? '') === '') {
+                continue;
+            }
+            $companies[] = $this->mapItem($basic);
         }
 
         return $companies;
@@ -79,11 +83,16 @@ class JisuProvider implements CompanyProviderInterface
         }
 
         $result = $this->extractResult($response, 'query', ['company_name' => $companyName]);
-        if ($result === null || array_is_list($result) || ($result['name'] ?? '') === '') {
+        if ($result === null || array_is_list($result)) {
             return null;
         }
 
-        return $this->mapItem($result);
+        $basic = $this->unwrapBasic($result);
+        if (($basic['name'] ?? '') === '') {
+            return null;
+        }
+
+        return $this->mapItem($basic);
     }
 
     /**
@@ -115,12 +124,14 @@ class JisuProvider implements CompanyProviderInterface
      */
     private function mapItem(array $item): CompanyInfo
     {
+        $item = $this->unwrapBasic($item);
+
         return CompanyInfo::fromArray([
             'name' => $item['name'] ?? '',
             'creditCode' => $item['creditno'] ?? null,
             'legalPersonName' => $item['legalperson'] ?? null,
             'regStatus' => $item['status'] ?? null,
-            'regCapital' => $item['regcapital'] ?? null,
+            'regCapital' => $item['regcapitalcn'] ?? $item['regcapital'] ?? null,
             'regNumber' => $item['regno'] ?? null,
             'estiblishTime' => $item['startdate'] ?? $item['regdate'] ?? null,
             'regLocation' => $item['regaddress'] ?? null,
@@ -136,6 +147,16 @@ class JisuProvider implements CompanyProviderInterface
             'provider' => $this->name(),
             'raw' => $item,
         ]);
+    }
+
+    /**
+     * 兼容 result 直接为数据、或 result.basic 包裹数据两种结构.
+     */
+    private function unwrapBasic(array $data): array
+    {
+        $basic = $data['basic'] ?? null;
+
+        return is_array($basic) ? $basic : $data;
     }
 
     /**
