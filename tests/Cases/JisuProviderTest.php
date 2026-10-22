@@ -19,6 +19,15 @@ use TgkwAdc\Utils\CompanyInfo\JisuApi;
  */
 class JisuProviderTest extends AbstractTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (! defined('BASE_PATH')) {
+            define('BASE_PATH', sys_get_temp_dir());
+        }
+    }
+
     public function testDetailUnwrapsResultBasic(): void
     {
         $api = $this->createMock(JisuApi::class);
@@ -83,5 +92,22 @@ class JisuProviderTest extends AbstractTestCase
 
         self::assertCount(1, $companies);
         self::assertSame('天宫通联（深圳）科技有限公司', $companies[0]->name);
+    }
+
+    public function testDetailReturnsNullWhenUpstreamReportsNotFound(): void
+    {
+        $api = $this->createMock(JisuApi::class);
+        $api->expects($this->once())
+            ->method('query')
+            ->with(['company' => '不存在的企业'])
+            ->willReturn([
+                'status' => 1,
+                'msg' => '未查询到企业信息',
+                'result' => null,
+            ]);
+
+        $provider = new JisuProvider($api);
+
+        self::assertNull($provider->detail('不存在的企业'));
     }
 }

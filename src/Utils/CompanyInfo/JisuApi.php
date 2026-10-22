@@ -120,6 +120,8 @@ class JisuApi
         $queryString = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
         $url = $this->baseUrl . $apiPath . '?' . $queryString;
 
+        $body = '';
+        $httpCode = 0;
         try {
             $response = $this->client->get($url, [
                 'headers' => [
@@ -130,18 +132,36 @@ class JisuApi
 
             $httpCode = $response->getStatusCode();
             $body = $response->getBody()->getContents();
-            if ($httpCode < 200 || $httpCode >= 300) {
-                throw new Exception("API请求失败，HTTP状态码: {$httpCode}，响应内容: {$body}");
-            }
         } catch (GuzzleException $e) {
             throw new Exception('HTTP请求失败: ' . $e->getMessage(), 0, $e);
         }
 
-        $result = json_decode($body, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception('API返回数据格式错误: ' . json_last_error_msg());
+        // 部分网关在“查无数据”时返回空响应体，按无数据返回，由 Provider 统一处理
+        if (trim($body) === '') {
+            return ['status' => '-1', 'msg' => 'empty response', 'result' => null];
         }
 
-        return $result;
+        $result = json_decode($body, true);
+        $isSuccessHttp = $httpCode >= 200 && $httpCode < 300;
+
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($result)) {
+            // 2xx 但响应体为空/非 JSON/非数组，按无数据返回，避免触发返回值类型错误
+            if ($isSuccessHttp) {
+                return ['status' => '-1', 'msg' => 'invalid response', 'result' => null];
+            }
+
+            throw new Exception("API请求失败，HTTP状态码: {$httpCode}，响应内容: {$body}");
+        }
+
+        // 携带 status 字段的业务响应，无论 HTTP 状态码都交由 Provider 判定（查无数据时网关可能返回非 2xx）
+        if (array_key_exists('status', $result)) {
+            return $result;
+        }
+
+        if ($isSuccessHttp) {
+            return ['status' => '-1', 'msg' => 'unexpected response', 'result' => null];
+        }
+
+        throw new Exception("API请求失败，HTTP状态码: {$httpCode}，响应内容: {$body}");
     }
 }
