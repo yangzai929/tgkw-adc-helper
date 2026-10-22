@@ -53,9 +53,12 @@ class JisuApi
             throw new InvalidArgumentException('极速数据AppCode不能为空');
         }
         $this->appCode = $appCode;
+        // http_errors=false：4xx/5xx 也返回响应对象，交由 sendRequest 解析业务体
+        // （极速数据对“查无数据”会返回 404 + {"status":"210","msg":"没有信息"}）
         $this->client = new Client([
             'timeout' => 30,
             'verify' => false,
+            'http_errors' => false,
         ]);
     }
 
