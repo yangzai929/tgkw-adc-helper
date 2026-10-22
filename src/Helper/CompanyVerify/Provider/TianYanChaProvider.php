@@ -14,7 +14,7 @@ use TgkwAdc\Helper\CompanyVerify\Contract\CompanyProviderInterface;
 use TgkwAdc\Helper\CompanyVerify\DTO\CompanyInfo;
 use TgkwAdc\Helper\CompanyVerify\Exception\CompanyVerifyException;
 use TgkwAdc\Helper\Log\LogHelper;
-use TgkwAdc\Utils\TianYanChaApi;
+use TgkwAdc\Utils\CompanyInfo\TianYanChaApi;
 use Throwable;
 
 /**
@@ -32,20 +32,6 @@ class TianYanChaProvider implements CompanyProviderInterface
     public function name(): string
     {
         return 'tianyancha';
-    }
-
-    public function verify(string $companyName, ?string $creditCode = null): bool
-    {
-        $info = $this->detail($companyName);
-        if ($info === null) {
-            return false;
-        }
-
-        if ($creditCode !== null && $creditCode !== '') {
-            return $this->equalsCode($info->creditCode, $creditCode);
-        }
-
-        return true;
     }
 
     public function search(string $keyword): array
@@ -95,6 +81,14 @@ class TianYanChaProvider implements CompanyProviderInterface
             'estiblishTime' => $this->formatTime($result['estiblishTime'] ?? null),
             'regLocation' => $result['regLocation'] ?? null,
             'businessScope' => $result['businessScope'] ?? null,
+            'companyOrgType' => $result['companyOrgType'] ?? null,
+            'regInstitute' => $result['regInstitute'] ?? null,
+            'orgNumber' => $result['orgNumber'] ?? null,
+            'actualCapital' => $result['actualCapital'] ?? null,
+            'regCapitalCurrency' => $result['regCapitalCurrency'] ?? null,
+            'industry' => $result['industry'] ?? null,
+            'socialStaffNum' => $result['socialStaffNum'] ?? null,
+            'businessTerm' => $this->formatBusinessTerm($result['fromTime'] ?? null, $result['toTime'] ?? null),
             'provider' => $this->name(),
             'raw' => $result,
         ]);
@@ -113,8 +107,21 @@ class TianYanChaProvider implements CompanyProviderInterface
         return date('Y-m-d', (int) ((int) $value / 1000));
     }
 
-    private function equalsCode(?string $a, string $b): bool
+    /**
+     * 营业期限：天眼查拆为 fromTime/toTime 两个毫秒时间戳，拼接为「起至止」，
+     * toTime 为空表示无固定期限.
+     * @param mixed $fromTime
+     * @param mixed $toTime
+     */
+    private function formatBusinessTerm($fromTime, $toTime): ?string
     {
-        return $a !== null && strcasecmp(trim($a), trim($b)) === 0;
+        $from = $this->formatTime($fromTime);
+        if ($from === null) {
+            return null;
+        }
+
+        $to = $this->formatTime($toTime);
+
+        return $from . '至' . ($to ?? '无固定期限');
     }
 }

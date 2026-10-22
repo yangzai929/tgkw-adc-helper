@@ -81,4 +81,26 @@ interface PublicServiceInterface
      * @return array{verified: bool, driver: string, company: null|array}
      */
     public function companyVerify(array $params);
+
+    /**
+     * 企业模糊搜索（与 HTTP POST /v1/company-search 同能力）.
+     *
+     * 参数说明：
+     * - keyword (必填) 搜索关键词
+     *
+     * @param array $params 搜索参数
+     * @return array{driver: string, list: array}
+     */
+    public function companySearch(array $params);
+
+    /**
+     * 企业工商详情查询（与 HTTP POST /v1/company-detail 同能力）.
+     *
+     * 参数说明：
+     * - company_name (必填) 企业名称（需准确；81api 通道同时支持信用代码）
+     *
+     * @param array $params 查询参数
+     * @return array{driver: string, company: null|array}
+     */
+    public function companyDetail(array $params);
 }

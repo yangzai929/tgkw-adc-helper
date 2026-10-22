@@ -53,4 +53,14 @@ class PublicServiceConsumer extends AbstractServiceClient implements PublicServi
     {
         return $this->__request(__FUNCTION__, compact('params'));
     }
+
+    public function companySearch(array $params)
+    {
+        return $this->__request(__FUNCTION__, compact('params'));
+    }
+
+    public function companyDetail(array $params)
+    {
+        return $this->__request(__FUNCTION__, compact('params'));
+    }
 }

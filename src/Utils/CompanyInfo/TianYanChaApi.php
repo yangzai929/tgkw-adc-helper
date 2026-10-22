@@ -8,7 +8,7 @@ declare(strict_types=1);
  * @document https://hyperf.wiki
  */
 
-namespace TgkwAdc\Utils;
+namespace TgkwAdc\Utils\CompanyInfo;
 
 use Exception;
 use GuzzleHttp\Client;
