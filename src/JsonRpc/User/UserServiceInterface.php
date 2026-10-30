@@ -106,4 +106,22 @@ interface UserServiceInterface
     public function getUserPermiScope(int $userId, int $tenantId): array;
 
     public function getUsersByRoleName(string $roleName, int $tenantId): array;
+
+    /**
+     * 按内置角色编码查询角色。编码即 roles.code，不随名称修改变化。
+     *
+     * @param string $code 角色编码
+     * @param int $tenantId 租户ID
+     * @return array 角色信息，不存在时为空数组
+     */
+    public function getRoleByCode(string $code, int $tenantId): array;
+
+    /**
+     * 按内置角色编码查询成员，返回结构与 getUsersByRoles 一致。
+     *
+     * @param string $code 角色编码
+     * @param int $tenantId 租户ID
+     * @return array 成员列表，角色不存在时为空数组
+     */
+    public function getUsersByRoleCode(string $code, int $tenantId): array;
 }
