@@ -19,6 +19,7 @@ use TgkwAdc\Helper\Log\TraceIdProcessor;
 $appEnv = env('APP_ENV', 'dev');
 $appName = env('APP_NAME', 'hyperf');
 $logPath = env('LOG_PATH', BASE_PATH . '/runtime/logs');
+$dailyFilenameFormat = '{date}/{filename}';
 
 $defaultLineFormatter = [
     'class' => LineFormatter::class,
@@ -69,6 +70,7 @@ return [
                     'filename' => "{$logPath}/{$appName}-{$appEnv}.log",
                     'level' => Level::Info,
                     'maxFiles' => 30,
+                    'filenameFormat' => $dailyFilenameFormat,
                 ],
                 'formatter' => $defaultLineFormatter,
             ],
@@ -87,6 +89,7 @@ return [
                     'filename' => "{$logPath}/{$appName}-debug-{$appEnv}.log",
                     'level' => Level::Debug,
                     'maxFiles' => 30,
+                    'filenameFormat' => $dailyFilenameFormat,
                 ],
                 'formatter' => $defaultJsonFormatter,
             ],
@@ -105,6 +108,7 @@ return [
                     'filename' => "{$logPath}/{$appName}-business-{$appEnv}.log",
                     'level' => Level::Info,
                     'maxFiles' => 90,
+                    'filenameFormat' => $dailyFilenameFormat,
                 ],
                 'formatter' => $defaultLineFormatter,
             ],
@@ -123,6 +127,7 @@ return [
                     'filename' => "{$logPath}/{$appName}-access-{$appEnv}.log",
                     'level' => Level::Info,
                     'maxFiles' => 30,
+                    'filenameFormat' => $dailyFilenameFormat,
                 ],
                 'formatter' => $defaultJsonFormatter,
             ],
@@ -142,6 +147,7 @@ return [
                     'filename' => "{$logPath}/{$appName}-system-{$appEnv}.log",
                     'level' => Level::Warning,
                     'maxFiles' => 30,
+                    'filenameFormat' => $dailyFilenameFormat,
                 ],
                 'formatter' => $defaultLineFormatter,
             ],
@@ -157,6 +163,7 @@ return [
                     'filename' => "{$logPath}/{$appName}-exception-{$appEnv}.log",
                     'level' => Level::Error,
                     'maxFiles' => 30,
+                    'filenameFormat' => $dailyFilenameFormat,
                 ],
                 'formatter' => [
                     'class' => LineFormatter::class,
@@ -183,6 +190,7 @@ return [
                     'filename' => "{$logPath}/{$appName}-debug-{$appEnv}.log",
                     'level' => Level::Debug,
                     'maxFiles' => 7,
+                    'filenameFormat' => $dailyFilenameFormat,
                 ],
                 'formatter' => $defaultLineFormatter,
             ],
@@ -201,6 +209,7 @@ return [
                     'filename' => "{$logPath}/{$appName}-payment-{$appEnv}.log",
                     'level' => Level::Info,
                     'maxFiles' => 90,
+                    'filenameFormat' => $dailyFilenameFormat,
                 ],
                 'formatter' => $defaultJsonFormatter,
             ],

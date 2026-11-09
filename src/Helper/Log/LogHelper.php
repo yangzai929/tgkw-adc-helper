@@ -61,7 +61,12 @@ class LogHelper
         $logPath = "{$logDir}/{$filename}.log";
 
         $logger = new Logger($name);
-        $handler = new RotatingFileHandler($logPath, $maxFiles, Logger::toMonologLevel($level));
+        $handler = new RotatingFileHandler(
+            $logPath,
+            $maxFiles,
+            Logger::toMonologLevel($level),
+            filenameFormat: '{date}/{filename}',
+        );
 
         // 异步缓冲写入
         if ($async) {
